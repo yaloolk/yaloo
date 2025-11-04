@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../core/constants/colors.dart';
+import '../../../core/constants/app_text_styles.dart';
+
 
 class Onboarding1Screen extends StatelessWidget {
   const Onboarding1Screen({Key? key}) : super(key: key);
@@ -46,10 +48,9 @@ class Onboarding1Screen extends StatelessWidget {
       children: [
 
         Image.asset(
-          'assets/icons/Yaloo_logo.png', // <-- Yaloo logo
-          width: 28,
-          height: 28,
-          // color: AppColors.primaryBlue,
+          'assets/images/yaloo_logo.png', // <-- Yaloo logo
+          width: 48,
+          height: 48,
           errorBuilder: (context, error, stackTrace) {
             // This fallback icon will show if the logo isn't found
             return Icon(
@@ -63,11 +64,12 @@ class Onboarding1Screen extends StatelessWidget {
         SizedBox(width: 8),
         Text(
           'Yaloo',
-          style: TextStyle(
-            fontSize: 22,
-            fontWeight: FontWeight.bold,
-            color: AppColors.primaryBlue, // Using primary blue for the text
-          ),
+          style: AppTextStyles.headlineLarge,
+          // style: TextStyle(
+          //   fontSize: 22,
+          //   fontWeight: FontWeight.w900,
+          //   color: AppColors.primaryBlue, // Using primary blue for the text
+          // ),
         ),
       ],
     );
@@ -113,22 +115,14 @@ class Onboarding1Screen extends StatelessWidget {
         Text(
           'Explore like a Local',
           textAlign: TextAlign.center,
-          style: TextStyle(
-            fontSize: 28,
-            fontWeight: FontWeight.bold,
-            // Using a very dark blue for high contrast, as in the image
-            color: Color(0xFF001A33),
-          ),
+          style: AppTextStyles.headlineLarge,
         ),
         SizedBox(height: 16),
         Text(
           'Go where locals go. Eat what they eat. Feel the culture with every step.',
           textAlign: TextAlign.center,
-          style: TextStyle(
-            fontSize: 16,
-            color: AppColors.primaryGray,
-            height: 1.5, // Improves readability of multi-line text
-          ),
+          style: AppTextStyles.bodySmall,
+
         ),
       ],
     );
@@ -146,11 +140,7 @@ class Onboarding1Screen extends StatelessWidget {
           },
           child: Text(
             'Skip',
-            style: TextStyle(
-              color: AppColors.primaryGray,
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
-            ),
+            style: AppTextStyles.bodyLarge,
           ),
         ),
 
@@ -175,7 +165,7 @@ class Onboarding1Screen extends StatelessWidget {
             style: TextStyle(
               color: AppColors.primaryBlue,
               fontSize: 16,
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.w400,
             ),
           ),
         ),

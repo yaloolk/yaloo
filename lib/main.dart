@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'core/constants/colors.dart';
 import 'routes/app_routes.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -16,6 +17,7 @@ class YalooApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Yaloo - Explore Sri Lanka',
       theme: ThemeData(
+        // fontFamily: 'Poppins',
         primaryColor: AppColors.primaryBlue,
         scaffoldBackgroundColor: AppColors.thirdBlue,
         colorScheme: ColorScheme.fromSeed(
@@ -23,8 +25,8 @@ class YalooApp extends StatelessWidget {
           primary: AppColors.primaryBlue,
           secondary: AppColors.eggplant,
         ),
-        textTheme: const TextTheme(
-          bodyMedium: TextStyle(fontFamily: 'Poppins'),
+        textTheme: GoogleFonts.poppinsTextTheme(
+          Theme.of(context).textTheme,
         ),
       ),
        initialRoute: '/onboarding1', // Start app from Onboarding 1
