@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'core/constants/colors.dart';
 import 'routes/app_routes.dart';
@@ -8,6 +9,17 @@ void main() {
   runApp(const YalooApp());
 }
 
+// This custom scroll behavior enables dragging with a mouse
+class AppScrollBehavior extends MaterialScrollBehavior {
+  @override
+  Set<PointerDeviceKind> get dragDevices => {
+    PointerDeviceKind.touch,
+    PointerDeviceKind.mouse,
+    PointerDeviceKind.stylus,
+    PointerDeviceKind.unknown,
+  };
+}
+
 class YalooApp extends StatelessWidget {
   const YalooApp({super.key});
 
@@ -16,8 +28,8 @@ class YalooApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Yaloo - Explore Sri Lanka',
+      scrollBehavior: AppScrollBehavior(),
       theme: ThemeData(
-        // fontFamily: 'Poppins',
         primaryColor: AppColors.primaryBlue,
         scaffoldBackgroundColor: AppColors.thirdBlue,
         colorScheme: ColorScheme.fromSeed(
@@ -29,8 +41,8 @@ class YalooApp extends StatelessWidget {
           Theme.of(context).textTheme,
         ),
       ),
-       initialRoute: '/onboarding1', // Start app from Onboarding 1
-       routes: AppRoutes.routes,
+      initialRoute: '/onboarding',
+      routes: AppRoutes.routes,
     );
   }
 }
