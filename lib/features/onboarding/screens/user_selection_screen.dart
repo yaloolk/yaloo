@@ -31,7 +31,6 @@ class _UserSelectionScreenState extends State<UserSelectionScreen> {
               Text(
                 'Who are you joining as?',
                 textAlign: TextAlign.center,
-                // UPDATED: Use a dark color for text on a light background
                 style: AppTextStyles.headlineLarge
                     .copyWith(color: const Color(0xFF001A33)),
               ),
@@ -40,21 +39,21 @@ class _UserSelectionScreenState extends State<UserSelectionScreen> {
               // 2. Role Selection Cards
               _buildRoleCard(
                 role: UserRole.tourist,
-                title: 'Tourist',
+                title: 'Explore',
                 subtitle: 'Discover, explore & book authentic experiences.',
                 icon: Icons.flight_takeoff_rounded,
               ),
               const SizedBox(height: 16),
               _buildRoleCard(
                 role: UserRole.guide,
-                title: 'Local Guide',
+                title: 'Be a Local Guide',
                 subtitle: 'Share your local knowledge & earn confidently.',
                 icon: Icons.explore_outlined,
               ),
               const SizedBox(height: 16),
               _buildRoleCard(
                 role: UserRole.host,
-                title: 'Village Host',
+                title: 'Be a Host',
                 subtitle: 'Offer authentic homestays & cultural experiences.',
                 icon: Icons.home_outlined,
               ),
@@ -76,8 +75,8 @@ class _UserSelectionScreenState extends State<UserSelectionScreen> {
                       ),
                       recognizer: TapGestureRecognizer()
                         ..onTap = () {
-                          // TODO: Navigate to Login screen
-                          // Navigator.pushNamed(context, '/login');
+                          // Navigate to Login screen
+                          Navigator.pushNamed(context, '/login');
                         },
                     ),
                   ],
@@ -91,8 +90,16 @@ class _UserSelectionScreenState extends State<UserSelectionScreen> {
                 onPressed: _selectedRole == null
                     ? null
                     : () {
-                  // TODO: Navigate to Signup screen based on role
-                  // Example: Navigator.pushNamed(context, '/signup', arguments: _selectedRole);
+                  // UPDATED: Navigate based on the selected role
+                  if (_selectedRole == UserRole.tourist) {
+                    Navigator.pushNamed(context, '/signup');
+                  } else if (_selectedRole == UserRole.guide) {
+                    // TODO: Create a Guide Signup Screen
+                     Navigator.pushNamed(context, '/guideSignup');
+                  } else if (_selectedRole == UserRole.host) {
+                    // TODO: Create a Host Signup Screen
+                    // Navigator.pushNamed(context, '/hostSignup');
+                  }
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primaryBlue,
@@ -101,7 +108,6 @@ class _UserSelectionScreenState extends State<UserSelectionScreen> {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  // Style for the disabled state
                   disabledBackgroundColor:
                   AppColors.primaryGray.withAlpha(128), // 0.5 opacity
                 ),

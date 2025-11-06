@@ -86,7 +86,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       mainAxisAlignment: MainAxisAlignment.start,
       children: [
         Image.asset(
-          'assets/images/yaloologo.svg',
+          'assets/images/yaloo_logo.png',
           width: 40,
           height: 40,
           errorBuilder: (context, error, stackTrace) {

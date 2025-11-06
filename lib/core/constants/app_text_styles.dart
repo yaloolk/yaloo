@@ -26,6 +26,12 @@ class AppTextStyles {
     color: AppColors.primaryGray,
   );
 
+  static final TextStyle textSmall = GoogleFonts.poppins(
+    fontSize: 14,
+    fontWeight: FontWeight.w300,
+    color: AppColors.primaryGray,
+  );
+
   static final TextStyle buttonText = GoogleFonts.poppins(
     fontSize: 16,
     fontWeight: FontWeight.w600,
