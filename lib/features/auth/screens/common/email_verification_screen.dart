@@ -16,11 +16,30 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
   bool _isEmailVerified = false;
   Timer? _timer;
   String _userEmail = '';
+  String _userRole = ''; // <-- ADDED: To store the user's role
   bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
+    // We use didChangeDependencies to safely get ModalRoute arguments
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    // --- MOCKUP: Get arguments from the previous screen ---
+    try {
+      final args = ModalRoute.of(context)?.settings.arguments as Map<String, String>?;
+      _userEmail = args?['email'] ?? 'your email';
+      _userRole = args?['role'] ?? 'Tourist'; // Default to Tourist if something goes wrong
+    } catch (e) {
+      _userEmail = 'your email';
+      _userRole = 'Tourist';
+    }
+    setState(() {});
+    // --- END MOCKUP ---
 
     // --- TODO: BACKEND LOGIC ---
     // final user = FirebaseAuth.instance.currentUser;
@@ -34,14 +53,6 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
     //   }
     // }
     // --- END BACKEND LOGIC ---
-
-    // --- MOCKUP: Simulate the email ---
-    Future.delayed(Duration.zero, () {
-      setState(() {
-        _userEmail = ModalRoute.of(context)?.settings.arguments as String? ?? 'your email';
-      });
-    });
-    // --- END MOCKUP ---
   }
 
   @override
@@ -64,12 +75,13 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
     //   final userDoc = await FirebaseFirestore.instance.collection('users').doc(user!.uid).get();
     //   final role = userDoc.get('role');
     //
+    //   // UPDATED: This logic is now correct for all roles
     //   if (role == 'Tourist') {
-    //     Navigator.pushReplacementNamed(context, '/profileCompletion'); // This is the old tourist one
+    //     Navigator.pushReplacementNamed(context, '/profileCompletion');
     //   } else if (role == 'Guide') {
     //     Navigator.pushReplacementNamed(context, '/guideProfileCompletion');
     //   } else if (role == 'Host') {
-    //     // Navigator.pushReplacementNamed(context, '/hostProfileCompletion');
+    //     Navigator.pushReplacementNamed(context, '/hostProfileCompletion');
     //   }
     // }
     // --- END BACKEND LOGIC ---
@@ -77,16 +89,12 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
 
   Future<void> _resendVerificationEmail() async {
     setState(() { _isLoading = true; });
-    // --- TODO: BACKEND LOGIC ---
-    // ... (resend logic) ...
-
     // --- MOCKUP: Simulate API call ---
     await Future.delayed(const Duration(seconds: 1));
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('Verification email resent successfully.')),
     );
     // --- END MOCKUP ---
-
     setState(() { _isLoading = false; });
   }
 
@@ -128,21 +136,28 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                 ),
               ),
               const SizedBox(height: 30),
-              // --- MOCKUP BUTTON to simulate verification ---
+
+              // --- UPDATED MOCKUP BUTTON ---
               Center(
                 child: ElevatedButton(
                   onPressed: () {
-                    // --- MOCKUP: Manually push to the next step ---
-                    // We assume this is a Guide, so we send them to the
-                    // new Guide Profile Completion screen
-                    Navigator.pushReplacementNamed(context, '/guideProfileCompletion');
+                    // This button now correctly navigates based on the role
+                    // passed from the signup screen.
+                    if (_userRole == 'Guide') {
+                      Navigator.pushReplacementNamed(context, '/guideProfileCompletion');
+                    } else if (_userRole == 'Host') {
+                      Navigator.pushReplacementNamed(context, '/hostProfileCompletion');
+                    } else {
+                      // Default to Tourist
+                      Navigator.pushReplacementNamed(context, '/profileCompletion');
+                    }
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primaryBlue,
                     foregroundColor: Colors.white,
                     padding: EdgeInsets.symmetric(horizontal: 32, vertical: 16),
                   ),
-                  child: Text('I\'ve Verified, Continue'),
+                  child: Text('I\'ve Verified, Continue (Mockup)'),
                 ),
               ),
               // --- END MOCKUP ---

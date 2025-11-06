@@ -2,6 +2,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import '../../../../../core/constants/colors.dart';
 import '../../../../../core/constants/app_text_styles.dart';
+import '../../../../core/widgets/social_auth_button.dart';
 
 // This screen is for *Guide* signup. It only collects Email/Password.
 class GuideSignupScreen extends StatefulWidget {
@@ -26,6 +27,9 @@ class _GuideSignupScreenState extends State<GuideSignupScreen> {
 
   // Image & icon Paths
   final String _logoPath = 'assets/images/yaloo_logo.png';
+  final String _googleIconPath = 'assets/icons/google.png';
+  final String _facebookIconPath = 'assets/icons/facebook.png';
+  final String _appleIconPath = 'assets/icons/apple.png';
 
   // --- Loading and Error State ---
   bool _isLoading = false;
@@ -119,11 +123,15 @@ class _GuideSignupScreenState extends State<GuideSignupScreen> {
     // --- MOCKUP: Simulate success ---
     await Future.delayed(const Duration(seconds: 1));
     setState(() { _isLoading = false; });
-    // Pass the user's email to the verification screen
+
+    // UPDATED: Pass email AND role as arguments
     Navigator.pushReplacementNamed(
       context,
       '/verifyEmail',
-      arguments: _emailController.text.trim(),
+      arguments: {
+        'email': _emailController.text.trim(),
+        'role': 'Guide', // <-- Pass the role
+      },
     );
     // --- END MOCKUP ---
   }
@@ -219,7 +227,11 @@ class _GuideSignupScreenState extends State<GuideSignupScreen> {
                     _buildSignUpButton(),
                     const SizedBox(height: 40),
 
-                    // Sign In Footer
+                    const SizedBox(height: 40),
+                    _buildSeparator(),
+                    const SizedBox(height: 20),
+                    _buildSocialLoginRow(),
+                    const SizedBox(height: 40),
                     _buildSignInFooter(context),
                     const SizedBox(height: 20), // For bottom padding
                   ],
@@ -433,6 +445,44 @@ class _GuideSignupScreenState extends State<GuideSignupScreen> {
             ),
           ),
         ),
+      ],
+    );
+  }
+
+  Widget _buildSocialLoginRow() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      spacing: 20.0,
+      children: [
+        SocialAuthButton(
+          iconPath: _googleIconPath,
+          onPressed: () { /* TODO: Google Sign In */ },
+        ),
+        SocialAuthButton(
+          iconPath: _facebookIconPath,
+          onPressed: () { /* TODO: Facebook Sign In */ },
+        ),
+        SocialAuthButton(
+          iconPath: _appleIconPath,
+          onPressed: () { /* TODO: Apple Sign In */ },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSeparator() {
+    return Row(
+      children: [
+        Expanded(child: Divider(color: AppColors.secondaryGray, thickness: 1)),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          child: Text(
+            'Or sign in with',
+            style: AppTextStyles.textSmall
+                .copyWith(color: AppColors.primaryGray),
+          ),
+        ),
+        Expanded(child: Divider(color: AppColors.secondaryGray, thickness: 1)),
       ],
     );
   }

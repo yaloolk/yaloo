@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
-import '../../../../../core/constants/colors.dart';
-import '../../../../../core/constants/app_text_styles.dart';
+import '../../../../core/constants/colors.dart';
+import '../../../../core/constants/app_text_styles.dart';
 import 'package:country_picker/country_picker.dart';
 import 'package:language_picker/language_picker.dart';
 import 'package:language_picker/languages.dart';
+import '../../../../core/widgets/custom_text_field.dart';
+import '../../../../core/widgets/custom_picker_button.dart';
+import '../../../../core/widgets/circular_nav_button.dart';
 
 class ProfileCompletionScreen extends StatefulWidget {
   const ProfileCompletionScreen({Key? key}) : super(key: key);
@@ -17,14 +20,10 @@ class _ProfileCompletionScreenState extends State<ProfileCompletionScreen> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
 
-  // --- Page 1 Data ---
   Country? _selectedCountry;
   Language? _selectedLanguage;
 
-  // --- Page 2 Data ---
   final Set<String> _selectedInterests = {};
-
-  // --- THIS WAS THE MISSING LIST ---
   final List<Map<String, dynamic>> _allInterests = [
     {'name': 'Beach', 'icon': Icons.beach_access},
     {'name': 'Mountains', 'icon': Icons.terrain},
@@ -34,7 +33,6 @@ class _ProfileCompletionScreenState extends State<ProfileCompletionScreen> {
     {'name': 'Festivals', 'icon': Icons.celebration},
     {'name': 'Nature', 'icon': Icons.eco},
   ];
-  // ---------------------------------
 
   @override
   void dispose() {
@@ -53,7 +51,6 @@ class _ProfileCompletionScreenState extends State<ProfileCompletionScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               SizedBox(height: 40),
-              // Header Logo
               Image.asset(
                 'assets/images/yaloo_logo.png',
                 width: 80,
@@ -75,12 +72,10 @@ class _ProfileCompletionScreenState extends State<ProfileCompletionScreen> {
                 },
               ),
               const SizedBox(height: 20),
-
-              // PageView
               Expanded(
                 child: PageView(
                   controller: _pageController,
-                  physics: const NeverScrollableScrollPhysics(), // Disable swiping
+                  physics: const NeverScrollableScrollPhysics(),
                   onPageChanged: (page) {
                     setState(() {
                       _currentPage = page;
@@ -92,8 +87,6 @@ class _ProfileCompletionScreenState extends State<ProfileCompletionScreen> {
                   ],
                 ),
               ),
-
-              // Bottom Navigation
               _buildBottomNavigation(),
               const SizedBox(height: 20),
             ],
@@ -103,7 +96,6 @@ class _ProfileCompletionScreenState extends State<ProfileCompletionScreen> {
     );
   }
 
-  // --- Page 1: Profile Details ---
   Widget _buildProfileDetailsPage() {
     return SingleChildScrollView(
       child: Column(
@@ -122,36 +114,27 @@ class _ProfileCompletionScreenState extends State<ProfileCompletionScreen> {
           ),
           const SizedBox(height: 40),
 
-          // Passport/NIC Field
-          _buildShadowedTextField(
+          CustomTextField(
             hint: 'Passport/ NIC No',
-            icon: Icons.badge_outlined,
+            icon: Icons.badge_outlined, hintText: 'Passport/ NIC No',
           ),
           const SizedBox(height: 16),
-
-          // Age Field
-          _buildShadowedTextField(
+          CustomTextField(
             hint: 'Age',
             icon: Icons.calendar_today_outlined,
-            keyboardType: TextInputType.number,
+            keyboardType: TextInputType.number, hintText: 'Age',
           ),
           const SizedBox(height: 16),
-
-          // UPDATED: Country Picker
-          _buildShadowedPickerButton(
+          CustomPickerButton(
             hint: 'Country',
             icon: Icons.public_outlined,
-            // Display the selected country's name, or the hint
             value: _selectedCountry?.name,
             onTap: _showCountryPicker,
           ),
           const SizedBox(height: 16),
-
-          // UPDATED: Language Picker
-          _buildShadowedPickerButton(
+          CustomPickerButton(
             hint: 'Language',
             icon: Icons.translate_outlined,
-            // Display the selected language's name, or the hint
             value: _selectedLanguage?.name,
             onTap: _showLanguagePicker,
           ),
@@ -160,24 +143,20 @@ class _ProfileCompletionScreenState extends State<ProfileCompletionScreen> {
     );
   }
 
-  // --- NEW: Helper method to show Country Picker ---
   void _showCountryPicker() {
     showCountryPicker(
       context: context,
-      // Optional: Show phone code
       showPhoneCode: false,
       onSelect: (Country country) {
         setState(() {
           _selectedCountry = country;
         });
       },
-      // Optional: Stylize the picker
       countryListTheme: CountryListThemeData(
         borderRadius: BorderRadius.only(
           topLeft: Radius.circular(20.0),
           topRight: Radius.circular(20.0),
         ),
-        // Style the search field
         inputDecoration: InputDecoration(
           labelText: 'Search',
           hintText: 'Start typing to search',
@@ -192,7 +171,6 @@ class _ProfileCompletionScreenState extends State<ProfileCompletionScreen> {
     );
   }
 
-  // --- NEW: Helper method to show Language Picker ---
   void _showLanguagePicker() {
     showDialog(
       context: context,
@@ -218,7 +196,6 @@ class _ProfileCompletionScreenState extends State<ProfileCompletionScreen> {
     );
   }
 
-// Helper for rendering each language item
   Widget _buildLanguageItem(Language language) {
     return Row(
       children: <Widget>[
@@ -231,8 +208,6 @@ class _ProfileCompletionScreenState extends State<ProfileCompletionScreen> {
     );
   }
 
-
-  // --- Page 2: Interests ---
   Widget _buildInterestsPage() {
     return SingleChildScrollView(
       child: Column(
@@ -250,8 +225,6 @@ class _ProfileCompletionScreenState extends State<ProfileCompletionScreen> {
                 .copyWith(color: AppColors.primaryGray, fontSize: 16),
           ),
           const SizedBox(height: 30),
-
-          // Grid of interests
           GridView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
@@ -259,11 +232,11 @@ class _ProfileCompletionScreenState extends State<ProfileCompletionScreen> {
               crossAxisCount: 2,
               crossAxisSpacing: 16,
               mainAxisSpacing: 16,
-              childAspectRatio: 1.4, // Adjust this ratio to get desired height
+              childAspectRatio: 1.4,
             ),
-            itemCount: _allInterests.length, // Now this will work
+            itemCount: _allInterests.length,
             itemBuilder: (context, index) {
-              final interest = _allInterests[index]; // Now this will work
+              final interest = _allInterests[index];
               final isSelected = _selectedInterests.contains(interest['name']);
               return _buildInterestChip(
                 text: interest['name']!,
@@ -286,90 +259,6 @@ class _ProfileCompletionScreenState extends State<ProfileCompletionScreen> {
     );
   }
 
-  // --- Reusable Widgets ---
-
-  Widget _buildShadowedTextField({
-    required String hint,
-    required IconData icon,
-    TextInputType? keyboardType,
-  }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primaryGray.withAlpha(18),
-            blurRadius: 20,
-            offset: Offset(0, 5),
-          ),
-        ],
-      ),
-      child: TextFormField(
-        keyboardType: keyboardType,
-        decoration: InputDecoration(
-          hintText: hint,
-          prefixIcon: Padding(
-            padding: const EdgeInsets.only(left: 20.0, right: 16.0),
-            child: Icon(icon, color: AppColors.primaryGray),
-          ),
-          filled: true,
-          fillColor: Colors.white,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(24),
-            borderSide: BorderSide.none,
-          ),
-          contentPadding: EdgeInsets.only(top: 20.0, bottom: 20.0, right: 20.0),
-        ),
-      ),
-    );
-  }
-
-  // --- NEW: Reusable widget for picker buttons ---
-  Widget _buildShadowedPickerButton({
-    required String hint,
-    required IconData icon,
-    String? value, // The text to display (e.g., "Sri Lanka")
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding:
-        const EdgeInsets.only(top: 20.0, bottom: 20.0, left: 20, right: 12),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(24),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.primaryGray.withAlpha(18),
-              blurRadius: 20,
-              offset: Offset(0, 5),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            Icon(icon, color: AppColors.primaryGray),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Text(
-                value ?? hint, // Show selected value or hint
-                style: AppTextStyles.bodySmall.copyWith(
-                  // Use dark text if a value is selected, gray if it's just the hint
-                  color: value != null
-                      ? Colors.black
-                      : AppColors.primaryGray.withAlpha(150),
-                ),
-              ),
-            ),
-            Icon(Icons.arrow_drop_down, color: AppColors.primaryGray),
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget _buildInterestChip({
     required String text,
     required IconData icon,
@@ -387,9 +276,9 @@ class _ProfileCompletionScreenState extends State<ProfileCompletionScreen> {
             width: 1.5,
           ),
           boxShadow: [
-            if (!isSelected) // Only show shadow if not selected
+            if (!isSelected)
               BoxShadow(
-                color: AppColors.primaryGray.withAlpha(18),
+                color: AppColors.primaryGray.withAlpha(20),
                 blurRadius: 10,
                 offset: Offset(0, 4),
               ),
@@ -417,18 +306,15 @@ class _ProfileCompletionScreenState extends State<ProfileCompletionScreen> {
     );
   }
 
-  // --- Bottom Navigation ---
   Widget _buildBottomNavigation() {
     bool isLastPage = _currentPage == 1;
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        // Skip Button
         TextButton(
           onPressed: () {
-            // TODO: Handle Skip (e.g., navigate to Home)
-            // Navigator.pushReplacementNamed(context, '/home');
+            // TODO: Handle Skip
           },
           child: Text(
             'Skip',
@@ -436,38 +322,18 @@ class _ProfileCompletionScreenState extends State<ProfileCompletionScreen> {
           ),
         ),
 
-        // Continue / Complete Button
-        Row(
-          children: [
-            Text(
-              isLastPage ? 'Complete' : 'Continue',
-              style: AppTextStyles.headlineLarge.copyWith(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(width: 15),
-            ElevatedButton(
-              onPressed: () {
-                if (isLastPage) {
-                  // TODO: Handle Complete (Save data and navigate to Home)
-                  // Navigator.pushReplacementNamed(context, '/home');
-                } else {
-                  // Go to the next page
-                  _pageController.nextPage(
-                    duration: const Duration(milliseconds: 400),
-                    curve: Curves.easeInOut,
-                  );
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primaryBlue,
-                shape: const StadiumBorder(), // This makes it a "pill"
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-              ),
-              child: const Icon(Icons.arrow_forward, color: Colors.white, size: 28,),
-            ),
-          ],
+        CircularNavButton(
+          label: isLastPage ? 'Complete' : 'Continue',
+          onPressed: () {
+            if (isLastPage) {
+              // TODO: Handle Complete
+            } else {
+              _pageController.nextPage(
+                duration: const Duration(milliseconds: 400),
+                curve: Curves.easeInOut,
+              );
+            }
+          },
         ),
       ],
     );

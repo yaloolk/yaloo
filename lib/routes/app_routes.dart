@@ -9,6 +9,9 @@ import '../features/auth/screens/guide/guide_signup_screen.dart';
 import '../features/auth/screens/common/email_verification_screen.dart';
 import '../features/auth/screens/guide/guide_profile_completion_screen.dart';
 import '../features/auth/screens/common/profile_submitted_screen.dart';
+import '../features/auth/screens/host/host_signup_screen.dart.';
+import '../features/auth/screens/host/host_profile_completion_screen.dart';
+
 
 
 
@@ -24,6 +27,8 @@ class AppRoutes {
     '/verifyEmail': (_) => const EmailVerificationScreen(),
     '/guideProfileCompletion': (_) => const GuideProfileCompletionScreen(),
     '/profileSubmitted': (_) => const ProfileSubmittedScreen(),
+    '/hostSignup': (_) => const HostSignupScreen(),
+    '/hostProfileCompletion': (_) => const HostProfileCompletionScreen(),
 
   };
 }

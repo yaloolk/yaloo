@@ -1,7 +1,9 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import '../../../../core/constants/colors.dart';
-import '../../../../core/constants/app_text_styles.dart';
+import 'package:yaloo/core/constants/colors.dart';
+import 'package:yaloo/core/constants/app_text_styles.dart';
+import 'package:yaloo/core/widgets/custom_primary_button.dart';
+
 
 // Enum to hold the different user roles
 enum UserRole { tourist, guide, host }
@@ -18,7 +20,6 @@ class _UserSelectionScreenState extends State<UserSelectionScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Using a white background as requested
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -27,7 +28,6 @@ class _UserSelectionScreenState extends State<UserSelectionScreen> {
           child: Column(
             children: [
               const Spacer(flex: 1),
-              // 1. Title
               Text(
                 'Who are you joining as?',
                 textAlign: TextAlign.center,
@@ -36,7 +36,6 @@ class _UserSelectionScreenState extends State<UserSelectionScreen> {
               ),
               const SizedBox(height: 40),
 
-              // 2. Role Selection Cards
               _buildRoleCard(
                 role: UserRole.tourist,
                 title: 'Explore',
@@ -57,10 +56,8 @@ class _UserSelectionScreenState extends State<UserSelectionScreen> {
                 subtitle: 'Offer authentic homestays & cultural experiences.',
                 icon: Icons.home_outlined,
               ),
-
               const Spacer(flex: 2),
 
-              // 3. Log In Text
               RichText(
                 text: TextSpan(
                   style: AppTextStyles.bodySmall
@@ -75,7 +72,6 @@ class _UserSelectionScreenState extends State<UserSelectionScreen> {
                       ),
                       recognizer: TapGestureRecognizer()
                         ..onTap = () {
-                          // Navigate to Login screen
                           Navigator.pushNamed(context, '/login');
                         },
                     ),
@@ -84,40 +80,20 @@ class _UserSelectionScreenState extends State<UserSelectionScreen> {
               ),
               const SizedBox(height: 20),
 
-              // 4. Continue Button
-              ElevatedButton(
-                // The button is disabled if no role is selected
+              //  custom widget
+              CustomPrimaryButton(
+                text: 'Continue',
                 onPressed: _selectedRole == null
                     ? null
                     : () {
-                  // UPDATED: Navigate based on the selected role
                   if (_selectedRole == UserRole.tourist) {
                     Navigator.pushNamed(context, '/signup');
                   } else if (_selectedRole == UserRole.guide) {
-                    // TODO: Create a Guide Signup Screen
-                     Navigator.pushNamed(context, '/guideSignup');
+                    Navigator.pushNamed(context, '/guideSignup');
                   } else if (_selectedRole == UserRole.host) {
-                    // TODO: Create a Host Signup Screen
-                    // Navigator.pushNamed(context, '/hostSignup');
+                    Navigator.pushNamed(context, '/hostSignup');
                   }
                 },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primaryBlue,
-                  foregroundColor: Colors.white,
-                  minimumSize: const Size(double.infinity, 52),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  disabledBackgroundColor:
-                  AppColors.primaryGray.withAlpha(128), // 0.5 opacity
-                ),
-                child: Text(
-                  'Continue',
-                  style: AppTextStyles.bodyLarge.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
               ),
               const Spacer(flex: 1),
             ],
@@ -153,15 +129,14 @@ class _UserSelectionScreenState extends State<UserSelectionScreen> {
           ),
           boxShadow: [
             BoxShadow(
-              color: AppColors.secondaryGray.withAlpha(128), // 0.5 opacity
-              blurRadius: 4,
-              offset: const Offset(0, 2),
+              color: AppColors.primaryGray.withAlpha(20), // Your shadow color
+              blurRadius: 20,
+              offset: const Offset(0, 5),
             )
           ],
         ),
         child: Row(
           children: [
-            // Icon
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
@@ -171,7 +146,6 @@ class _UserSelectionScreenState extends State<UserSelectionScreen> {
               child: Icon(icon, color: AppColors.primaryBlue, size: 24),
             ),
             const SizedBox(width: 16),
-            // Text
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -191,7 +165,6 @@ class _UserSelectionScreenState extends State<UserSelectionScreen> {
                 ],
               ),
             ),
-            // Radio Button
             Radio<UserRole>(
               value: role,
               groupValue: _selectedRole,

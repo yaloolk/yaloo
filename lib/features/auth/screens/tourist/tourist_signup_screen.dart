@@ -1,7 +1,10 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import '../../../../../core/constants/colors.dart';
-import '../../../../../core/constants/app_text_styles.dart';
+import '../../../../core/constants/colors.dart';
+import '../../../../core/constants/app_text_styles.dart';
+import '../../../../core/widgets/custom_text_field.dart';
+import '../../../../core/widgets/social_auth_button.dart';
+import '../../../../core/widgets/pill_action_button.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({Key? key}) : super(key: key);
@@ -11,7 +14,6 @@ class SignupScreen extends StatefulWidget {
 }
 
 class _SignupScreenState extends State<SignupScreen> {
-  // --- Controllers to listen to text fields ---
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
@@ -19,11 +21,9 @@ class _SignupScreenState extends State<SignupScreen> {
   bool _isPasswordObscure = true;
   bool _isConfirmPasswordObscure = true;
   bool _agreeToTerms = false;
-
-  // --- State variable to control the button ---
   bool _canSignUp = false;
+  bool _isLoading = false;
 
-  // Image & icon Paths
   final String _logoPath = 'assets/images/yaloo_logo.png';
   final String _googleIconPath = 'assets/icons/google.png';
   final String _facebookIconPath = 'assets/icons/facebook.png';
@@ -32,7 +32,6 @@ class _SignupScreenState extends State<SignupScreen> {
   @override
   void initState() {
     super.initState();
-    // Add listeners to all controllers
     _emailController.addListener(_validateForm);
     _passwordController.addListener(_validateForm);
     _confirmPasswordController.addListener(_validateForm);
@@ -40,7 +39,6 @@ class _SignupScreenState extends State<SignupScreen> {
 
   @override
   void dispose() {
-    // Clean up listeners and controllers
     _emailController.removeListener(_validateForm);
     _passwordController.removeListener(_validateForm);
     _confirmPasswordController.removeListener(_validateForm);
@@ -50,14 +48,12 @@ class _SignupScreenState extends State<SignupScreen> {
     super.dispose();
   }
 
-  // --- Validation logic ---
   void _validateForm() {
     // Check if all fields are not empty and terms are agreed to
     final bool fieldsAreValid = _emailController.text.isNotEmpty &&
         _passwordController.text.isNotEmpty &&
         _confirmPasswordController.text.isNotEmpty;
 
-    // Update the state of _canSignUp
     // We only set state if the value has changed to avoid unnecessary rebuilds
     if (_canSignUp != (fieldsAreValid && _agreeToTerms)) {
       setState(() {
@@ -66,13 +62,33 @@ class _SignupScreenState extends State<SignupScreen> {
     }
   }
 
+  Future<void> _handleTouristSignUp() async {
+    if (!_canSignUp) return;
+
+    setState(() { _isLoading = true; });
+
+    // --- MOCKUP: Simulate success ---
+    await Future.delayed(const Duration(seconds: 1));
+    setState(() { _isLoading = false; });
+
+    // UPDATED: Pass email AND role as arguments
+    Navigator.pushReplacementNamed(
+      context,
+      '/verifyEmail',
+      arguments: {
+        'email': _emailController.text.trim(),
+        'role': 'Tourist', // <-- Pass the role
+      },
+    );
+    // --- END MOCKUP ---
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
       body: Stack(
         children: [
-          // Main content
           SafeArea(
             child: SingleChildScrollView(
               child: Padding(
@@ -81,7 +97,6 @@ class _SignupScreenState extends State<SignupScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     SizedBox(height: 40),
-
                     Image.asset(
                       _logoPath,
                       width: 80,
@@ -103,8 +118,6 @@ class _SignupScreenState extends State<SignupScreen> {
                       },
                     ),
                     const SizedBox(height: 20),
-
-                    // Welcome Text
                     Text(
                       'Let\'s Get Started!',
                       style: AppTextStyles.headlineLarge
@@ -118,45 +131,91 @@ class _SignupScreenState extends State<SignupScreen> {
                     ),
                     const SizedBox(height: 40),
 
-                    // Email Field
-                    _buildEmailField(),
+                    // --- REFACTORED ---
+                    CustomTextField(
+                      controller: _emailController,
+                      hintText: 'E-mail',
+                      icon: Icons.email_outlined,
+                      keyboardType: TextInputType.emailAddress, hint: '',
+                    ),
                     const SizedBox(height: 16),
-
-                    // Password Field
-                    _buildPasswordField(),
+                    CustomTextField(
+                      controller: _passwordController,
+                      hintText: 'Password',
+                      icon: Icons.lock_outline,
+                      obscureText: _isPasswordObscure,
+                      suffixIcon: Padding(
+                        padding: const EdgeInsets.only(right: 12.0),
+                        child: IconButton(
+                          icon: Icon(
+                            _isPasswordObscure
+                                ? Icons.visibility_off_outlined
+                                : Icons.visibility_outlined,
+                            color: AppColors.primaryGray,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              _isPasswordObscure = !_isPasswordObscure;
+                            });
+                          },
+                        ),
+                      ), hint: '',
+                    ),
                     const SizedBox(height: 16),
+                    CustomTextField(
+                      controller: _confirmPasswordController,
+                      hintText: 'Confirm Password',
+                      icon: Icons.lock_outline,
+                      obscureText: _isConfirmPasswordObscure,
+                      suffixIcon: Padding(
+                        padding: const EdgeInsets.only(right: 12.0),
+                        child: IconButton(
+                          icon: Icon(
+                            _isConfirmPasswordObscure
+                                ? Icons.visibility_off_outlined
+                                : Icons.visibility_outlined,
+                            color: AppColors.primaryGray,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              _isConfirmPasswordObscure =
+                              !_isConfirmPasswordObscure;
+                            });
+                          },
+                        ),
+                      ), hint: '',
+                    ),
+                    // --- END REFACTOR ---
 
-                    // Confirm Password Field
-                    _buildConfirmPasswordField(),
                     const SizedBox(height: 8),
-
-                    // Password hint text
                     Text(
                       'At least 8 characters, 1 uppercase letter, 1 number, 1 symbol',
                       style: AppTextStyles.textSmall
                           .copyWith(color: AppColors.primaryGray, fontSize: 12),
                     ),
                     const SizedBox(height: 20),
-
-                    // Terms and Conditions
                     _buildTermsAndConditionsRow(),
                     const SizedBox(height: 30),
 
-                    // Sign Up Button
-                    _buildSignUpButton(),
-                    const SizedBox(height: 40),
+                    // --- REFACTORED ---
+                    PillActionButton(
+                      label: 'Sign Up',
+                      onPressed: _canSignUp
+                          ? () {
+                        // TODO: Implement Sign Up Logic
+                        Navigator.pushNamed(context, '/profileCompletion');
+                      }
+                          : null,
+                    ),
+                    // --- END REFACTOR ---
 
-                    // "Or sign in with" Separator
+                    const SizedBox(height: 40),
                     _buildSeparator(),
                     const SizedBox(height: 20),
-
-                    // Social Login
                     _buildSocialLoginRow(),
                     const SizedBox(height: 40),
-
-                    // Sign In Footer
                     _buildSignInFooter(context),
-                    const SizedBox(height: 20), // For bottom padding
+                    const SizedBox(height: 20),
                   ],
                 ),
               ),
@@ -167,147 +226,6 @@ class _SignupScreenState extends State<SignupScreen> {
     );
   }
 
-  // Helper widget for Email field
-  Widget _buildEmailField() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white, // Field background color
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primaryGray.withAlpha(20), // Shadow color
-            blurRadius: 20,
-            offset: Offset(0, 5), // Shadow position
-          ),
-        ],
-      ),
-      child: TextFormField(
-        controller: _emailController, // Attach controller
-        keyboardType: TextInputType.emailAddress,
-        decoration: InputDecoration(
-          hintText: 'E-mail',
-          prefixIcon: Padding(
-            padding: const EdgeInsets.only(
-                left: 20.0, right: 16.0), // Add space left and right of icon
-            child: Icon(Icons.email_outlined, color: AppColors.primaryGray),
-          ),
-          filled: true,
-          fillColor: Colors.white, // Match container color
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(24), // Your updated radius
-            borderSide: BorderSide.none,
-          ),
-          contentPadding: EdgeInsets.only(top: 20.0, bottom: 20.0, right: 20.0),
-        ),
-      ),
-    );
-  }
-
-  // Helper widget for Password field
-  Widget _buildPasswordField() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white, // Field background color
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primaryGray.withAlpha(20), // Shadow color
-            blurRadius: 20,
-            offset: Offset(0, 5),
-          ),
-        ],
-      ),
-      child: TextFormField(
-        controller: _passwordController, // Attach controller
-        obscureText: _isPasswordObscure,
-        decoration: InputDecoration(
-          hintText: 'Password',
-          prefixIcon: Padding(
-            padding: const EdgeInsets.only(
-                left: 20.0, right: 16.0),
-            child: Icon(Icons.lock_outline, color: AppColors.primaryGray),
-          ),
-          suffixIcon: Padding(
-            padding: const EdgeInsets.only(right: 12.0),
-            child: IconButton(
-              icon: Icon(
-                _isPasswordObscure
-                    ? Icons.visibility_off_outlined
-                    : Icons.visibility_outlined,
-                color: AppColors.primaryGray,
-              ),
-              onPressed: () {
-                setState(() {
-                  _isPasswordObscure = !_isPasswordObscure;
-                });
-              },
-            ),
-          ),
-          filled: true,
-          fillColor: Colors.white, // Match container color
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(24), // Your updated radius
-            borderSide: BorderSide.none,
-          ),
-          contentPadding: EdgeInsets.symmetric(vertical: 20.0),
-        ),
-      ),
-    );
-  }
-
-  // Helper widget for Confirm Password field
-  Widget _buildConfirmPasswordField() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white, // Field background color
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primaryGray.withAlpha(20), // Shadow color
-            blurRadius: 20,
-            offset: Offset(0, 5),
-          ),
-        ],
-      ),
-      child: TextFormField(
-        controller: _confirmPasswordController, // Attach controller
-        obscureText: _isConfirmPasswordObscure,
-        decoration: InputDecoration(
-          hintText: 'Confirm Password',
-          prefixIcon: Padding(
-            padding: const EdgeInsets.only(
-                left: 20.0, right: 16.0),
-            child: Icon(Icons.lock_outline, color: AppColors.primaryGray),
-          ),
-          suffixIcon: Padding(
-            padding: const EdgeInsets.only(right: 12.0),
-            child: IconButton(
-              icon: Icon(
-                _isConfirmPasswordObscure
-                    ? Icons.visibility_off_outlined
-                    : Icons.visibility_outlined,
-                color: AppColors.primaryGray,
-              ),
-              onPressed: () {
-                setState(() {
-                  _isConfirmPasswordObscure = !_isConfirmPasswordObscure;
-                });
-              },
-            ),
-          ),
-          filled: true,
-          fillColor: Colors.white, // Match container color
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(24), // Your updated radius
-            borderSide: BorderSide.none,
-          ),
-          contentPadding: EdgeInsets.symmetric(vertical: 20.0),
-        ),
-      ),
-    );
-  }
-
-  // Helper widget for Terms and Conditions
   Widget _buildTermsAndConditionsRow() {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -372,44 +290,6 @@ class _SignupScreenState extends State<SignupScreen> {
     );
   }
 
-  // Helper widget for Sign Up button
-  Widget _buildSignUpButton() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.end,
-      children: [
-        Flexible(
-          child: Text(
-            'Sign Up',
-            style: AppTextStyles.headlineLarge.copyWith(
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
-            ),
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-        const SizedBox(width: 15),
-        ElevatedButton(
-          // The onPressed logic is the same
-          onPressed: _canSignUp
-              ? () {
-            // TODO: Implement Sign Up Logic
-            // ...
-            Navigator.pushNamed(context, '/profileCompletion');
-          }
-              : null, // Setting onPressed to null disables the button
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.primaryBlue, // Normal color
-            disabledBackgroundColor: AppColors.primaryGray.withAlpha(100), // Disabled color
-            shape: const StadiumBorder(), // This makes it a "pill"
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-          ),
-          child: const Icon(Icons.arrow_forward, color: Colors.white, size: 28,),
-        ),
-      ],
-    );
-  }
-
-  // Helper widget for "Or sign in with" separator
   Widget _buildSeparator() {
     return Row(
       children: [
@@ -427,41 +307,28 @@ class _SignupScreenState extends State<SignupScreen> {
     );
   }
 
-  // Helper widget for Social Login buttons
   Widget _buildSocialLoginRow() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
-      spacing: 20.0, // Horizontal space between icons
+      spacing: 20.0,
       children: [
-        _buildSocialIcon(_googleIconPath),
-        _buildSocialIcon(_facebookIconPath),
-        _buildSocialIcon(_appleIconPath),
+        SocialAuthButton(
+          iconPath: _googleIconPath,
+          onPressed: () { /* TODO: Google Sign In */ },
+        ),
+        SocialAuthButton(
+          iconPath: _facebookIconPath,
+          onPressed: () { /* TODO: Facebook Sign In */ },
+        ),
+        SocialAuthButton(
+          iconPath: _appleIconPath,
+          onPressed: () { /* TODO: Apple Sign In */ },
+        ),
+
       ],
     );
   }
 
-  Widget _buildSocialIcon(String assetPath) {
-    return OutlinedButton(
-      onPressed: () {
-        // TODO: Implement Social Login
-      },
-      style: OutlinedButton.styleFrom(
-        shape: const CircleBorder(),
-        padding: const EdgeInsets.all(16),
-        side: BorderSide(color: AppColors.secondaryGray),
-      ),
-      child: Image.asset(
-        assetPath,
-        height: 28,
-        width: 28,
-        errorBuilder: (context, error, stackTrace) {
-          return Icon(Icons.public, color: AppColors.primaryGray, size: 28);
-        },
-      ),
-    );
-  }
-
-  // Helper widget for Sign In footer
   Widget _buildSignInFooter(BuildContext context) {
     return Center(
       child: RichText(
@@ -478,7 +345,6 @@ class _SignupScreenState extends State<SignupScreen> {
               ),
               recognizer: TapGestureRecognizer()
                 ..onTap = () {
-                  // Navigate back to Login screen
                   Navigator.pushNamed(context, '/login');
                 },
             ),
