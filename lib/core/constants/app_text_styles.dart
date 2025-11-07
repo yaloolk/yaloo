@@ -43,4 +43,6 @@ class AppTextStyles {
     fontWeight: FontWeight.w600,
     color: Colors.white,
   );
+
+  static const TextStyle bodyLargeButton = TextStyle(fontSize: 16);
 }

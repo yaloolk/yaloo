@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import  'package:lucide_icons_flutter/lucide_icons.dart';// <-- Your import
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:yaloo/core/constants/colors.dart';
 import 'package:yaloo/core/constants/app_text_styles.dart';
 
@@ -42,7 +42,9 @@ class HomeScreen extends StatelessWidget {
               const SizedBox(height: 24),
               _buildFeaturedSlider(),
               const SizedBox(height: 24),
-              _buildFindSection(),
+              // --- 1. UPDATED CALL ---
+              // Now passes the context
+              _buildFindSection(context),
               const SizedBox(height: 24),
               _buildSectionHeader(title: "Popular Destinations"),
               const SizedBox(height: 16),
@@ -134,16 +136,16 @@ class HomeScreen extends StatelessWidget {
           Text(
             'Explore Amazing',
             style: AppTextStyles.headlineLargeBlack.copyWith(
-              fontSize: 28,
+              fontSize: 22,
               fontWeight: FontWeight.bold,
             ),
           ),
           Text(
             'Destinations !',
             style: AppTextStyles.headlineLargeBlack.copyWith(
-              fontSize: 28,
+              fontSize: 22,
               fontWeight: FontWeight.bold,
-               color: AppColors.primaryBlue,
+              color: AppColors.primaryBlue,
             ),
           ),
         ],
@@ -172,7 +174,7 @@ class HomeScreen extends StatelessWidget {
                   prefixIcon:
                   Icon(LucideIcons.search, color: AppColors.primaryGray, size: 20),
                   border: InputBorder.none,
-                  contentPadding: EdgeInsets.symmetric(vertical: 16),
+                  contentPadding: EdgeInsets.symmetric(vertical: 14),
                 ),
               ),
             ),
@@ -240,15 +242,14 @@ class HomeScreen extends StatelessWidget {
           ),
         ],
       ),
-      // --- UPDATED: Removed the Center/3DText child ---
-      // child: Center(
-      //   child: _build3dText(title, fontSize: 56),
-      // ),
     );
   }
 
   // --- 5. Find (Guide/Host) Section ---
-  Widget _buildFindSection() {
+
+  // --- 2. UPDATED WIDGET ---
+  // Now accepts context
+  Widget _buildFindSection(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24.0),
       child: Column(
@@ -266,6 +267,7 @@ class HomeScreen extends StatelessWidget {
             children: [
               Expanded(
                 child: _buildFindButton(
+                  context: context, // <-- Passes context
                   label: "GUIDE",
                   icon: LucideIcons.compass,
                   onPressed: () { /* TODO: Go to Find Guide */ },
@@ -274,8 +276,27 @@ class HomeScreen extends StatelessWidget {
               const SizedBox(width: 16),
               Expanded(
                 child: _buildFindButton(
+                  context: context, // <-- Passes context
                   label: "HOST",
                   icon: LucideIcons.house,
+                  onPressed: () { /* TODO: Go to Find Host */ },
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: _buildFindButton(
+                  context: context, // <-- Passes context
+                  label: "FOOD",
+                  icon: LucideIcons.utensils,
+                  onPressed: () { /* TODO: Go to Find Host */ },
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: _buildFindButton(
+                  context: context, // <-- Passes context
+                  label: "HOTEL",
+                  icon: LucideIcons.hotel,
                   onPressed: () { /* TODO: Go to Find Host */ },
                 ),
               ),
@@ -286,47 +307,78 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
+  // --- 3. REPLACED WIDGET ---
+  // This is the new, modern button style
   Widget _buildFindButton({
+    required BuildContext context, // <-- Accepts context
     required String label,
     required IconData icon,
     required VoidCallback onPressed,
   }) {
-    return GestureDetector(
-      onTap: onPressed,
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-            color: AppColors.thirdBlue.withOpacity(0.7),
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.primaryGray.withAlpha(20),
-                blurRadius: 10,
-                offset: Offset(0, 4),
+    // Use Theme for responsiveness (e.g., auto dark mode)
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return Card(
+      // Card provides a clean material surface, shape, and shadow
+      elevation: 3.0,
+      shadowColor: AppColors.primaryGray.withOpacity(0.15),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+      // Use a clean, opaque background
+      // color: colorScheme.surface, // This is typically White
+      color: AppColors.fourthBlue,
+      child: InkWell(
+        // InkWell provides the modern "ripple" tap effect
+        onTap: onPressed,
+        borderRadius: BorderRadius.circular(16), // Match the Card's shape
+        child: Padding(
+          // Use padding for flexible, responsive spacing
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 20),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              // --- THIS IS THE UPDATED PART ---
+              Container(
+                padding: const EdgeInsets.all(12), // Adjust padding as needed
+                decoration: BoxDecoration(
+                  // 1. Set background to white
+                  color: Colors.white,
+                  // 2. Set shape to be circular
+                  shape: BoxShape.circle,
+                  // 3. Add the shadow
+                  boxShadow: [
+                    BoxShadow(
+                      // Use a subtle shadow color
+                      color: AppColors.primaryGray.withOpacity(0.12),
+                      blurRadius: 8,
+                      offset: Offset(0, 4), // Shadow position (bottom)
+                    ),
+                  ],
+                ),
+                child: Icon(
+                  icon,
+                  // The icon uses the "full" color
+                  color: AppColors.secondaryBlue,
+                  size: 32,
+                ),
               ),
-            ]
-        ),
-        child: Column(
-          children: [
-            Container(
-              height: 60,
-              width: 60,
-              decoration: BoxDecoration(
-                color: AppColors.secondaryBlue,
-                borderRadius: BorderRadius.circular(12),
+              // --- END OF UPDATE ---
+              const SizedBox(height: 12),
+              Text(
+                label,
+                textAlign: TextAlign.center, // Handles long text
+                style: AppTextStyles.bodyLarge.copyWith(
+                  // Use a standard, high-readability text color
+                  color: colorScheme.onSurface, // Typically Black
+                  fontWeight: FontWeight.w600, // 'w600' is a nice modern "bold"
+                  fontSize: 14,
+                ),
               ),
-              child: Icon(icon, color: Colors.white, size: 32),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              label,
-              style: AppTextStyles.bodyLarge.copyWith(
-                  color: AppColors.primaryBlue,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
