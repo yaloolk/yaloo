@@ -11,6 +11,7 @@ import '../features/auth/screens/guide/guide_profile_completion_screen.dart';
 import '../features/auth/screens/common/profile_submitted_screen.dart';
 import '../features/auth/screens/host/host_signup_screen.dart.';
 import '../features/auth/screens/host/host_profile_completion_screen.dart';
+import '../features/tourist/screens/tourist_dashboard_screen.dart';
 
 
 
@@ -29,6 +30,7 @@ class AppRoutes {
     '/profileSubmitted': (_) => const ProfileSubmittedScreen(),
     '/hostSignup': (_) => const HostSignupScreen(),
     '/hostProfileCompletion': (_) => const HostProfileCompletionScreen(),
+    '/touristDashboard': (_) => const TouristDashboardScreen(),
 
   };
 }

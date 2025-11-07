@@ -9,6 +9,12 @@ class AppTextStyles {
     color: AppColors.primaryBlue,
   );
 
+  static final TextStyle headlineLargeBlack = GoogleFonts.poppins(
+    fontSize: 28,
+    fontWeight: FontWeight.w400,
+    color: AppColors.primaryBlack,
+  );
+
   static final TextStyle headlineMedium = GoogleFonts.poppins(
     fontSize: 22,
     fontWeight: FontWeight.w600,

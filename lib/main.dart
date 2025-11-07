@@ -41,7 +41,8 @@ class YalooApp extends StatelessWidget {
           Theme.of(context).textTheme,
         ),
       ),
-      initialRoute: '/onboarding',
+      // initialRoute: '/onboarding',
+      initialRoute: '/touristDashboard',
       routes: AppRoutes.routes,
     );
   }
