@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
-// --- UPDATED IMPORT ---
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:yaloo/core/constants/colors.dart';
 import 'package:yaloo/core/constants/app_text_styles.dart';
 
+import '../../../core/widgets/icon_Button.dart';
+
+// (Mock data lists remain the same...)
 // --- MOCK DATA for the sliders ---
 final List<Map<String, String>> featuredDestinations = [
   {"name": "Yala", "image": "assets/images/yaloo_banner_1.jpg"},
@@ -15,7 +17,6 @@ final List<Map<String, String>> popularDestinations = [
   {"name": "Galle", "location": "Galle", "image": "assets/images/galle.jpg"},
 ];
 final List<Map<String, dynamic>> categories = [
-  // --- UPDATED ICONS ---
   {"name": "Beach", "icon": FontAwesomeIcons.umbrellaBeach},
   {"name": "Mountains", "icon": FontAwesomeIcons.mountain},
   {"name": "Jungle", "icon": FontAwesomeIcons.tree},
@@ -24,8 +25,8 @@ final List<Map<String, dynamic>> categories = [
 // ---------------------------------
 
 
-class HomeScreen extends StatelessWidget {
-  const HomeScreen({Key? key}) : super(key: key);
+class TouristHomeScreen extends StatelessWidget {
+  const TouristHomeScreen({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -44,8 +45,7 @@ class HomeScreen extends StatelessWidget {
               const SizedBox(height: 24),
               _buildFeaturedSlider(),
               const SizedBox(height: 24),
-              // Now passes the context
-              _buildFindSection(context),
+              _buildFindSection(context), // Pass context
               const SizedBox(height: 24),
               _buildSectionHeader(title: "Popular Destinations"),
               const SizedBox(height: 16),
@@ -54,11 +54,13 @@ class HomeScreen extends StatelessWidget {
               _buildSectionHeader(title: "Choose Category"),
               const SizedBox(height: 16),
               _buildCategorySlider(),
-              const SizedBox(height: 24),
+              const SizedBox(height: 24), // Padding for bottom nav
             ],
           ),
         ),
       ),
+      // --- REMOVED Floating Action Button ---
+      // It now lives in the parent tourist_dashboard_screen
     );
   }
 
@@ -83,20 +85,18 @@ class HomeScreen extends StatelessWidget {
             ),
           ),
           const Spacer(),
-          IconButton(
+          CustomIconButton(
             onPressed: () { /* TODO: Handle Settings */ },
             icon: Icon(FontAwesomeIcons.gear,
                 color: AppColors.primaryBlack, size: 24),
-            style: _iconButtonStyle(),
           ),
           const SizedBox(width: 12),
           Stack(
             children: [
-              IconButton(
+              CustomIconButton(
                 onPressed: () { /* TODO: Handle notification */ },
                 icon: Icon(FontAwesomeIcons.bell,
                     color: AppColors.primaryBlack, size: 24),
-                style: _iconButtonStyle(),
               ),
               Positioned(
                 top: 10,
@@ -114,16 +114,6 @@ class HomeScreen extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-
-  ButtonStyle _iconButtonStyle() {
-    return IconButton.styleFrom(
-      shape: CircleBorder(),
-      backgroundColor: Colors.white,
-      elevation: 8, //shadow
-      padding: EdgeInsets.all(10),
-      shadowColor: Colors.black.withOpacity(0.2),
     );
   }
 
@@ -181,11 +171,10 @@ class HomeScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 12),
-          IconButton(
+          CustomIconButton(
             onPressed: () { /* TODO: Handle filter */ },
             icon: Icon(FontAwesomeIcons.sliders,
                 color: AppColors.primaryBlack, size: 24),
-            style: _iconButtonStyle(),
           ),
         ],
       ),
@@ -243,6 +232,7 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
+
   // --- 5. Find (Guide/Host) Section ---
   Widget _buildFindSection(BuildContext context) {
     return Padding(
@@ -252,7 +242,7 @@ class HomeScreen extends StatelessWidget {
         children: [
           Text(
             "Find What You're Looking For",
-            style: AppTextStyles.headlineMedium.copyWith(
+            style: AppTextStyles.headlineLarge.copyWith(
               fontSize: 20,
               fontWeight: FontWeight.w700,
             ),
@@ -266,8 +256,8 @@ class HomeScreen extends StatelessWidget {
                   label: "GUIDE",
                   icon: FontAwesomeIcons.compass,
                   onPressed: () {
+                    // This will now push 'findGuide' onto the NESTED navigator
                     Navigator.pushNamed(context, '/findGuide');
-
                   },
                 ),
               ),
@@ -276,8 +266,11 @@ class HomeScreen extends StatelessWidget {
                 child: _buildFindButton(
                   context: context,
                   label: "HOST",
-                  icon: FontAwesomeIcons.houseChimney,
-                  onPressed: () { /* TODO: Go to Find Host */ },
+                  icon: FontAwesomeIcons.house,
+                  onPressed: () {
+                    // TODO: Create a '/findHost' screen
+                    // Navigator.pushNamed(context, '/findHost');
+                  },
                 ),
               ),
               const SizedBox(width: 16),
@@ -286,7 +279,7 @@ class HomeScreen extends StatelessWidget {
                   context: context,
                   label: "FOOD",
                   icon: FontAwesomeIcons.utensils,
-                  onPressed: () { /* TODO: Go to Find Host */ },
+                  onPressed: () { /* TODO: Navigate to Find Food */ },
                 ),
               ),
               const SizedBox(width: 16),
@@ -295,7 +288,7 @@ class HomeScreen extends StatelessWidget {
                   context: context,
                   label: "HOTEL",
                   icon: FontAwesomeIcons.hotel,
-                  onPressed: () { /* TODO: Go to Find Host */ },
+                  onPressed: () { /* TODO: Navigate to Find Hotel */ },
                 ),
               ),
             ],
@@ -311,6 +304,7 @@ class HomeScreen extends StatelessWidget {
     required IconData icon,
     required VoidCallback onPressed,
   }) {
+    // ... (This widget is unchanged) ...
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
@@ -346,7 +340,7 @@ class HomeScreen extends StatelessWidget {
                 child: Icon(
                   icon,
                   color: AppColors.secondaryBlue,
-                  size: 30,
+                  size: 32,
                 ),
               ),
               const SizedBox(height: 12),
@@ -368,6 +362,7 @@ class HomeScreen extends StatelessWidget {
 
   // --- 6. Reusable Section Header ---
   Widget _buildSectionHeader({required String title}) {
+    // ... (This widget is unchanged) ...
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24.0),
       child: Row(
@@ -397,6 +392,7 @@ class HomeScreen extends StatelessWidget {
 
   // --- 7. Popular Destinations Slider ---
   Widget _buildPopularSlider() {
+    // ... (This widget is unchanged) ...
     return Container(
       height: 280,
       child: ListView.builder(
@@ -424,6 +420,7 @@ class HomeScreen extends StatelessWidget {
     bool isFirst = false,
     bool isLast = false,
   }) {
+    // ... (This widget is unchanged) ...
     return Container(
       width: 220,
       margin: EdgeInsets.only(
@@ -496,6 +493,7 @@ class HomeScreen extends StatelessWidget {
 
   // --- 8. Category Slider ---
   Widget _buildCategorySlider() {
+    // ... (This widget is unchanged) ...
     return Container(
       height: 48,
       child: ListView.builder(
@@ -521,6 +519,7 @@ class HomeScreen extends StatelessWidget {
     bool isFirst = false,
     bool isLast = false,
   }) {
+    // ... (This widget is unchanged) ...
     return Padding(
       padding: EdgeInsets.only(
         left: isFirst ? 24.0 : 8.0,
@@ -542,34 +541,6 @@ class HomeScreen extends StatelessWidget {
         ),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       ),
-    );
-  }
-
-  // --- Helper for 3D Text Effect (No longer used) ---
-  Widget _build3dText(String text, {double fontSize = 48}) {
-    return Stack(
-      children: [
-        Text(
-          text,
-          style: AppTextStyles.headlineLarge.copyWith(
-            fontSize: fontSize,
-            fontWeight: FontWeight.w900,
-            color: Colors.black.withOpacity(0.3),
-          ),
-        ),
-        Positioned(
-          top: -2,
-          left: -2,
-          child: Text(
-            text,
-            style: AppTextStyles.headlineLarge.copyWith(
-              fontSize: fontSize,
-              fontWeight: FontWeight.w900,
-              color: Colors.white,
-            ),
-          ),
-        ),
-      ],
     );
   }
 }

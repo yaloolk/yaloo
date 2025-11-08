@@ -1,14 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:yaloo/core/constants/app_text_styles.dart';
 
 class BookingsScreen extends StatelessWidget {
   const BookingsScreen({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
+    return Scaffold(
       backgroundColor: Colors.white,
       body: Center(
-        child: Text('Bookings Screen'),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(FontAwesomeIcons.calendarCheck, size: 60, color: Colors.grey[300]),
+            SizedBox(height: 16),
+            Text('Bookings Screen', style: AppTextStyles.headlineLarge),
+          ],
+        ),
       ),
     );
   }

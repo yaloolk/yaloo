@@ -2,182 +2,206 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:yaloo/core/constants/colors.dart';
 import 'package:yaloo/core/constants/app_text_styles.dart';
+import 'package:yaloo/features/tourist/widgets/guide_list_card.dart'; // <-- Import the new widget
+import 'package:yaloo/core/widgets/icon_Button.dart';
 
-class GuideListCard extends StatelessWidget {
-  final String name;
-  final String location;
-  final String rating;
-  final String imageUrl;
-  final List<String> languages;
-  final List<String> specialties;
+import '../../../core/widgets/custom_app_bar.dart';
 
-  const GuideListCard({
-    Key? key,
-    required this.name,
-    required this.location,
-    required this.rating,
-    required this.imageUrl,
-    required this.languages,
-    required this.specialties,
-  }) : super(key: key);
+// --- MOCK DATA ---
+final List<Map<String, dynamic>> availableGuides = [
+  {
+    "name": "Hadhi Ahamed",
+    "location": "Kandy",
+    "rating": "4.6",
+    "image": "assets/images/guide_1.jpg",
+    "languages": ["English", "Sinhala", "Tamil"],
+    "specialties": ["Historical", "Food Tour"],
+    "isAvailable": true,
+  },
+  {
+    "name": "Hisham",
+    "location": "Galle",
+    "rating": "4.8",
+    "image": "assets/images/guide_2.jpg",
+    "languages": ["English", "German"],
+    "specialties": ["Surfing", "Beach Life"],
+    "isAvailable": false,
+  },
+  {
+    "name": "Dilshan",
+    "location": "Ella",
+    "rating": "4.7",
+    "image": "assets/images/guide_3.jpg",
+    "languages": ["English", "Russian"],
+    "specialties": ["Hiking", "Nature"],
+    "isAvailable": true,
+  },
+  {
+    "name": "Aman",
+    "location": "Ella",
+    "rating": "4.7",
+    "image": "assets/images/guide_3.jpg",
+    "languages": ["English", "Russian"],
+    "specialties": ["Hiking", "Nature"],
+    "isAvailable": false,
+  },
+];
+// -----------------
+
+class GuideListScreen extends StatelessWidget {
+  const GuideListScreen({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 8,
-      shadowColor: AppColors.primaryGray.withAlpha(20),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.0)),
-      color: Colors.white,
-      margin: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: CustomAppBar(
+          title: 'Choose Your Guide',
+          actions: [
+            CustomIconButton(
+              onPressed: () { /* TODO: Handle Search */ },
+              icon: Icon(FontAwesomeIcons.magnifyingGlass,
+                  color: AppColors.primaryBlack, size: 24),
+            ),
+            const SizedBox(width: 12),
+            Stack(
+              alignment: Alignment.center, // Aligns the dot better
               children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(12.0),
-                  child: Image.network(
-                    imageUrl,
-                    width: 80,
-                    height: 80,
-                    fit: BoxFit.cover,
-                  ),
+                CustomIconButton(
+                  onPressed: () { /* TODO: Handle notification */ },
+                  icon: Icon(FontAwesomeIcons.bell, color: AppColors.primaryBlack, size: 24),
                 ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildNameAndRating(),
-                      const SizedBox(height: 6),
-                      _buildInfoRow(FontAwesomeIcons.mapPin, location),
-                      const SizedBox(height: 6),
-                      _buildInfoRow(FontAwesomeIcons.language, languages.join(', ')),
-                    ],
+                Positioned(
+                  top: 10,
+                  right: 10,
+                  child: Container(
+                    width: 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: AppColors.primaryBlue,
+                      shape: BoxShape.circle,
+                    ),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 12),
-            _buildSpecialties(),
-            const SizedBox(height: 12),
-            Divider(color: AppColors.secondaryGray),
-            const SizedBox(height: 8),
-            _buildActionButtons(),
+            const SizedBox(width: 12),
           ],
         ),
+      body: Column(
+        children: [
+          _buildFilterBar(),
+          Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.only(top: 8, bottom: 80), // Padding for chat button
+              itemCount: availableGuides.length,
+              itemBuilder: (context, index) {
+                final guide = availableGuides[index];
+                return GuideListCard(
+                  name: guide['name'],
+                  location: guide['location'],
+                  rating: guide['rating'],
+                  imageUrl: guide['image'],
+                  languages: guide['languages'],
+                  specialties: guide['specialties'],
+                  isAvailable: guide['isAvailable'],
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+      // NOTE: The floating chat button will be visible here,
+      // because this screen is pushed on top of the 'TouristDashboardScreen'
+    );
+  }
+
+  // --- 1. Custom App Bar ---
+  PreferredSizeWidget _buildAppBar(BuildContext context) {
+    return AppBar(
+      backgroundColor: Colors.white,
+      elevation: 0,
+      leading: IconButton(
+        onPressed: () {
+          Navigator.of(context).pop(); // Go back
+        },
+        icon: Icon(FontAwesomeIcons.arrowLeft, color: AppColors.primaryBlack, size: 24),
+      ),
+      title: Text(
+        'Choose Your Guide',
+        style: AppTextStyles.headlineLargeBlack.copyWith(
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+      centerTitle: true,
+      actions: [
+        CustomIconButton(
+          onPressed: () { /* TODO: Handle Search */ },
+          icon: Icon(FontAwesomeIcons.magnifyingGlass,
+              color: AppColors.primaryBlack, size: 24),
+        ),
+        const SizedBox(width: 12),
+        Stack(
+          children: [
+            CustomIconButton(
+              onPressed: () { /* TODO: Handle notification */ },
+              icon: Icon(FontAwesomeIcons.bell, color: AppColors.primaryBlack, size: 24),
+            ),
+            Positioned(
+              top: 10,
+              right: 10,
+              child: Container(
+                width: 8,
+                height: 8,
+                decoration: BoxDecoration(
+                  color: AppColors.primaryBlue,
+                  shape: BoxShape.circle,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(width: 12),
+      ],
+    );
+  }
+
+  // --- 2. Filter & Sort Bar ---
+  Widget _buildFilterBar() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
+      child: Row(
+        children: [
+          _buildFilterChip(FontAwesomeIcons.sliders, "Filter"),
+          const SizedBox(width: 12),
+          _buildFilterChip(FontAwesomeIcons.sort, "Sort"),
+        ],
       ),
     );
   }
 
-  Widget _buildNameAndRating() {
-    return Row(
-      children: [
-        Text(
-          name,
-          style: AppTextStyles.headlineLargeBlack.copyWith(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const Spacer(),
-        Icon(FontAwesomeIcons.solidStar, color: Colors.amber, size: 14),
-        const SizedBox(width: 4),
-        Text(
-          rating,
-          style: AppTextStyles.bodyLarge.copyWith(
-            fontWeight: FontWeight.bold,
-            color: AppColors.primaryBlack,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildInfoRow(IconData icon, String text) {
-    return Row(
-      children: [
-        Icon(icon, size: 14, color: AppColors.primaryGray),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Text(
-            text,
-            style: AppTextStyles.textSmall.copyWith(color: AppColors.primaryGray),
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSpecialties() {
-    return Wrap(
-      spacing: 8.0,
-      runSpacing: 4.0,
-      children: specialties.map((specialty) {
-        return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-          decoration: BoxDecoration(
-            color: AppColors.thirdBlue,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Text(
-            specialty,
-            style: AppTextStyles.textSmall.copyWith(
-              color: AppColors.primaryBlue,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        );
-      }).toList(),
-    );
-  }
-
-  Widget _buildActionButtons() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        IconButton(
-          onPressed: () {
-            // TODO: Handle Favorite
-          },
-          icon: Icon(FontAwesomeIcons.heart, color: AppColors.primaryGray),
-        ),
-        TextButton(
-          onPressed: () {
-            // TODO: Navigate to Guide Profile
-          },
-          child: Text(
-            'Profile',
+  Widget _buildFilterChip(IconData icon, String label) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.secondaryGray, width: 1.5),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, size: 16, color: AppColors.primaryGray),
+          const SizedBox(width: 8),
+          Text(
+            label,
             style: AppTextStyles.bodyLarge.copyWith(
-              color: AppColors.primaryGray,
-              fontWeight: FontWeight.bold,
+              color: AppColors.primaryBlack,
+              fontWeight: FontWeight.w600,
             ),
           ),
-        ),
-        ElevatedButton(
-          onPressed: () {
-            // TODO: Handle Book
-          },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.primaryBlue,
-            foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 32),
-          ),
-          child: Text(
-            'Book',
-            style: AppTextStyles.bodyLarge.copyWith(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

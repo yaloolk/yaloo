@@ -6,6 +6,9 @@ import 'package:yaloo/core/constants/app_text_styles.dart';
 import 'package:yaloo/core/widgets/custom_text_field.dart';
 import 'package:yaloo/core/widgets/custom_picker_button.dart';
 
+import '../../../core/widgets/icon_Button.dart';
+
+// (Mock data lists remain the same...)
 // --- MOCK DATA ---
 final List<String> sliderImages = [
   "assets/images/sigiriya.jpg",
@@ -13,11 +16,12 @@ final List<String> sliderImages = [
   "assets/images/ella.jpg",
 ];
 final List<Map<String, String>> topGuides = [
-  {"name": "Hadhi", "location": "Kandy", "rating": "4.6", "image": "https://placehold.co/200x260/e9c46a/white?text=Hadhi"},
-  {"name": "Hisham", "location": "Galle", "rating": "4.8", "image": "https://placehold.co/200x260/264653/white?text=Hisham"},
-  {"name": "Aman", "location": "Ella", "rating": "4.7", "image": "https://placehold.co/200x260/e76f51/white?text=Aman"},
+  {"name": "Hadhi", "location": "Kandy", "rating": "4.6", "image": "assets/images/guide_1.jpg"},
+  {"name": "Hisham", "location": "Galle", "rating": "4.8", "image": "assets/images/guide_2.jpg"},
+  {"name": "Aman", "location": "Ella", "rating": "4.7", "image": "assets/images/guide_3.jpg"},
 ];
 // -----------------
+
 
 class FindGuideScreen extends StatefulWidget {
   const FindGuideScreen({Key? key}) : super(key: key);
@@ -28,17 +32,17 @@ class FindGuideScreen extends StatefulWidget {
 
 class _FindGuideScreenState extends State<FindGuideScreen> {
   final _sliderPageController = PageController();
-  final _placeController = TextEditingController(text: 'Colombo'); // Default text
+  final _cityController = TextEditingController();
   final _hourController = TextEditingController();
-  final _minuteController = TextEditingController(text: '00');
+  final _minuteController = TextEditingController();
 
   DateTime? _selectedDate;
-  bool _isAm = true; // For AM/PM toggle
+  bool _isAm = true;
 
   @override
   void dispose() {
     _sliderPageController.dispose();
-    _placeController.dispose();
+    _cityController.dispose();
     _hourController.dispose();
     _minuteController.dispose();
     super.dispose();
@@ -46,8 +50,6 @@ class _FindGuideScreenState extends State<FindGuideScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // This page is a full screen, so it has its own Scaffold.
-    // The Bottom Nav Bar from TouristDashboardScreen will be hidden.
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -64,11 +66,13 @@ class _FindGuideScreenState extends State<FindGuideScreen> {
               _buildSectionHeader("Top Rated Guides"),
               const SizedBox(height: 16),
               _buildTopGuidesSlider(),
-              const SizedBox(height: 40), // Bottom padding
+              const SizedBox(height: 24), // Padding for floating button
             ],
           ),
         ),
       ),
+      // --- REMOVED the floatingActionButton ---
+      // The button is now in tourist_dashboard_screen.dart
     );
   }
 
@@ -78,7 +82,6 @@ class _FindGuideScreenState extends State<FindGuideScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
       child: Row(
         children: [
-          // UPDATED: Changed hamburger to a back arrow
           IconButton(
             onPressed: () {
               Navigator.of(context).pop(); // Go back to the Home screen
@@ -86,14 +89,22 @@ class _FindGuideScreenState extends State<FindGuideScreen> {
             icon: Icon(FontAwesomeIcons.arrowLeft, color: AppColors.primaryBlack, size: 24),
           ),
           const Spacer(),
-          IconButton(
+          Text(
+            'Find a Guide',
+            style: AppTextStyles.headlineLargeBlack.copyWith(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const Spacer(),
+          CustomIconButton(
             onPressed: () { /* TODO: Handle Search */ },
             icon: Icon(FontAwesomeIcons.magnifyingGlass, color: AppColors.primaryBlack, size: 24),
           ),
           const SizedBox(width: 12),
           Stack(
             children: [
-              IconButton(
+              CustomIconButton(
                 onPressed: () { /* TODO: Handle notification */ },
                 icon: Icon(FontAwesomeIcons.bell, color: AppColors.primaryBlack, size: 24),
               ),
@@ -169,12 +180,12 @@ class _FindGuideScreenState extends State<FindGuideScreen> {
             ),
           ),
           const SizedBox(height: 16),
-          // Place Field
-          _buildFormLabel("Place"),
+          // City Field
+          _buildFormLabel("City"),
           CustomTextField(
-            controller: _placeController,
-            hintText: 'e.g., Ella',
-            icon: FontAwesomeIcons.mapLocationDot, hint: 'Ella',
+            controller: _cityController,
+            hintText: 'e.g., Colombo',
+            icon: FontAwesomeIcons.mapLocationDot, hint: '',
           ),
           const SizedBox(height: 16),
           // Date Field
@@ -196,6 +207,7 @@ class _FindGuideScreenState extends State<FindGuideScreen> {
           ElevatedButton(
             onPressed: () {
               // TODO: Handle Search Logic
+              Navigator.pushNamed(context, '/guideList');
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primaryBlue,
@@ -316,6 +328,7 @@ class _FindGuideScreenState extends State<FindGuideScreen> {
 
   // --- 4. Top Rated Guides (Matches UI) ---
   Widget _buildSectionHeader(String title) {
+    // ... (This widget is unchanged) ...
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24.0),
       child: Row(
@@ -323,7 +336,7 @@ class _FindGuideScreenState extends State<FindGuideScreen> {
         children: [
           Text(
             title,
-            style: AppTextStyles.headlineLarge.copyWith(
+            style: AppTextStyles.headlineLargeBlack.copyWith(
               fontSize: 20,
               fontWeight: FontWeight.bold,
             ),
@@ -333,7 +346,7 @@ class _FindGuideScreenState extends State<FindGuideScreen> {
             child: Text(
               "See All",
               style: AppTextStyles.bodySmall.copyWith(
-                color: AppColors.primaryBlue,
+                color: AppColors.thirdGray,
                 fontWeight: FontWeight.bold,
               ),
             ),

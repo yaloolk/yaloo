@@ -12,6 +12,9 @@ import '../features/auth/screens/common/profile_submitted_screen.dart';
 import '../features/auth/screens/host/host_signup_screen.dart.';
 import '../features/auth/screens/host/host_profile_completion_screen.dart';
 import '../features/tourist/screens/tourist_dashboard_screen.dart';
+import '../features/tourist/screens/find_guide_screen.dart';
+import '../features/tourist/screens/guide_list_screen.dart';
+import '../features/tourist/screens/tourist_guide_profile.dart';
 
 
 
@@ -31,6 +34,10 @@ class AppRoutes {
     '/hostSignup': (_) => const HostSignupScreen(),
     '/hostProfileCompletion': (_) => const HostProfileCompletionScreen(),
     '/touristDashboard': (_) => const TouristDashboardScreen(),
+    '/findGuide': (_) => const FindGuideScreen(),
+    '/guideList': (_) => const GuideListScreen(),
+    '/touristGuideProfile': (_) => const GuideProfileScreen(),
+
 
   };
 }

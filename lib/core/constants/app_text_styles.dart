@@ -38,6 +38,18 @@ class AppTextStyles {
     color: AppColors.primaryGray,
   );
 
+  static final TextStyle textExtraSmall = GoogleFonts.poppins(
+    fontSize: 12,
+    fontWeight: FontWeight.w300,
+    color: AppColors.primaryGray,
+  );
+
+  static final TextStyle textSmallBlack = GoogleFonts.poppins(
+    fontSize: 14,
+    fontWeight: FontWeight.w300,
+    color: AppColors.primaryBlack,
+  );
+
   static final TextStyle buttonText = GoogleFonts.poppins(
     fontSize: 16,
     fontWeight: FontWeight.w600,
