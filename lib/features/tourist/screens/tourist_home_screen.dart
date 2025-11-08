@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
+// --- UPDATED IMPORT ---
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:yaloo/core/constants/colors.dart';
 import 'package:yaloo/core/constants/app_text_styles.dart';
 
@@ -14,10 +15,11 @@ final List<Map<String, String>> popularDestinations = [
   {"name": "Galle", "location": "Galle", "image": "assets/images/galle.jpg"},
 ];
 final List<Map<String, dynamic>> categories = [
-  {"name": "Beach", "icon": LucideIcons.umbrella},
-  {"name": "Mountains", "icon": LucideIcons.mountain},
-  {"name": "Jungle", "icon": LucideIcons.trees},
-  {"name": "Culture", "icon": LucideIcons.landmark},
+  // --- UPDATED ICONS ---
+  {"name": "Beach", "icon": FontAwesomeIcons.umbrellaBeach},
+  {"name": "Mountains", "icon": FontAwesomeIcons.mountain},
+  {"name": "Jungle", "icon": FontAwesomeIcons.tree},
+  {"name": "Culture", "icon": FontAwesomeIcons.landmark},
 ];
 // ---------------------------------
 
@@ -42,7 +44,6 @@ class HomeScreen extends StatelessWidget {
               const SizedBox(height: 24),
               _buildFeaturedSlider(),
               const SizedBox(height: 24),
-              // --- 1. UPDATED CALL ---
               // Now passes the context
               _buildFindSection(context),
               const SizedBox(height: 24),
@@ -53,7 +54,7 @@ class HomeScreen extends StatelessWidget {
               _buildSectionHeader(title: "Choose Category"),
               const SizedBox(height: 16),
               _buildCategorySlider(),
-              const SizedBox(height: 100),
+              const SizedBox(height: 24),
             ],
           ),
         ),
@@ -84,7 +85,7 @@ class HomeScreen extends StatelessWidget {
           const Spacer(),
           IconButton(
             onPressed: () { /* TODO: Handle Settings */ },
-            icon: Icon(LucideIcons.settings,
+            icon: Icon(FontAwesomeIcons.gear,
                 color: AppColors.primaryBlack, size: 24),
             style: _iconButtonStyle(),
           ),
@@ -93,7 +94,7 @@ class HomeScreen extends StatelessWidget {
             children: [
               IconButton(
                 onPressed: () { /* TODO: Handle notification */ },
-                icon: Icon(LucideIcons.bell,
+                icon: Icon(FontAwesomeIcons.bell,
                     color: AppColors.primaryBlack, size: 24),
                 style: _iconButtonStyle(),
               ),
@@ -172,7 +173,7 @@ class HomeScreen extends StatelessWidget {
                   hintStyle: AppTextStyles.bodyLarge
                       .copyWith(color: AppColors.primaryGray),
                   prefixIcon:
-                  Icon(LucideIcons.search, color: AppColors.primaryGray, size: 20),
+                  Icon(FontAwesomeIcons.magnifyingGlass, color: AppColors.primaryGray, size: 20),
                   border: InputBorder.none,
                   contentPadding: EdgeInsets.symmetric(vertical: 14),
                 ),
@@ -182,7 +183,7 @@ class HomeScreen extends StatelessWidget {
           const SizedBox(width: 12),
           IconButton(
             onPressed: () { /* TODO: Handle filter */ },
-            icon: Icon(LucideIcons.slidersHorizontal,
+            icon: Icon(FontAwesomeIcons.sliders,
                 color: AppColors.primaryBlack, size: 24),
             style: _iconButtonStyle(),
           ),
@@ -202,7 +203,6 @@ class HomeScreen extends StatelessWidget {
         itemBuilder: (context, index) {
           final item = featuredDestinations[index];
           return _buildFeaturedCard(
-            // title parameter removed
             imageUrl: item['image']!,
             isFirst: index == 0,
             isLast: index == featuredDestinations.length - 1,
@@ -213,7 +213,6 @@ class HomeScreen extends StatelessWidget {
   }
 
   Widget _buildFeaturedCard({
-    // required String title, // <-- REMOVED
     required String imageUrl,
     bool isFirst = false,
     bool isLast = false,
@@ -228,7 +227,6 @@ class HomeScreen extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
         image: DecorationImage(
-          // Use AssetImage for local assets, NetworkImage for web
           image: imageUrl.startsWith('assets/')
               ? AssetImage(imageUrl) as ImageProvider
               : NetworkImage(imageUrl),
@@ -246,9 +244,6 @@ class HomeScreen extends StatelessWidget {
   }
 
   // --- 5. Find (Guide/Host) Section ---
-
-  // --- 2. UPDATED WIDGET ---
-  // Now accepts context
   Widget _buildFindSection(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24.0),
@@ -267,36 +262,39 @@ class HomeScreen extends StatelessWidget {
             children: [
               Expanded(
                 child: _buildFindButton(
-                  context: context, // <-- Passes context
+                  context: context,
                   label: "GUIDE",
-                  icon: LucideIcons.compass,
-                  onPressed: () { /* TODO: Go to Find Guide */ },
+                  icon: FontAwesomeIcons.compass,
+                  onPressed: () {
+                    Navigator.pushNamed(context, '/findGuide');
+
+                  },
                 ),
               ),
               const SizedBox(width: 16),
               Expanded(
                 child: _buildFindButton(
-                  context: context, // <-- Passes context
+                  context: context,
                   label: "HOST",
-                  icon: LucideIcons.house,
+                  icon: FontAwesomeIcons.houseChimney,
                   onPressed: () { /* TODO: Go to Find Host */ },
                 ),
               ),
               const SizedBox(width: 16),
               Expanded(
                 child: _buildFindButton(
-                  context: context, // <-- Passes context
+                  context: context,
                   label: "FOOD",
-                  icon: LucideIcons.utensils,
+                  icon: FontAwesomeIcons.utensils,
                   onPressed: () { /* TODO: Go to Find Host */ },
                 ),
               ),
               const SizedBox(width: 16),
               Expanded(
                 child: _buildFindButton(
-                  context: context, // <-- Passes context
+                  context: context,
                   label: "HOTEL",
-                  icon: LucideIcons.hotel,
+                  icon: FontAwesomeIcons.hotel,
                   onPressed: () { /* TODO: Go to Find Host */ },
                 ),
               ),
@@ -307,73 +305,57 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  // --- 3. REPLACED WIDGET ---
-  // This is the new, modern button style
   Widget _buildFindButton({
-    required BuildContext context, // <-- Accepts context
+    required BuildContext context,
     required String label,
     required IconData icon,
     required VoidCallback onPressed,
   }) {
-    // Use Theme for responsiveness (e.g., auto dark mode)
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
     return Card(
-      // Card provides a clean material surface, shape, and shadow
       elevation: 3.0,
       shadowColor: AppColors.primaryGray.withOpacity(0.15),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
       ),
-      // Use a clean, opaque background
-      // color: colorScheme.surface, // This is typically White
       color: AppColors.fourthBlue,
       child: InkWell(
-        // InkWell provides the modern "ripple" tap effect
         onTap: onPressed,
-        borderRadius: BorderRadius.circular(16), // Match the Card's shape
+        borderRadius: BorderRadius.circular(16),
         child: Padding(
-          // Use padding for flexible, responsive spacing
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 20),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // --- THIS IS THE UPDATED PART ---
               Container(
-                padding: const EdgeInsets.all(12), // Adjust padding as needed
+                padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  // 1. Set background to white
                   color: Colors.white,
-                  // 2. Set shape to be circular
                   shape: BoxShape.circle,
-                  // 3. Add the shadow
                   boxShadow: [
                     BoxShadow(
-                      // Use a subtle shadow color
                       color: AppColors.primaryGray.withOpacity(0.12),
                       blurRadius: 8,
-                      offset: Offset(0, 4), // Shadow position (bottom)
+                      offset: Offset(0, 4),
                     ),
                   ],
                 ),
                 child: Icon(
                   icon,
-                  // The icon uses the "full" color
                   color: AppColors.secondaryBlue,
-                  size: 32,
+                  size: 30,
                 ),
               ),
-              // --- END OF UPDATE ---
               const SizedBox(height: 12),
               Text(
                 label,
-                textAlign: TextAlign.center, // Handles long text
+                textAlign: TextAlign.center,
                 style: AppTextStyles.bodyLarge.copyWith(
-                  // Use a standard, high-readability text color
-                  color: colorScheme.onSurface, // Typically Black
-                  fontWeight: FontWeight.w600, // 'w600' is a nice modern "bold"
+                  color: colorScheme.onSurface,
+                  fontWeight: FontWeight.w600,
                   fontSize: 14,
                 ),
               ),
@@ -452,7 +434,9 @@ class HomeScreen extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
         image: DecorationImage(
-          image: NetworkImage(imageUrl),
+          image: imageUrl.startsWith('assets/')
+              ? AssetImage(imageUrl) as ImageProvider
+              : NetworkImage(imageUrl),
           fit: BoxFit.cover,
         ),
         boxShadow: [
@@ -484,25 +468,20 @@ class HomeScreen extends StatelessWidget {
                 color: Colors.white.withOpacity(0.2),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Icon(LucideIcons.maximize, color: Colors.white, size: 20),
+              child: Icon(FontAwesomeIcons.expand, color: Colors.white, size: 20),
             ),
           ),
-          // --- UPDATED: Removed the Center/3DText widget ---
-          // Center(
-          //   child: _build3dText(title, fontSize: 48),
-          // ),
           Positioned(
             bottom: 20,
             left: 20,
             child: Row(
               children: [
-                Icon(LucideIcons.mapPin,
+                Icon(FontAwesomeIcons.mapPin,
                     color: Colors.white, size: 16),
                 const SizedBox(width: 4),
-                // --- UPDATED: Show the title where the location was ---
                 Text(
-                  title, // <-- Show title here
-                  style: AppTextStyles.bodyLarge.copyWith( // <-- Bigger text
+                  title,
+                  style: AppTextStyles.bodyLarge.copyWith(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
                   ),
@@ -566,9 +545,7 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  // --- Helper for 3D Text Effect ---
-  // This is no longer used, but I'll leave it in case you want to
-  // add it back to the "Popular" slider.
+  // --- Helper for 3D Text Effect (No longer used) ---
   Widget _build3dText(String text, {double fontSize = 48}) {
     return Stack(
       children: [
