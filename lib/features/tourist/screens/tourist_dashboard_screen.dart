@@ -6,6 +6,7 @@ import 'package:yaloo/features/tourist/screens/tourist_guide_profile.dart';
 
 // Import the 4 screens for your tabs
 import '../../booking/screens/booking_details_screen.dart';
+import '../../booking/screens/booking_request_sent_screen.dart';
 import '../../booking/screens/payment_screen.dart';
 import '../../booking/screens/tour_information_screen.dart';
 import 'tourist_home_screen.dart';
@@ -94,6 +95,9 @@ class _TouristDashboardScreenState extends State<TouristDashboardScreen> {
               break;
             case '/payment':
               page = const PaymentScreen();
+              break;
+            case '/bookingRequestSent':
+              page = const BookingRequestSentScreen();
               break;
             default:
               page = const TouristHomeScreen();

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:yaloo/core/constants/colors.dart';
 import 'package:yaloo/core/constants/app_text_styles.dart';
@@ -101,14 +102,14 @@ class _TourInformationScreenState extends State<TourInformationScreen> {
         actions: [
           IconButton(
             onPressed: () { /* TODO: Show Help */ },
-            icon: Icon(FontAwesomeIcons.circleQuestion, color: AppColors.primaryBlack, size: 24),
+            icon: Icon(FontAwesomeIcons.circleQuestion, color: AppColors.primaryBlack, size: 24.w),
           ),
-          const SizedBox(width: 12),
+           SizedBox(width: 12.w),
         ],
       ),
       body: SingleChildScrollView(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0),
+          padding: EdgeInsets.symmetric(horizontal: 24.w),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -125,7 +126,7 @@ class _TourInformationScreenState extends State<TourInformationScreen> {
               // --- 2. Who's traveling ---
               _buildFormLabel("Who's traveling?"),
               _buildTravelerToggle(),
-              const SizedBox(height: 24),
+               SizedBox(height: 24.h),
 
               // --- 3. Duration (UPDATED) ---
               _buildFormLabel("Duration (in hours)"),
@@ -135,7 +136,7 @@ class _TourInformationScreenState extends State<TourInformationScreen> {
                 icon: FontAwesomeIcons.hourglassHalf,
                 keyboardType: TextInputType.number, hint: '',
               ),
-              const SizedBox(height: 24),
+               SizedBox(height: 24.h),
 
               // --- 4. Form Fields ---
               _buildFormLabel("Meeting Point"),
@@ -144,17 +145,17 @@ class _TourInformationScreenState extends State<TourInformationScreen> {
                 hintText: 'Enter a meeting point',
                 icon: FontAwesomeIcons.mapLocationDot, hint: '',
               ),
-              const SizedBox(height: 16),
+               SizedBox(height: 16.h),
               _buildFormLabel("Pickup Time"),
               _buildTimePicker(),
-              const SizedBox(height: 16),
+               SizedBox(height: 16.h),
               _buildFormLabel("Note"),
               _buildNoteField(),
-              const SizedBox(height: 24),
+               SizedBox(height: 24.h),
 
               // --- 5. Payment Summary (UPDATED) ---
               _buildPaymentSummary(),
-              const SizedBox(height: 24),
+               SizedBox(height: 24.h),
 
               // --- 6. Confirm Button ---
               CustomPrimaryButton(
@@ -172,9 +173,9 @@ class _TourInformationScreenState extends State<TourInformationScreen> {
                   );
                 } : null,
               ),
-              const SizedBox(height: 20),
+               SizedBox(height: 20.h),
               _buildFaqLink(),
-              const SizedBox(height: 100), // Padding for chat button
+               SizedBox(height: 100.h), // Padding for chat button
             ],
           ),
         ),
@@ -199,7 +200,7 @@ class _TourInformationScreenState extends State<TourInformationScreen> {
             }),
           ),
         ),
-        const SizedBox(width: 12),
+         SizedBox(width: 12.w),
         Expanded(
           child: _buildSelectableCard(
             icon: FontAwesomeIcons.userGroup,
@@ -211,7 +212,7 @@ class _TourInformationScreenState extends State<TourInformationScreen> {
             }),
           ),
         ),
-        const SizedBox(width: 12),
+         SizedBox(width: 12.w),
         Expanded(
           child: _buildSelectableCard(
             icon: FontAwesomeIcons.users,
@@ -236,26 +237,26 @@ class _TourInformationScreenState extends State<TourInformationScreen> {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 16),
+        padding: EdgeInsets.symmetric(vertical: 16.h),
         decoration: BoxDecoration(
           color: isSelected ? AppColors.thirdBlue : Colors.white,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(16.r),
           border: Border.all(
             color: isSelected ? AppColors.primaryBlue : AppColors.secondaryGray,
-            width: 1.5,
+            width: 1.5.w,
           ),
           boxShadow: isSelected ? [
             BoxShadow(
               color: AppColors.primaryGray.withAlpha(20),
-              blurRadius: 10,
+              blurRadius: 10.r,
               offset: Offset(0, 4),
             )
           ] : null,
         ),
         child: Column(
           children: [
-            Icon(icon, color: AppColors.primaryBlue, size: 28),
-            const SizedBox(height: 8),
+            Icon(icon, color: AppColors.primaryBlue, size: 28.w),
+             SizedBox(height: 8.h),
             Text(
               label,
               style: AppTextStyles.bodyLarge.copyWith(
@@ -271,7 +272,7 @@ class _TourInformationScreenState extends State<TourInformationScreen> {
 
   Widget _buildFormLabel(String label) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8.0, left: 16.0),
+      padding: EdgeInsets.only(bottom: 8.h, left: 16.w),
       child: Text.rich(
         TextSpan(
           text: label,
@@ -286,10 +287,10 @@ class _TourInformationScreenState extends State<TourInformationScreen> {
 
   Widget _buildTimePicker() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 6.h),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(24.r),
         boxShadow: [
           BoxShadow(
             color: AppColors.primaryGray.withAlpha(20),
@@ -300,15 +301,15 @@ class _TourInformationScreenState extends State<TourInformationScreen> {
       ),
       child: Row(
         children: [
-          Icon(FontAwesomeIcons.clock, color: AppColors.primaryGray, size: 20),
-          SizedBox(width: 16),
+          Icon(FontAwesomeIcons.clock, color: AppColors.primaryGray, size: 20.w),
+          SizedBox(width: 16.w),
           SizedBox(
-            width: 40,
+            width: 40.w,
             child: TextField(
               controller: _pickupTimeHourController,
               keyboardType: TextInputType.number,
               textAlign: TextAlign.center,
-              style: AppTextStyles.textSmall.copyWith(color: Colors.black, fontSize: 16),
+              style: AppTextStyles.textSmall.copyWith(color: Colors.black, fontSize: 16.sp),
               decoration: InputDecoration(
                 hintText: 'HH',
                 hintStyle: AppTextStyles.textSmall.copyWith(
@@ -318,14 +319,14 @@ class _TourInformationScreenState extends State<TourInformationScreen> {
               ),
             ),
           ),
-          Text(':', style: AppTextStyles.textSmall.copyWith(color: Colors.black, fontSize: 18, fontWeight: FontWeight.bold)),
+          Text(':', style: AppTextStyles.textSmall.copyWith(color: Colors.black, fontSize: 18.sp, fontWeight: FontWeight.bold)),
           SizedBox(
-            width: 40,
+            width: 40.w,
             child: TextField(
               controller: _pickupTimeMinuteController,
               keyboardType: TextInputType.number,
               textAlign: TextAlign.center,
-              style: AppTextStyles.textSmall.copyWith(color: Colors.black, fontSize: 16),
+              style: AppTextStyles.textSmall.copyWith(color: Colors.black, fontSize: 16.sp),
               decoration: InputDecoration(
                 hintText: 'MM',
                 hintStyle: AppTextStyles.textSmall.copyWith(
@@ -343,17 +344,17 @@ class _TourInformationScreenState extends State<TourInformationScreen> {
                 _isAm = index == 0;
               });
             },
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(8.r),
             selectedColor: Colors.white,
             color: AppColors.primaryBlue,
             fillColor: AppColors.primaryBlue,
             children: [
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                padding: EdgeInsets.symmetric(horizontal: 12.w),
                 child: Text('AM', style: AppTextStyles.textSmall.copyWith(fontWeight: FontWeight.bold)),
               ),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                padding: EdgeInsets.symmetric(horizontal: 12.w),
                 child: Text('PM', style: AppTextStyles.textSmall.copyWith(fontWeight: FontWeight.bold)),
               ),
             ],
@@ -365,24 +366,24 @@ class _TourInformationScreenState extends State<TourInformationScreen> {
 
   Widget _buildPaymentSummary() {
     return Container(
-      padding: const EdgeInsets.all(20.0),
+      padding: EdgeInsets.all(20.w),
       decoration: BoxDecoration(
         color: AppColors.secondaryGray.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(16.r),
       ),
       child: Column(
         children: [
           Text(
             'Payment Summary',
-            style: AppTextStyles.headlineLargeBlack.copyWith(fontSize: 18, fontWeight: FontWeight.bold),
+            style: AppTextStyles.headlineLargeBlack.copyWith(fontSize: 18.sp, fontWeight: FontWeight.bold),
           ),
-          const SizedBox(height: 16),
+           SizedBox(height: 16.h),
           _buildDetailRow("Base Rate (per hour):", "\$${_baseRate.toStringAsFixed(0)}"),
-          Divider(color: Colors.grey.shade300, height: 24),
+          Divider(color: Colors.grey.shade300, height: 24.h),
           _buildDetailRow("Travelers:", _travelerCount.toString()),
-          Divider(color: Colors.grey.shade300, height: 24),
+          Divider(color: Colors.grey.shade300, height: 24.h),
           _buildDetailRow("Duration:", "${_durationHours.toStringAsFixed(0)}h"),
-          Divider(color: Colors.grey.shade300, height: 24),
+          Divider(color: Colors.grey.shade300, height: 24.h),
           _buildDetailRow(
             "Total:",
             "\$${_total.toStringAsFixed(0)}",
@@ -417,7 +418,7 @@ class _TourInformationScreenState extends State<TourInformationScreen> {
     return Center(
       child: TextButton.icon(
         onPressed: () { /* TODO: Open FAQs */ },
-        icon: Icon(FontAwesomeIcons.circleQuestion, color: AppColors.primaryGray, size: 16),
+        icon: Icon(FontAwesomeIcons.circleQuestion, color: AppColors.primaryGray, size: 16.w),
         label: Text(
           'FAQs & Help',
           style: AppTextStyles.textSmall.copyWith(
@@ -434,7 +435,7 @@ class _TourInformationScreenState extends State<TourInformationScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         border: Border.all(color: AppColors.secondaryGray),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(16.r),
         boxShadow: [
           BoxShadow(
             color: AppColors.primaryGray.withAlpha(20),
@@ -443,7 +444,7 @@ class _TourInformationScreenState extends State<TourInformationScreen> {
           ),
         ],
       ),
-      padding: const EdgeInsets.all(12),
+      padding: EdgeInsets.all(12.w),
       child: TextField(
         controller: _noteController,
         maxLines: 5,

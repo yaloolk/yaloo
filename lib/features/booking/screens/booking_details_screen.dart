@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:yaloo/core/constants/colors.dart';
 import 'package:yaloo/core/constants/app_text_styles.dart';
@@ -102,14 +103,14 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
         actions: [
           IconButton(
             onPressed: () { /* TODO: Show Help */ },
-            icon: Icon(FontAwesomeIcons.circleQuestion, color: AppColors.primaryBlack, size: 24),
+            icon: Icon(FontAwesomeIcons.circleQuestion, color: AppColors.primaryBlack, size: 24.w),
           ),
-          const SizedBox(width: 12),
+           SizedBox(width: 12.w),
         ],
       ),
       body: SingleChildScrollView(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0),
+          padding: EdgeInsets.symmetric(horizontal: 24.w),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -123,31 +124,31 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
               ),
 
               _buildProviderCard(),
-              const SizedBox(height: 24),
+               SizedBox(height: 24.h),
 
               Text(
                 'Almost done! Kindly provide your information below.',
                 style: AppTextStyles.textSmall.copyWith(
                   color: AppColors.primaryGray,
-                  fontSize: 16,
-                  height: 1.5,
+                  fontSize: 16.sp,
+                  height: 1.5.h,
                 ),
               ),
-              const SizedBox(height: 24),
+               SizedBox(height: 24.h),
               _buildFormLabel("Full name"),
               CustomTextField(
                 controller: _nameController,
                 hintText: 'Enter your full name',
                 icon: FontAwesomeIcons.user, hint: ' Maria',
               ),
-              const SizedBox(height: 16),
+               SizedBox(height: 16.h),
               _buildFormLabel("Passport Number"),
               CustomTextField(
                 controller: _passportController,
                 hintText: 'Enter your passport number',
                 icon: FontAwesomeIcons.passport, hint: 'N478**',
               ),
-              const SizedBox(height: 16),
+               SizedBox(height: 16.h),
               _buildFormLabel("Email"),
               CustomTextField(
                 controller: _emailController,
@@ -155,10 +156,10 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                 icon: FontAwesomeIcons.envelope,
                 keyboardType: TextInputType.emailAddress, hint: 'youremail@domain.com',
               ),
-              const SizedBox(height: 16),
+               SizedBox(height: 16.h),
               _buildFormLabel("Phone number"),
               _buildPhoneField(),
-              const SizedBox(height: 16),
+               SizedBox(height: 16.h),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -176,7 +177,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                       ],
                     ),
                   ),
-                  const SizedBox(width: 16),
+                   SizedBox(width: 16.w),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -193,9 +194,9 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                   ),
                 ],
               ),
-              const SizedBox(height: 20),
+               SizedBox(height: 20.h),
               _buildSaveDetailsCheckbox(),
-              const SizedBox(height: 20),
+               SizedBox(height: 20.h),
               CustomPrimaryButton(
                 text: 'Submit',
                 isLoading: _isLoading,
@@ -205,9 +206,9 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                   Navigator.pushNamed(context, '/tourInformation');
                 } : null,
               ),
-              const SizedBox(height: 20),
+               SizedBox(height: 20.h),
               _buildFaqLink(),
-              const SizedBox(height: 100), // Padding for chat button
+               SizedBox(height: 100.h), // Padding for chat button
             ],
           ),
         ),
@@ -221,30 +222,30 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
   Widget _buildProviderCard() {
     return Center(
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
         decoration: BoxDecoration(
           color: AppColors.thirdBlue,
-          borderRadius: BorderRadius.circular(30),
+          borderRadius: BorderRadius.circular(30.r),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             CircleAvatar(
-              radius: 24,
+              radius: 24.r,
               // UPDATED: Use dynamic image
               backgroundImage: AssetImage(_guideImage),
               onBackgroundImageError: (e, s) => Icon(FontAwesomeIcons.user, color: AppColors.primaryGray),
             ),
-            const SizedBox(width: 12),
+             SizedBox(width: 12.w),
             Text(
               _guideName, // UPDATED: Use dynamic name
               style: AppTextStyles.bodyLarge.copyWith(
                 fontWeight: FontWeight.bold,
-                fontSize: 18,
+                fontSize: 18.sp,
               ),
             ),
-            const SizedBox(width: 8),
-            Icon(Icons.check_circle, color: AppColors.primaryBlue, size: 20),
+             SizedBox(width: 8.w),
+            Icon(Icons.check_circle, color: AppColors.primaryBlue, size: 20.w),
           ],
         ),
       ),
@@ -253,7 +254,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
 
   Widget _buildFormLabel(String label) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8.0, left: 16.0),
+      padding: EdgeInsets.only(bottom: 8.h, left: 16.w),
       child: Text.rich(
         TextSpan(
           text: label,
@@ -270,7 +271,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(24.r),
         boxShadow: [
           BoxShadow(
             color: AppColors.primaryGray.withAlpha(20),
@@ -293,16 +294,16 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
               _showCountryPicker(showPhoneCode: true);
             },
             child: Padding(
-              padding: const EdgeInsets.only(left: 20.0, right: 10.0),
+              padding: EdgeInsets.only(left: 20.w, right: 10.w),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   // UPDATED: Show flag emoji
                   Text(
                     _phoneCountryFlag,
-                    style: const TextStyle(fontSize: 24),
+                    style: TextStyle(fontSize: 24.sp),
                   ),
-                  SizedBox(width: 8),
+                  SizedBox(width: 8.w),
                   Text(
                     "+$_phoneCountryCode",
                     style: AppTextStyles.textSmall.copyWith(color: Colors.black),
@@ -315,10 +316,10 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
           filled: true,
           fillColor: Colors.white,
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(24),
+            borderRadius: BorderRadius.circular(24.r),
             borderSide: BorderSide.none,
           ),
-          contentPadding: EdgeInsets.only(top: 20.0, bottom: 20.0, right: 20.0),
+          contentPadding: EdgeInsets.only(top: 20.h, bottom: 20.h, right: 20.w),
         ),
       ),
     );
@@ -349,7 +350,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
     return Center(
       child: TextButton.icon(
         onPressed: () { /* TODO: Open FAQs */ },
-        icon: Icon(FontAwesomeIcons.circleQuestion, color: AppColors.primaryGray, size: 16),
+        icon: Icon(FontAwesomeIcons.circleQuestion, color: AppColors.primaryGray, size: 16.w),
         label: Text(
           'FAQs & Help',
           style: AppTextStyles.textSmall.copyWith(

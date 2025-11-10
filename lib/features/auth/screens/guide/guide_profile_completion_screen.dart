@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:country_picker/country_picker.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:yaloo/core/constants/colors.dart';
 import 'package:yaloo/core/constants/app_text_styles.dart';
 
@@ -60,17 +61,17 @@ class _GuideProfileCompletionScreenState
       backgroundColor: Colors.white,
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0),
+          padding: EdgeInsets.symmetric(horizontal: 24.w),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              SizedBox(height: 40),
+              SizedBox(height: 40.h),
               Image.asset(
                 'assets/images/yaloo_logo.png',
-                width: 80,
-                height: 80,
+                width: 80.w,
+                height: 80.h,
               ),
-              const SizedBox(height: 20),
+              SizedBox(height: 20.h),
 
               // PageView
               Expanded(
@@ -89,7 +90,7 @@ class _GuideProfileCompletionScreenState
 
               // Bottom Navigation
               _buildBottomNavigation(),
-              const SizedBox(height: 20),
+              SizedBox(height: 20.h),
             ],
           ),
         ),
@@ -106,37 +107,37 @@ class _GuideProfileCompletionScreenState
           Text(
             'Complete Your Profile',
             style: AppTextStyles.headlineLarge
-                .copyWith(fontSize: 32, fontWeight: FontWeight.bold),
+                .copyWith(fontSize: 32.sp, fontWeight: FontWeight.bold),
           ),
-          const SizedBox(height: 10),
+           SizedBox(height: 10.h),
           Text(
             'Tell us more about yourself to get started.',
             style: AppTextStyles.textSmall
-                .copyWith(color: AppColors.primaryGray, fontSize: 16),
+                .copyWith(color: AppColors.primaryGray, fontSize: 16.sp),
           ),
-          const SizedBox(height: 40),
+           SizedBox(height: 40.h),
 
           _buildShadowedTextField(
             controller: _nameController,
             hint: 'Full Name',
             icon: Icons.person_outline,
           ),
-          const SizedBox(height: 16),
+           SizedBox(height: 16.h),
           _buildPhoneField(), // Phone with Country Code
-          const SizedBox(height: 16),
+           SizedBox(height: 16.h),
           _buildShadowedPickerButton(
             hint: 'Country',
             icon: Icons.public_outlined,
             value: _selectedCountry?.name,
             onTap: _showCountryPicker,
           ),
-          const SizedBox(height: 16),
+           SizedBox(height: 16.h),
           _buildShadowedTextField(
             controller: _cityController,
             hint: 'City',
             icon: Icons.location_city_outlined,
           ),
-          const SizedBox(height: 16),
+           SizedBox(height: 16.h),
           _buildShadowedPickerButton(
             hint: 'Date of Birth',
             icon: Icons.calendar_today_outlined,
@@ -145,7 +146,7 @@ class _GuideProfileCompletionScreenState
                 : "${_selectedDateOfBirth!.day}/${_selectedDateOfBirth!.month}/${_selectedDateOfBirth!.year}",
             onTap: _showDatePicker,
           ),
-          const SizedBox(height: 16),
+           SizedBox(height: 16.h),
           _buildShadowedDropdown(
               hint: 'Gender',
               icon: Icons.wc_outlined,
@@ -155,7 +156,7 @@ class _GuideProfileCompletionScreenState
                 setState(() { _selectedGender = val; });
               }
           ),
-          const SizedBox(height: 16),
+           SizedBox(height: 16.h),
           // UPDATED: This button now uses the single-select logic
           _buildShadowedPickerButton(
             hint: 'Languages Spoken',
@@ -163,7 +164,7 @@ class _GuideProfileCompletionScreenState
             value: _selectedLanguage?.name, // Display the single language name
             onTap: _showLanguagePicker, // Use your provided function
           ),
-          const SizedBox(height: 20),
+           SizedBox(height: 20.h),
         ],
       ),
     );
@@ -178,15 +179,15 @@ class _GuideProfileCompletionScreenState
           Text(
             'Verification',
             style: AppTextStyles.headlineLarge
-                .copyWith(fontSize: 32, fontWeight: FontWeight.bold),
+                .copyWith(fontSize: 32.sp, fontWeight: FontWeight.bold),
           ),
-          const SizedBox(height: 10),
+           SizedBox(height: 10.h),
           Text(
             'Please upload the following documents to get verified.',
             style: AppTextStyles.textSmall
-                .copyWith(color: AppColors.primaryGray, fontSize: 16),
+                .copyWith(color: AppColors.primaryGray, fontSize: 16.sp),
           ),
-          const SizedBox(height: 40),
+           SizedBox(height: 40.h),
 
           _buildUploadButton(
             label: 'Government ID / Passport',
@@ -194,21 +195,21 @@ class _GuideProfileCompletionScreenState
             fileName: _govIdFileName,
             onPressed: () => _pickFile('govId'), // UPDATED
           ),
-          const SizedBox(height: 16),
+           SizedBox(height: 16.h),
           _buildUploadButton(
             label: 'Profile Photo (for verification)',
             icon: Icons.camera_alt_outlined,
             fileName: _profilePhotoFileName,
             onPressed: () => _pickFile('profilePhoto'), // UPDATED
           ),
-          const SizedBox(height: 16),
+           SizedBox(height: 16.h),
           _buildUploadButton(
             label: 'License/Certificate (Optional)',
             icon: Icons.school_outlined,
             fileName: _licenseFileName,
             onPressed: () => _pickFile('license'), // UPDATED
           ),
-          const SizedBox(height: 20),
+           SizedBox(height: 20.h),
         ],
       ),
     );
@@ -247,11 +248,11 @@ class _GuideProfileCompletionScreenState
             Text(
               isLastPage ? 'Submit' : 'Continue',
               style: AppTextStyles.headlineLarge.copyWith(
-                fontSize: 28,
+                fontSize: 28.sp,
                 fontWeight: FontWeight.bold,
               ),
             ),
-            const SizedBox(width: 15),
+             SizedBox(width: 15.w),
             ElevatedButton(
               onPressed: _isLoading ? null : () {
                 if (isLastPage) {
@@ -268,11 +269,11 @@ class _GuideProfileCompletionScreenState
               style: ElevatedButton.styleFrom(
                 backgroundColor: _isLoading ? AppColors.primaryGray : AppColors.primaryBlue,
                 shape: const StadiumBorder(),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
                ),
               child: _isLoading
                   ? const CircularProgressIndicator(color: Colors.white)
-                  : const Icon(Icons.arrow_forward, color: Colors.white, size: 28,),
+                  : Icon(Icons.arrow_forward, color: Colors.white, size: 28.w),
             ),
           ],
         ),
@@ -361,7 +362,7 @@ class _GuideProfileCompletionScreenState
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(Icons.phone_outlined, color: AppColors.primaryGray),
-                  SizedBox(width: 8),
+                  SizedBox(width: 8.w),
                   Text(
                     "+$_countryCode",
                     style: AppTextStyles.textSmall.copyWith(color: Colors.black),
@@ -408,7 +409,7 @@ class _GuideProfileCompletionScreenState
         child: Row(
           children: [
             Icon(icon, color: AppColors.primaryGray),
-            const SizedBox(width: 16),
+             SizedBox(width: 16.w),
             Expanded(
               child: Text(
                 value ?? hint,
@@ -495,7 +496,7 @@ class _GuideProfileCompletionScreenState
     return GestureDetector(
       onTap: onPressed,
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 18.0, horizontal: 20.0),
+        padding: EdgeInsets.symmetric(vertical: 18.h, horizontal: 20.w),
         decoration: BoxDecoration(
           color: isUploaded ? AppColors.thirdBlue : Colors.white,
           borderRadius: BorderRadius.circular(24),
@@ -516,7 +517,7 @@ class _GuideProfileCompletionScreenState
                 isUploaded ? Icons.check_circle_outline : icon,
                 color: isUploaded ? AppColors.primaryBlue : AppColors.primaryGray
             ),
-            SizedBox(width: 12),
+            SizedBox(width: 12.w),
             Expanded(
               child: Text(
                 isUploaded ? fileName! : label, // Show file name
@@ -610,8 +611,8 @@ class _GuideProfileCompletionScreenState
   Widget _buildLanguageItem(Language language) {
     return Row(
       children: <Widget>[
-        const SizedBox(width: 8.0),
-        Text(language.name, style: const TextStyle(fontSize: 16)),
+         SizedBox(width: 8.w),
+        Text(language.name, style: TextStyle(fontSize: 16.sp)),
         const Spacer(),
         Text('(${language.isoCode})',
             style: const TextStyle(color: Colors.grey)),

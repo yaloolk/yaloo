@@ -18,6 +18,8 @@ import '../features/tourist/screens/tourist_guide_profile.dart';
 import '../features/booking/screens/booking_details_screen.dart';
 import '../features/booking/screens/tour_information_screen.dart';
 import '../features/booking/screens/payment_screen.dart';
+import '../features/booking/screens/booking_request_sent_screen.dart';
+import '../features/booking/screens/booking_status_screen.dart';
 
 
 
@@ -43,6 +45,8 @@ class AppRoutes {
     '/bookingDetails': (_) => const BookingDetailsScreen(),
     '/tourInformation': (_) => const TourInformationScreen(),
     '/payment': (_) => const PaymentScreen(),
+    '/bookingRequestSent': (_) => const BookingRequestSentScreen(),
+    '/bookingStatus': (_) => const BookingStatusScreen(),
 
 
   };

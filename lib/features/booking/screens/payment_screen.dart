@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:yaloo/core/constants/colors.dart';
 import 'package:yaloo/core/constants/app_text_styles.dart';
@@ -90,14 +91,14 @@ class _PaymentScreenState extends State<PaymentScreen> {
         actions: [
           IconButton(
             onPressed: () { /* TODO: Show Help */ },
-            icon: Icon(FontAwesomeIcons.circleQuestion, color: AppColors.primaryBlack, size: 24),
+            icon: Icon(FontAwesomeIcons.circleQuestion, color: AppColors.primaryBlack, size: 24.w),
           ),
-          const SizedBox(width: 12),
+           SizedBox(width: 12.w),
         ],
       ),
       body: SingleChildScrollView(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0),
+          padding: EdgeInsets.symmetric(horizontal: 24.w),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -116,29 +117,29 @@ class _PaymentScreenState extends State<PaymentScreen> {
                 child: Text(
                   '\$ $_totalPrice',
                   style: AppTextStyles.headlineLargeBlack.copyWith(
-                    fontSize: 48,
+                    fontSize: 48.sp,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
               ),
-              const SizedBox(height: 24),
+               SizedBox(height: 24.h),
 
               // --- 3. Payment Options ---
               _buildPaymentOption(
                   title: 'Credit/Debit Card',
                   method: PaymentMethod.card,
                   icons: [
-                    FaIcon(FontAwesomeIcons.ccVisa, color: Color(0xFF1A1F71), size: 24),
-                    SizedBox(width: 8),
-                    FaIcon(FontAwesomeIcons.ccMastercard, color: Color(0xFFEB001B), size: 24),
+                    FaIcon(FontAwesomeIcons.ccVisa, color: Color(0xFF1A1F71), size: 24.w),
+                    SizedBox(width: 8.w),
+                    FaIcon(FontAwesomeIcons.ccMastercard, color: Color(0xFFEB001B), size: 24.w),
                   ]
               ),
               if (_paymentMethod == PaymentMethod.card)
                 _buildCreditCardForm(),
 
-              const SizedBox(height: 16),
+               SizedBox(height: 16.h),
               Divider(color: AppColors.secondaryGray),
-              const SizedBox(height: 16),
+               SizedBox(height: 16.h),
 
               _buildPaymentOption(
                   title: 'PayPal',
@@ -146,14 +147,14 @@ class _PaymentScreenState extends State<PaymentScreen> {
                   icons: [
                     Image.network( // Using network image for PayPal logo
                       'https://www.paypalobjects.com/webstatic/mktg/Logo/pp-logo-100px.png',
-                      height: 24,
+                      height: 24.h,
                     ),
                   ]
               ),
               if (_paymentMethod == PaymentMethod.paypal)
                 _buildPayPalInfo(),
 
-              const SizedBox(height: 32),
+               SizedBox(height: 32.h),
 
               // --- 4. Pay Button ---
               CustomPrimaryButton(
@@ -161,11 +162,12 @@ class _PaymentScreenState extends State<PaymentScreen> {
                 onPressed: _canPay ? () {
                   // TODO: Handle Payment Logic
                   // e.g., call Stripe/PayPal SDK
+                  Navigator.pushNamed(context, '/bookingRequestSent');
                 } : null,
               ),
-              const SizedBox(height: 20),
+               SizedBox(height: 20.h),
               _buildFaqLink(),
-              const SizedBox(height: 100), // Padding for chat button
+               SizedBox(height: 100.h), // Padding for chat button
             ],
           ),
         ),
@@ -186,7 +188,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
         children: [
           Text(
             title,
-            style: AppTextStyles.headlineLargeBlack.copyWith(fontSize: 18, fontWeight: FontWeight.bold),
+            style: AppTextStyles.headlineLargeBlack.copyWith(fontSize: 18.sp, fontWeight: FontWeight.bold),
           ),
           const Spacer(),
           ...icons,
@@ -208,8 +210,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
 
   Widget _buildCreditCardForm() {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      padding: const EdgeInsets.all(16.0),
+      margin:  EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+      padding:  EdgeInsets.all(16.w),
       decoration: BoxDecoration(
         color: AppColors.secondaryGray.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(16),
@@ -221,7 +223,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
             'Pay securely with your Bank Account using Visa or Mastercard',
             style: AppTextStyles.textSmall.copyWith(color: AppColors.primaryGray),
           ),
-          const SizedBox(height: 16),
+           SizedBox(height: 16.h),
           _buildFormLabel("Card Number"),
           CustomTextField(
             controller: _cardNumberController,
@@ -229,14 +231,14 @@ class _PaymentScreenState extends State<PaymentScreen> {
             icon: FontAwesomeIcons.creditCard,
             keyboardType: TextInputType.number, hint: '',
           ),
-          const SizedBox(height: 16),
+           SizedBox(height: 16.h),
           _buildFormLabel("Name on Card"),
           CustomTextField(
             controller: _nameOnCardController,
             hintText: 'Name on Card',
             icon: FontAwesomeIcons.user, hint: '',
           ),
-          const SizedBox(height: 16),
+           SizedBox(height: 16.h),
           Row(
             children: [
               Expanded(
@@ -253,7 +255,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                   ],
                 ),
               ),
-              const SizedBox(width: 16),
+               SizedBox(width: 16.h),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -270,7 +272,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 8),
+           SizedBox(height: 8.h),
           _buildSaveCardCheckbox(),
         ],
       ),
@@ -279,11 +281,11 @@ class _PaymentScreenState extends State<PaymentScreen> {
 
   Widget _buildPayPalInfo() {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      padding: const EdgeInsets.all(16.0),
+      margin:  EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+      padding:  EdgeInsets.all(16.w),
       decoration: BoxDecoration(
         color: AppColors.secondaryGray.withValues(alpha: 0.3),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(16.r),
       ),
       child: Text(
         'You will be redirected to PayPal website to complete your order securely.',
@@ -294,7 +296,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
 
   Widget _buildFormLabel(String label) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8.0, left: 16.0),
+      padding: EdgeInsets.only(bottom: 8.h, left: 16.w),
       child: Text(
         label,
         style: AppTextStyles.textSmall.copyWith(color: AppColors.primaryBlack, fontWeight: FontWeight.bold),
@@ -326,7 +328,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
     return Center(
       child: TextButton.icon(
         onPressed: () { /* TODO: Open FAQs */ },
-        icon: Icon(FontAwesomeIcons.circleQuestion, color: AppColors.primaryGray, size: 16),
+        icon: Icon(FontAwesomeIcons.circleQuestion, color: AppColors.primaryGray, size: 16.w),
         label: Text(
           'Get Payment Assistance',
           style: AppTextStyles.textSmall.copyWith(

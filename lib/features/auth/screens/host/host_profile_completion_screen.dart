@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:country_picker/country_picker.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:yaloo/core/constants/colors.dart';
 import 'package:yaloo/core/constants/app_text_styles.dart';
@@ -68,17 +69,17 @@ class _HostProfileCompletionScreenState
       backgroundColor: Colors.white,
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0),
+          padding: EdgeInsets.symmetric(horizontal: 24.h),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              SizedBox(height: 40),
+              SizedBox(height: 40.h),
               Image.asset(
                 'assets/images/yaloo_logo.png',
-                width: 80,
-                height: 80,
+                width: 80.w,
+                height: 80.h,
               ),
-              const SizedBox(height: 20),
+               SizedBox(height: 20.h),
 
               // PageView
               Expanded(
@@ -97,7 +98,7 @@ class _HostProfileCompletionScreenState
 
               // Bottom Navigation
               _buildBottomNavigation(),
-              const SizedBox(height: 20),
+               SizedBox(height: 20.h),
             ],
           ),
         ),
@@ -114,24 +115,24 @@ class _HostProfileCompletionScreenState
           Text(
             'Complete Your Host Profile',
             style: AppTextStyles.headlineLarge
-                .copyWith(fontSize: 32, fontWeight: FontWeight.bold),
+                .copyWith(fontSize: 32.sp, fontWeight: FontWeight.bold),
           ),
-          const SizedBox(height: 10),
+           SizedBox(height: 10.h),
           Text(
             'Tell us about yourself and your place.',
             style: AppTextStyles.textSmall
-                .copyWith(color: AppColors.primaryGray, fontSize: 16),
+                .copyWith(color: AppColors.primaryGray, fontSize: 16.sp),
           ),
-          const SizedBox(height: 40),
+           SizedBox(height: 40.h),
 
           CustomTextField(
             controller: _nameController,
             hint: 'Full Name',
             icon: Icons.person_outline, hintText: 'Full Name',
           ),
-          const SizedBox(height: 16),
+           SizedBox(height: 16.h),
           _buildPhoneField(), // Phone with Country Code
-          const SizedBox(height: 16),
+           SizedBox(height: 16.h),
           // CustomPickerButton(
           //   hint: 'Country',
           //   icon: Icons.public_outlined,
@@ -144,7 +145,7 @@ class _HostProfileCompletionScreenState
             hint: 'Village / Town / City',
             icon: Icons.location_on_outlined, hintText: 'Village / Town / City',
           ),
-          const SizedBox(height: 16),
+           SizedBox(height: 16.h),
           _buildShadowedDropdown(
               hint: 'Accommodation Type',
               icon: Icons.home_work_outlined,
@@ -154,14 +155,14 @@ class _HostProfileCompletionScreenState
                 setState(() { _accommodationType = val; });
               }
           ),
-          const SizedBox(height: 16),
+           SizedBox(height: 16.h),
           CustomTextField(
             controller: _priceController,
             hint: 'Price per Night (Dollar)',
             icon: Icons.attach_money_outlined,
             keyboardType: TextInputType.number, hintText: 'Price per Night (Dollar)',
           ),
-          const SizedBox(height: 16),
+           SizedBox(height: 16.h),
           CustomPickerButton(
             hint: 'Select Facilities',
             icon: Icons.kitchen_outlined,
@@ -170,13 +171,13 @@ class _HostProfileCompletionScreenState
                 : _selectedAmenities.join(', '),
             onTap: _showAmenityMultiSelect,
           ),
-          const SizedBox(height: 16),
+           SizedBox(height: 16.h),
           // CustomTextArea(
           //   controller: _bioController,
           //   hint: 'About Your Place (for tourists)',
           //   icon: Icons.edit_outlined, hintText: 'About Your Place (for tourists)',
           // ),
-          const SizedBox(height: 20),
+           SizedBox(height: 20.h),
         ],
       ),
     );
@@ -191,15 +192,15 @@ class _HostProfileCompletionScreenState
           Text(
             'Verification & Photos',
             style: AppTextStyles.headlineLarge
-                .copyWith(fontSize: 32, fontWeight: FontWeight.bold),
+                .copyWith(fontSize: 32.sp, fontWeight: FontWeight.bold),
           ),
-          const SizedBox(height: 10),
+           SizedBox(height: 10.h),
           Text(
             'Upload documents for verification and photos of your property.',
             style: AppTextStyles.textSmall
-                .copyWith(color: AppColors.primaryGray, fontSize: 16),
+                .copyWith(color: AppColors.primaryGray, fontSize: 16.sp),
           ),
-          const SizedBox(height: 40),
+           SizedBox(height: 40.h),
 
           CustomUploadButton(
             label: 'Government ID / Passport',
@@ -207,14 +208,14 @@ class _HostProfileCompletionScreenState
             fileName: _govIdFileName,
             onPressed: () => _pickFile('govId'),
           ),
-          const SizedBox(height: 16),
+           SizedBox(height: 16.h),
           CustomUploadButton(
             label: 'Profile Photo (for verification)',
             icon: Icons.camera_alt_outlined,
             fileName: _profilePhotoFileName,
             onPressed: () => _pickFile('profilePhoto'),
           ),
-          const SizedBox(height: 16),
+           SizedBox(height: 16.h),
           CustomUploadButton(
             // Show how many photos are selected
             label: 'Upload Property Photos',
@@ -224,7 +225,7 @@ class _HostProfileCompletionScreenState
                 : "${_propertyPhotoFiles.length} photos selected",
             onPressed: _pickMultiplePropertyPhotos,
           ),
-          const SizedBox(height: 20),
+           SizedBox(height: 20.h),
         ],
       ),
     );
@@ -281,7 +282,7 @@ class _HostProfileCompletionScreenState
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(24.r),
         boxShadow: [
           BoxShadow(
             color: AppColors.primaryGray.withAlpha(20),
@@ -304,12 +305,12 @@ class _HostProfileCompletionScreenState
               _showCountryPicker(showPhoneCode: true);
             },
             child: Padding(
-              padding: const EdgeInsets.only(left: 20.0, right: 10.0),
+              padding: EdgeInsets.only(left: 20.w, right: 10.w),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(Icons.phone_outlined, color: AppColors.primaryGray),
-                  SizedBox(width: 8),
+                  SizedBox(width: 8.w),
                   Text(
                     "+$_countryCode",
                     style: AppTextStyles.textSmall.copyWith(color: Colors.black),
@@ -322,10 +323,10 @@ class _HostProfileCompletionScreenState
           filled: true,
           fillColor: Colors.white,
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(24),
+            borderRadius: BorderRadius.circular(24.r),
             borderSide: BorderSide.none,
           ),
-          contentPadding: EdgeInsets.only(top: 20.0, bottom: 20.0, right: 20.0),
+          contentPadding: EdgeInsets.only(top: 20.h, bottom: 20.h, right: 20.w),
         ),
       ),
     );
@@ -342,7 +343,7 @@ class _HostProfileCompletionScreenState
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(24.r),
         boxShadow: [
           BoxShadow(
             color: AppColors.primaryGray.withAlpha(20),
@@ -368,19 +369,19 @@ class _HostProfileCompletionScreenState
             color: AppColors.primaryGray.withAlpha(150),
           ),
           prefixIcon: Padding(
-            padding: const EdgeInsets.only(left: 20.0, right: 16.0),
+            padding: EdgeInsets.only(left: 20.w, right: 16.w),
             child: Icon(icon, color: AppColors.primaryGray),
           ),
           filled: true,
           fillColor: Colors.white,
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(24),
+            borderRadius: BorderRadius.circular(24.r),
             borderSide: BorderSide.none,
           ),
-          contentPadding: EdgeInsets.only(top: 20.0, bottom: 20.0, right: 0),
+          contentPadding: EdgeInsets.only(top: 20.h, bottom: 20.h, right: 0.w),
         ),
         icon: Padding(
-          padding: const EdgeInsets.only(right: 12.0),
+          padding: EdgeInsets.only(right: 12.w),
           child: Icon(Icons.arrow_drop_down, color: AppColors.primaryGray),
         ),
       ),

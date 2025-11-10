@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class CustomIconButton extends StatelessWidget {
   final Widget icon; // We accept a full Icon widget for more flexibility
@@ -20,7 +21,7 @@ class CustomIconButton extends StatelessWidget {
         shape: const CircleBorder(),
         backgroundColor: Colors.white,
         elevation: 8,
-        padding: const EdgeInsets.all(10),
+        padding: EdgeInsets.all(10.w),
         shadowColor: Colors.black.withValues(alpha: 0.2),
       ),
     );

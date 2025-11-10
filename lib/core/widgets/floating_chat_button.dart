@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
-
 import 'package:yaloo/core/constants/colors.dart';
 
 class FloatingChatButton extends StatelessWidget {
@@ -15,7 +15,7 @@ class FloatingChatButton extends StatelessWidget {
         boxShadow: [
           BoxShadow(
             color: AppColors.primaryBlue.withAlpha(100),
-            blurRadius: 10,
+            blurRadius: 10.r,
             offset: Offset(0, 4),
           ),
         ],
@@ -24,8 +24,8 @@ class FloatingChatButton extends StatelessWidget {
         onPressed: () {
           // TODO: Open Chat AI
         },
-        icon: Icon(LucideIcons.bot, color: Colors.white, size: 32),
-        padding: const EdgeInsets.all(16),
+        icon: Icon(LucideIcons.bot, color: Colors.white, size: 32.w),
+        padding: EdgeInsets.all(16.w),
       ),
     );
   }

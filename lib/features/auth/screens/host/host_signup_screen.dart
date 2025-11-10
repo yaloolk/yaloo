@@ -1,5 +1,6 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:yaloo/core/constants/colors.dart';
 import 'package:yaloo/core/constants/app_text_styles.dart';
 import 'package:yaloo/core/widgets/custom_text_field.dart';
@@ -92,27 +93,27 @@ class _HostSignupScreenState extends State<HostSignupScreen> {
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0),
+            padding:  EdgeInsets.symmetric(horizontal: 24.h),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                SizedBox(height: 40),
-                Image.asset(_logoPath, width: 80, height: 80),
-                const SizedBox(height: 20),
+                SizedBox(height: 40.h),
+                Image.asset(_logoPath, width: 80.w, height: 80.h),
+                 SizedBox(height: 20.h),
 
                 // Title
                 Text(
                   'Become a Host', // <-- UPDATED TITLE
                   style: AppTextStyles.headlineLarge
-                      .copyWith(fontSize: 32, fontWeight: FontWeight.bold),
+                      .copyWith(fontSize: 32.sp, fontWeight: FontWeight.bold),
                 ),
-                const SizedBox(height: 10),
+                 SizedBox(height: 10.h),
                 Text(
                   'Share your home and earn with Yaloo.', // <-- UPDATED SUBTITLE
                   style: AppTextStyles.textSmall
-                      .copyWith(color: AppColors.primaryGray, fontSize: 16),
+                      .copyWith(color: AppColors.primaryGray, fontSize: 16.sp),
                 ),
-                const SizedBox(height: 40),
+                 SizedBox(height: 40.h),
 
                 CustomTextField(
                   controller: _emailController,
@@ -120,7 +121,7 @@ class _HostSignupScreenState extends State<HostSignupScreen> {
                   icon: Icons.email_outlined,
                   keyboardType: TextInputType.emailAddress, hint: '',
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: 16.h),
                 CustomTextField(
                   controller: _passwordController,
                   hintText: 'Password',
@@ -131,7 +132,7 @@ class _HostSignupScreenState extends State<HostSignupScreen> {
                     setState(() { _isPasswordObscure = !_isPasswordObscure; });
                   }), hint: '',
                 ),
-                const SizedBox(height: 16),
+                 SizedBox(height: 16.h),
                 CustomTextField(
                   controller: _confirmPasswordController,
                   hintText: 'Confirm Password',
@@ -142,43 +143,41 @@ class _HostSignupScreenState extends State<HostSignupScreen> {
                     setState(() { _isConfirmPasswordObscure = !_isConfirmPasswordObscure; });
                   }), hint: '',
                 ),
-                const SizedBox(height: 8),
+                 SizedBox(height: 8.h),
                 Text(
                   'At least 8 characters, 1 uppercase letter, 1 number, 1 symbol',
                   style: AppTextStyles.textSmall
-                      .copyWith(color: AppColors.primaryGray, fontSize: 12),
+                      .copyWith(color: AppColors.primaryGray, fontSize: 12.sp),
                 ),
-                const SizedBox(height: 20),
+                 SizedBox(height: 20.h),
 
                 // Terms and Conditions
                 _buildTermsAndConditionsRow(),
-                const SizedBox(height: 10),
+                 SizedBox(height: 20.h),
 
                 if (_errorMessage.isNotEmpty)
                   Padding(
-                    padding: const EdgeInsets.only(bottom: 10.0),
+                    padding:  EdgeInsets.only(bottom: 10.h),
                     child: Text(
                       _errorMessage,
                       style: AppTextStyles.textSmall.copyWith(color: AppColors.primaryRed),
                     ),
                   ),
-
+                SizedBox(height: 40.h),
                 // Sign Up Button
                 PillActionButton(
                   label: 'Sign Up',
                   isLoading: _isLoading,
                   onPressed: _canSignUp ? _handleHostSignUp : null,
                 ),
-                const SizedBox(height: 40),
-
                 // Sign In Footer
-                const SizedBox(height: 40),
+                 SizedBox(height: 40.h),
                 _buildSeparator(),
-                const SizedBox(height: 20),
+                 SizedBox(height: 20.h),
                 _buildSocialLoginRow(),
-                const SizedBox(height: 40),
+                 SizedBox(height: 30.h),
                 _buildSignInFooter(context),
-                const SizedBox(height: 20),
+                 SizedBox(height: 20.h),
 
               ],
             ),
@@ -192,7 +191,7 @@ class _HostSignupScreenState extends State<HostSignupScreen> {
 
   Widget _buildObscureToggle(bool isObscure, VoidCallback onPressed) {
     return Padding(
-      padding: const EdgeInsets.only(right: 12.0),
+      padding: EdgeInsets.only(right: 12.w),
       child: IconButton(
         icon: Icon(
           isObscure
@@ -210,8 +209,8 @@ class _HostSignupScreenState extends State<HostSignupScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SizedBox(
-          height: 24.0,
-          width: 24.0,
+          height: 24.h,
+          width: 24.w,
           child: Checkbox(
             value: _agreeToTerms,
             onChanged: (bool? value) {
@@ -229,11 +228,11 @@ class _HostSignupScreenState extends State<HostSignupScreen> {
             }),
           ),
         ),
-        const SizedBox(width: 12),
+         SizedBox(width: 12.w),
         Expanded(
           child: RichText(
             text: TextSpan(
-              style: AppTextStyles.textSmall.copyWith(color: AppColors.primaryGray, fontSize: 13),
+              style: AppTextStyles.textSmall.copyWith(color: AppColors.primaryGray, fontSize: 13.sp),
               children: [
                 const TextSpan(text: 'By Signing up, you agree to the '),
                 TextSpan(
@@ -241,7 +240,7 @@ class _HostSignupScreenState extends State<HostSignupScreen> {
                   style: AppTextStyles.textSmall.copyWith(
                       color: AppColors.primaryBlue,
                       fontWeight: FontWeight.bold,
-                      fontSize: 13
+                      fontSize: 13.sp
                   ),
                   recognizer: TapGestureRecognizer()
                     ..onTap = () { /* TODO: Open Terms */ },
@@ -252,7 +251,7 @@ class _HostSignupScreenState extends State<HostSignupScreen> {
                   style: AppTextStyles.textSmall.copyWith(
                       color: AppColors.primaryBlue,
                       fontWeight: FontWeight.bold,
-                      fontSize: 13
+                      fontSize: 13.sp
                   ),
                   recognizer: TapGestureRecognizer()
                     ..onTap = () { /* TODO: Open Privacy */ },
@@ -269,7 +268,7 @@ class _HostSignupScreenState extends State<HostSignupScreen> {
   Widget _buildSocialLoginRow() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
-      spacing: 20.0,
+      spacing: 20.w,
       children: [
         SocialAuthButton(
           iconPath: _googleIconPath,
@@ -292,7 +291,7 @@ class _HostSignupScreenState extends State<HostSignupScreen> {
       children: [
         Expanded(child: Divider(color: AppColors.secondaryGray, thickness: 1)),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          padding: EdgeInsets.symmetric(horizontal: 16.w),
           child: Text(
             'Or sign in with',
             style: AppTextStyles.textSmall

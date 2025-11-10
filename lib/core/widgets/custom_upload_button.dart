@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:yaloo/core/constants/colors.dart';
 import 'package:yaloo/core/constants/app_text_styles.dart';
 
@@ -23,10 +24,10 @@ class CustomUploadButton extends StatelessWidget {
     return GestureDetector(
       onTap: onPressed,
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 18.0, horizontal: 20.0),
+        padding:  EdgeInsets.symmetric(vertical: 18.h, horizontal: 20.h),
         decoration: BoxDecoration(
           color: isUploaded ? AppColors.thirdBlue : Colors.white,
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(24.r),
           border: isUploaded ? Border.all(color: AppColors.primaryBlue) : null,
           boxShadow: [
             if (!isUploaded)
@@ -44,7 +45,7 @@ class CustomUploadButton extends StatelessWidget {
                 isUploaded ? Icons.check_circle_outline : icon,
                 color: isUploaded ? AppColors.primaryBlue : AppColors.primaryGray
             ),
-            SizedBox(width: 12),
+            SizedBox(width: 12.w),
             Expanded(
               child: Text(
                 isUploaded ? fileName! : label, // Show file name

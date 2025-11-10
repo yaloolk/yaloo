@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:yaloo/core/constants/colors.dart';
 
 class SocialAuthButton extends StatelessWidget {
@@ -17,15 +18,15 @@ class SocialAuthButton extends StatelessWidget {
       onPressed: onPressed,
       style: OutlinedButton.styleFrom(
         shape: const CircleBorder(),
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(16.w),
         side: BorderSide(color: AppColors.secondaryGray),
       ),
       child: Image.asset(
         iconPath,
-        height: 28,
-        width: 28,
+        height: 28.h,
+        width: 28.w,
         errorBuilder: (context, error, stackTrace) {
-          return Icon(Icons.public, color: AppColors.primaryGray, size: 28);
+          return Icon(Icons.public, color: AppColors.primaryGray, size: 28.w);
         },
       ),
     );

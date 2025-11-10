@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:yaloo/core/constants/colors.dart';
 import 'package:yaloo/core/constants/app_text_styles.dart';
 
@@ -25,10 +26,10 @@ class CustomPickerButton extends StatelessWidget {
       onTap: onTap,
       child: Container(
         padding:
-        const EdgeInsets.only(top: 20.0, bottom: 20.0, left: 20, right: 12),
+         EdgeInsets.only(top: 20.h, bottom: 20.h, left: 20.w, right: 12.w),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(24.r),
           boxShadow: [
             BoxShadow(
               color: AppColors.primaryGray.withAlpha(20),
@@ -40,7 +41,7 @@ class CustomPickerButton extends StatelessWidget {
         child: Row(
           children: [
             Icon(icon, color: AppColors.primaryGray),
-            const SizedBox(width: 16),
+             SizedBox(width: 16.w),
             Expanded(
               child: Text(
                 hasValue ? value! : hint,

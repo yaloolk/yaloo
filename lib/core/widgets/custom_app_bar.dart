@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:yaloo/core/constants/colors.dart';
 import 'package:yaloo/core/constants/app_text_styles.dart';
 
@@ -25,12 +26,12 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
         onPressed: () {
           Navigator.of(context).pop();
         },
-        icon: Icon(CupertinoIcons.left_chevron, color: AppColors.primaryBlack, size: 24),
+        icon: Icon(CupertinoIcons.left_chevron, color: AppColors.primaryBlack, size: 24.w),
       ),
       title: Text(
         title,
         style: AppTextStyles.headlineLargeBlack.copyWith(
-          fontSize: 20,
+          fontSize: 20.sp,
           fontWeight: FontWeight.bold,
         ),
       ),

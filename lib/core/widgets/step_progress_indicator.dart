@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:yaloo/core/constants/colors.dart';
 import 'package:yaloo/core/constants/app_text_styles.dart';
 
@@ -15,7 +16,7 @@ class StepProgressIndicator extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 24.0),
+      padding: EdgeInsets.symmetric(vertical: 24.h),
       child: Row(
         children: _buildSteps(),
       ),
@@ -68,23 +69,23 @@ class StepProgressIndicator extends StatelessWidget {
     return Column(
       children: [
         Container(
-          width: 44,
-          height: 44,
+          width: 44.w,
+          height: 44.h,
           decoration: BoxDecoration(
             color: isActive ? AppColors.primaryBlue : Colors.white,
             shape: BoxShape.circle,
             border: Border.all(
               color: color,
-              width: 2,
+              width: 2.w,
             ),
           ),
           child: Icon(
             icon,
             color: isActive ? Colors.white : color,
-            size: 20,
+            size: 20.w,
           ),
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: 8.h),
         Text(
           label,
           style: AppTextStyles.textSmall.copyWith(
@@ -101,9 +102,9 @@ class StepProgressIndicator extends StatelessWidget {
   Widget _buildConnector({required bool isCompleted}) {
     return Expanded(
       child: Container(
-        height: 2,
+        height: 2.h,
         color: isCompleted ? AppColors.primaryBlue : AppColors.secondaryGray,
-        margin: const EdgeInsets.only(bottom: 28.0), // Aligns with icons
+        margin: EdgeInsets.only(bottom: 28.h), // Aligns with icons
       ),
     );
   }

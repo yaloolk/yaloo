@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:yaloo/core/constants/colors.dart';
 import 'package:yaloo/core/constants/app_text_styles.dart';
 
@@ -23,23 +24,23 @@ class CircularNavButton extends StatelessWidget {
         Text(
           label,
           style: AppTextStyles.headlineLarge.copyWith(
-            fontSize: 28,
+            fontSize: 28.sp,
             fontWeight: FontWeight.bold,
           ),
         ),
-        const SizedBox(width: 15),
+         SizedBox(width: 15.w),
         ElevatedButton(
           onPressed: isLoading ? null : onPressed,
           style: ElevatedButton.styleFrom(
             backgroundColor:
             isLoading ? AppColors.primaryGray : AppColors.primaryBlue,
             shape: const StadiumBorder(),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
 
           ),
           child: isLoading
               ? const CircularProgressIndicator(color: Colors.white)
-              : const Icon(Icons.arrow_forward, color: Colors.white, size: 28,),
+              : Icon(Icons.arrow_forward, color: Colors.white, size: 28.w,),
         ),
       ],
     );

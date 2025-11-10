@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 // import 'package:firebase_auth/firebase_auth.dart';
 // import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:yaloo/core/constants/colors.dart';
@@ -104,27 +105,27 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
       backgroundColor: Colors.white,
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(24.0),
+          padding: EdgeInsets.all(24.w),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              SizedBox(height: 40),
+              SizedBox(height: 40.h),
               Image.asset(
                 'assets/images/yaloo_logo.png',
-                width: 80,
-                height: 80,
+                width: 80.w,
+                height: 80.h,
               ),
-              const SizedBox(height: 20),
+              SizedBox(height: 20.h),
               Text(
                 'Verify Your Email',
                 style: AppTextStyles.headlineLarge
-                    .copyWith(fontSize: 32, fontWeight: FontWeight.bold),
+                    .copyWith(fontSize: 32.sp, fontWeight: FontWeight.bold),
               ),
-              const SizedBox(height: 10),
+               SizedBox(height: 10.h),
               RichText(
                 text: TextSpan(
                   style: AppTextStyles.textSmall
-                      .copyWith(color: AppColors.primaryGray, fontSize: 16, height: 1.5),
+                      .copyWith(color: AppColors.primaryGray, fontSize: 16.sp, height: 1.5.h),
                   children: [
                     TextSpan(text: 'We\'ve sent a verification link to '),
                     TextSpan(
@@ -135,7 +136,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                   ],
                 ),
               ),
-              const SizedBox(height: 30),
+               SizedBox(height: 30.h),
 
               // --- UPDATED MOCKUP BUTTON ---
               Center(
@@ -179,7 +180,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                   ),
                 ),
               ),
-              const SizedBox(height: 40),
+               SizedBox(height: 40.h),
             ],
           ),
         ),

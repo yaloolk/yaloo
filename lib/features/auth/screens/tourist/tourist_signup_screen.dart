@@ -1,5 +1,6 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/constants/colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/widgets/custom_text_field.dart';
@@ -92,19 +93,19 @@ class _SignupScreenState extends State<SignupScreen> {
           SafeArea(
             child: SingleChildScrollView(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                padding: EdgeInsets.symmetric(horizontal: 24.w),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    SizedBox(height: 40),
+                    SizedBox(height: 40.h),
                     Image.asset(
                       _logoPath,
-                      width: 80,
-                      height: 80,
+                      width: 80.w,
+                      height: 80.h,
                       errorBuilder: (context, error, stackTrace) {
                         return Container(
-                          width: 70,
-                          height: 70,
+                          width: 70.w,
+                          height: 70.h,
                           decoration: BoxDecoration(
                             color: Colors.white,
                             shape: BoxShape.circle,
@@ -112,24 +113,24 @@ class _SignupScreenState extends State<SignupScreen> {
                           child: Icon(
                             Icons.public_rounded,
                             color: AppColors.primaryBlue,
-                            size: 40,
+                            size: 40.w,
                           ),
                         );
                       },
                     ),
-                    const SizedBox(height: 20),
+                    SizedBox(height: 20.h),
                     Text(
                       'Let\'s Get Started!',
                       style: AppTextStyles.headlineLarge
-                          .copyWith(fontSize: 32, fontWeight: FontWeight.bold),
+                          .copyWith(fontSize: 32.sp, fontWeight: FontWeight.bold),
                     ),
-                    const SizedBox(height: 10),
+                     SizedBox(height: 10.h),
                     Text(
                       'Sign up with Social or fill the form to continue.',
                       style: AppTextStyles.textSmall
-                          .copyWith(color: AppColors.primaryGray, fontSize: 16),
+                          .copyWith(color: AppColors.primaryGray, fontSize: 16.sp),
                     ),
-                    const SizedBox(height: 40),
+                     SizedBox(height: 40.h),
 
                     // --- REFACTORED ---
                     CustomTextField(
@@ -138,14 +139,14 @@ class _SignupScreenState extends State<SignupScreen> {
                       icon: Icons.email_outlined,
                       keyboardType: TextInputType.emailAddress, hint: '',
                     ),
-                    const SizedBox(height: 16),
+                     SizedBox(height: 16.sp),
                     CustomTextField(
                       controller: _passwordController,
                       hintText: 'Password',
                       icon: Icons.lock_outline,
                       obscureText: _isPasswordObscure,
                       suffixIcon: Padding(
-                        padding: const EdgeInsets.only(right: 12.0),
+                        padding: EdgeInsets.only(right: 12.w),
                         child: IconButton(
                           icon: Icon(
                             _isPasswordObscure
@@ -161,14 +162,14 @@ class _SignupScreenState extends State<SignupScreen> {
                         ),
                       ), hint: '',
                     ),
-                    const SizedBox(height: 16),
+                     SizedBox(height: 16.h),
                     CustomTextField(
                       controller: _confirmPasswordController,
                       hintText: 'Confirm Password',
                       icon: Icons.lock_outline,
                       obscureText: _isConfirmPasswordObscure,
                       suffixIcon: Padding(
-                        padding: const EdgeInsets.only(right: 12.0),
+                        padding:  EdgeInsets.only(right: 12.w),
                         child: IconButton(
                           icon: Icon(
                             _isConfirmPasswordObscure
@@ -187,15 +188,15 @@ class _SignupScreenState extends State<SignupScreen> {
                     ),
                     // --- END REFACTOR ---
 
-                    const SizedBox(height: 8),
+                     SizedBox(height: 8.h),
                     Text(
                       'At least 8 characters, 1 uppercase letter, 1 number, 1 symbol',
                       style: AppTextStyles.textSmall
-                          .copyWith(color: AppColors.primaryGray, fontSize: 12),
+                          .copyWith(color: AppColors.primaryGray, fontSize: 12.sp),
                     ),
-                    const SizedBox(height: 20),
+                     SizedBox(height: 20.h),
                     _buildTermsAndConditionsRow(),
-                    const SizedBox(height: 30),
+                     SizedBox(height: 30.h),
 
                     // --- REFACTORED ---
                     PillActionButton(
@@ -209,13 +210,13 @@ class _SignupScreenState extends State<SignupScreen> {
                     ),
                     // --- END REFACTOR ---
 
-                    const SizedBox(height: 40),
+                     SizedBox(height: 40.h),
                     _buildSeparator(),
-                    const SizedBox(height: 20),
+                     SizedBox(height: 20.h),
                     _buildSocialLoginRow(),
-                    const SizedBox(height: 40),
+                     SizedBox(height: 40.h),
                     _buildSignInFooter(context),
-                    const SizedBox(height: 20),
+                     SizedBox(height: 20.h),
                   ],
                 ),
               ),
@@ -231,8 +232,8 @@ class _SignupScreenState extends State<SignupScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SizedBox(
-          height: 24.0,
-          width: 24.0,
+          height: 24.h,
+          width: 24.w,
           child: Checkbox(
             value: _agreeToTerms,
             onChanged: (bool? value) {
@@ -250,7 +251,7 @@ class _SignupScreenState extends State<SignupScreen> {
             }),
           ),
         ),
-        const SizedBox(width: 12),
+         SizedBox(width: 12.w),
         Expanded(
           child: RichText(
             text: TextSpan(
@@ -262,7 +263,7 @@ class _SignupScreenState extends State<SignupScreen> {
                   style: AppTextStyles.textSmall.copyWith(
                       color: AppColors.primaryBlue,
                       fontWeight: FontWeight.bold,
-                      fontSize: 13
+                      fontSize: 13.sp
                   ),
                   recognizer: TapGestureRecognizer()
                     ..onTap = () {
@@ -275,7 +276,7 @@ class _SignupScreenState extends State<SignupScreen> {
                   style: AppTextStyles.textSmall.copyWith(
                       color: AppColors.primaryBlue,
                       fontWeight: FontWeight.bold,
-                      fontSize: 13
+                      fontSize: 13.sp
                   ),
                   recognizer: TapGestureRecognizer()
                     ..onTap = () {
@@ -295,7 +296,7 @@ class _SignupScreenState extends State<SignupScreen> {
       children: [
         Expanded(child: Divider(color: AppColors.secondaryGray, thickness: 1)),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          padding: EdgeInsets.symmetric(horizontal: 16.w),
           child: Text(
             'Or sign in with',
             style: AppTextStyles.textSmall
@@ -310,7 +311,7 @@ class _SignupScreenState extends State<SignupScreen> {
   Widget _buildSocialLoginRow() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
-      spacing: 20.0,
+      spacing: 20.w,
       children: [
         SocialAuthButton(
           iconPath: _googleIconPath,

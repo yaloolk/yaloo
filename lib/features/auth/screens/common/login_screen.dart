@@ -1,5 +1,6 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/constants/colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import 'package:yaloo/core/widgets/custom_text_field.dart';
@@ -32,19 +33,19 @@ class _LoginScreenState extends State<LoginScreen> {
           SafeArea(
             child: SingleChildScrollView(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                padding: EdgeInsets.symmetric(horizontal: 24.w),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    SizedBox(height: 40),
+                    SizedBox(height: 40.h),
                     Image.asset(
                       _logoPath,
-                      width: 80,
-                      height: 80,
+                      width: 80.w,
+                      height: 80.h,
                       errorBuilder: (context, error, stackTrace) {
                         return Container(
-                          width: 70,
-                          height: 70,
+                          width: 70.w,
+                          height: 70.h,
                           decoration: BoxDecoration(
                             color: Colors.white,
                             shape: BoxShape.circle,
@@ -52,24 +53,24 @@ class _LoginScreenState extends State<LoginScreen> {
                           child: Icon(
                             Icons.public_rounded,
                             color: AppColors.primaryBlue,
-                            size: 40,
+                            size: 40.w,
                           ),
                         );
                       },
                     ),
-                    const SizedBox(height: 20),
+                     SizedBox(height: 20.h),
                     Text(
                       'Welcome',
                       style: AppTextStyles.headlineLarge
-                          .copyWith(fontSize: 32, fontWeight: FontWeight.bold),
+                          .copyWith(fontSize: 32.sp, fontWeight: FontWeight.bold),
                     ),
-                    const SizedBox(height: 10),
+                     SizedBox(height: 10.h),
                     Text(
                       'Sign in with Social or fill the form to continue.',
                       style: AppTextStyles.textSmall
-                          .copyWith(color: AppColors.primaryGray, fontSize: 16),
+                          .copyWith(color: AppColors.primaryGray, fontSize: 16.sp),
                     ),
-                    const SizedBox(height: 40),
+                     SizedBox(height: 40.h),
 
                     // --- REFACTORED ---
                     CustomTextField(
@@ -77,13 +78,13 @@ class _LoginScreenState extends State<LoginScreen> {
                       icon: Icons.email_outlined,
                       keyboardType: TextInputType.emailAddress, hint: '',
                     ),
-                    const SizedBox(height: 16),
+                     SizedBox(height: 16.h),
                     CustomTextField(
                       hintText: 'Password',
                       icon: Icons.lock_outline,
                       obscureText: _isPasswordObscure,
                       suffixIcon: Padding(
-                        padding: const EdgeInsets.only(right: 12.0),
+                        padding: EdgeInsets.only(right: 12.w),
                         child: IconButton(
                           icon: Icon(
                             _isPasswordObscure
@@ -101,9 +102,9 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     // --- END REFACTOR ---
 
-                    const SizedBox(height: 20),
+                     SizedBox(height: 20.h),
                     _buildRememberAndForgotRow(),
-                    const SizedBox(height: 30),
+                     SizedBox(height: 30.h),
 
                     // --- REFACTORED ---
                     PillActionButton(
@@ -115,13 +116,13 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     // --- END REFACTOR ---
 
-                    const SizedBox(height: 40),
+                     SizedBox(height: 40.h),
                     _buildSeparator(),
-                    const SizedBox(height: 20),
+                     SizedBox(height: 20.h),
                     _buildSocialLoginRow(),
-                    const SizedBox(height: 40),
+                     SizedBox(height: 40.h),
                     _buildSignUpFooter(context),
-                    const SizedBox(height: 20),
+                     SizedBox(height: 20.h),
                   ],
                 ),
               ),
@@ -155,7 +156,7 @@ class _LoginScreenState extends State<LoginScreen> {
       children: [
         Expanded(child: Divider(color: AppColors.secondaryGray, thickness: 1)),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          padding: EdgeInsets.symmetric(horizontal: 16.w),
           child: Text(
             'Or sign in with',
             style: AppTextStyles.textSmall
@@ -170,7 +171,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget _buildSocialLoginRow() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
-      spacing: 20.0,
+      spacing: 20.w,
       children: [
         SocialAuthButton(
           iconPath: _googleIconPath,

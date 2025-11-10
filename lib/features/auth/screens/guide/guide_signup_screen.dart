@@ -1,5 +1,6 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../../core/constants/colors.dart';
 import '../../../../../core/constants/app_text_styles.dart';
 import '../../../../core/widgets/social_auth_button.dart';
@@ -147,20 +148,20 @@ class _GuideSignupScreenState extends State<GuideSignupScreen> {
           SafeArea(
             child: SingleChildScrollView(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                padding: EdgeInsets.symmetric(horizontal: 24.w),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    SizedBox(height: 40),
+                    SizedBox(height: 40.h),
 
                     Image.asset(
                       _logoPath,
-                      width: 80,
-                      height: 80,
+                      width: 80.w,
+                      height: 80.h,
                       errorBuilder: (context, error, stackTrace) {
                         return Container(
-                          width: 70,
-                          height: 70,
+                          width: 70.w,
+                          height: 70.h,
                           decoration: BoxDecoration(
                             color: Colors.white,
                             shape: BoxShape.circle,
@@ -168,72 +169,71 @@ class _GuideSignupScreenState extends State<GuideSignupScreen> {
                           child: Icon(
                             Icons.public_rounded,
                             color: AppColors.primaryBlue,
-                            size: 40,
+                            size: 40.w,
                           ),
                         );
                       },
                     ),
-                    const SizedBox(height: 20),
+                     SizedBox(height: 20.h),
 
                     // Welcome Text
                     Text(
                       'Become a Guide', // <-- UPDATED TITLE
                       style: AppTextStyles.headlineLarge
-                          .copyWith(fontSize: 32, fontWeight: FontWeight.bold),
+                          .copyWith(fontSize: 32.sp, fontWeight: FontWeight.bold),
                     ),
-                    const SizedBox(height: 10),
+                     SizedBox(height: 10.h),
                     Text(
                       'Create your account to get started.', // <-- UPDATED SUBTITLE
                       style: AppTextStyles.textSmall
-                          .copyWith(color: AppColors.primaryGray, fontSize: 16),
+                          .copyWith(color: AppColors.primaryGray, fontSize: 16.sp),
                     ),
-                    const SizedBox(height: 40),
+                     SizedBox(height: 40.h),
 
                     // Email Field
                     _buildEmailField(),
-                    const SizedBox(height: 16),
+                     SizedBox(height: 16.h),
 
                     // Password Field
                     _buildPasswordField(),
-                    const SizedBox(height: 16),
+                     SizedBox(height: 16.h),
 
                     // Confirm Password Field
                     _buildConfirmPasswordField(),
-                    const SizedBox(height: 8),
+                     SizedBox(height: 8.h),
 
                     // Password hint text
                     Text(
                       'At least 8 characters, 1 uppercase letter, 1 number, 1 symbol',
                       style: AppTextStyles.textSmall
-                          .copyWith(color: AppColors.primaryGray, fontSize: 12),
+                          .copyWith(color: AppColors.primaryGray, fontSize: 12.sp),
                     ),
-                    const SizedBox(height: 20),
+                     SizedBox(height: 20.h),
 
                     // Terms and Conditions
                     _buildTermsAndConditionsRow(),
-                    const SizedBox(height: 10),
+                     SizedBox(height: 10.h),
 
                     // Show error message
                     if (_errorMessage.isNotEmpty)
                       Padding(
-                        padding: const EdgeInsets.only(bottom: 10.0),
+                        padding:  EdgeInsets.only(bottom: 10.h),
                         child: Text(
                           _errorMessage,
                           style: AppTextStyles.textSmall.copyWith(color: AppColors.primaryRed),
                         ),
                       ),
-
+                    SizedBox(height: 40.h),
                     // Sign Up Button
                     _buildSignUpButton(),
-                    const SizedBox(height: 40),
+                     SizedBox(height: 40.h),
 
-                    const SizedBox(height: 40),
                     _buildSeparator(),
-                    const SizedBox(height: 20),
+                     SizedBox(height: 20.h),
                     _buildSocialLoginRow(),
-                    const SizedBox(height: 40),
+                     SizedBox(height: 30.h),
                     _buildSignInFooter(context),
-                    const SizedBox(height: 20), // For bottom padding
+                     SizedBox(height: 20.h), // For bottom padding
                   ],
                 ),
               ),
@@ -249,7 +249,7 @@ class _GuideSignupScreenState extends State<GuideSignupScreen> {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white, // Field background color
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(24.r),
         boxShadow: [
           BoxShadow(
             color: AppColors.primaryGray.withAlpha(20), // Shadow color
@@ -264,17 +264,17 @@ class _GuideSignupScreenState extends State<GuideSignupScreen> {
         decoration: InputDecoration(
           hintText: 'E-mail',
           prefixIcon: Padding(
-            padding: const EdgeInsets.only(
-                left: 20.0, right: 16.0), // Add space left and right of icon
+            padding: EdgeInsets.only(
+                left: 20.w, right: 16.w), // Add space left and right of icon
             child: Icon(Icons.email_outlined, color: AppColors.primaryGray),
           ),
           filled: true,
           fillColor: Colors.white, // Match container color
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(24), // Your updated radius
+            borderRadius: BorderRadius.circular(24.r), // Your updated radius
             borderSide: BorderSide.none,
           ),
-          contentPadding: EdgeInsets.only(top: 20.0, bottom: 20.0, right: 20.0),
+          contentPadding: EdgeInsets.only(top: 20.h, bottom: 20.h, right: 20.w),
         ),
       ),
     );
@@ -285,7 +285,7 @@ class _GuideSignupScreenState extends State<GuideSignupScreen> {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white, // Field background color
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(24.r),
         boxShadow: [
           BoxShadow(
             color: AppColors.primaryGray.withAlpha(20), // Shadow color
@@ -300,12 +300,12 @@ class _GuideSignupScreenState extends State<GuideSignupScreen> {
         decoration: InputDecoration(
           hintText: 'Password',
           prefixIcon: Padding(
-            padding: const EdgeInsets.only(
-                left: 20.0, right: 16.0),
+            padding: EdgeInsets.only(
+                left: 20.w, right: 16.w),
             child: Icon(Icons.lock_outline, color: AppColors.primaryGray),
           ),
           suffixIcon: Padding(
-            padding: const EdgeInsets.only(right: 12.0),
+            padding:  EdgeInsets.only(right: 12.w),
             child: IconButton(
               icon: Icon(
                 _isPasswordObscure
@@ -323,10 +323,10 @@ class _GuideSignupScreenState extends State<GuideSignupScreen> {
           filled: true,
           fillColor: Colors.white, // Match container color
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(24), // Your updated radius
+            borderRadius: BorderRadius.circular(24.r), // Your updated radius
             borderSide: BorderSide.none,
           ),
-          contentPadding: EdgeInsets.symmetric(vertical: 20.0),
+          contentPadding: EdgeInsets.symmetric(vertical: 20.h),
         ),
       ),
     );
@@ -337,7 +337,7 @@ class _GuideSignupScreenState extends State<GuideSignupScreen> {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white, // Field background color
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(24.r),
         boxShadow: [
           BoxShadow(
             color: AppColors.primaryGray.withAlpha(20), // Shadow color
@@ -352,12 +352,12 @@ class _GuideSignupScreenState extends State<GuideSignupScreen> {
         decoration: InputDecoration(
           hintText: 'Confirm Password',
           prefixIcon: Padding(
-            padding: const EdgeInsets.only(
-                left: 20.0, right: 16.0),
+            padding: EdgeInsets.only(
+                left: 20.w, right: 16.w),
             child: Icon(Icons.lock_outline, color: AppColors.primaryGray),
           ),
           suffixIcon: Padding(
-            padding: const EdgeInsets.only(right: 12.0),
+            padding: EdgeInsets.only(right: 12.w),
             child: IconButton(
               icon: Icon(
                 _isConfirmPasswordObscure
@@ -375,10 +375,10 @@ class _GuideSignupScreenState extends State<GuideSignupScreen> {
           filled: true,
           fillColor: Colors.white, // Match container color
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(24), // Your updated radius
+            borderRadius: BorderRadius.circular(24.r), // Your updated radius
             borderSide: BorderSide.none,
           ),
-          contentPadding: EdgeInsets.symmetric(vertical: 20.0),
+          contentPadding: EdgeInsets.symmetric(vertical: 20.h),
         ),
       ),
     );
@@ -390,8 +390,8 @@ class _GuideSignupScreenState extends State<GuideSignupScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SizedBox(
-          height: 24.0,
-          width: 24.0,
+          height: 24.h,
+          width: 24.w,
           child: Checkbox(
             value: _agreeToTerms,
             onChanged: (bool? value) {
@@ -409,11 +409,11 @@ class _GuideSignupScreenState extends State<GuideSignupScreen> {
             }),
           ),
         ),
-        const SizedBox(width: 12),
+        SizedBox(width: 12.w),
         Expanded(
           child: RichText(
             text: TextSpan(
-              style: AppTextStyles.textSmall.copyWith(color: AppColors.primaryGray, fontSize: 13),
+              style: AppTextStyles.textSmall.copyWith(color: AppColors.primaryGray, fontSize: 13.sp),
               children: [
                 const TextSpan(text: 'By Signing up, you agree to the '),
                 TextSpan(
@@ -421,7 +421,7 @@ class _GuideSignupScreenState extends State<GuideSignupScreen> {
                   style: AppTextStyles.textSmall.copyWith(
                       color: AppColors.primaryBlue,
                       fontWeight: FontWeight.bold,
-                      fontSize: 13
+                      fontSize: 13.sp
                   ),
                   recognizer: TapGestureRecognizer()
                     ..onTap = () {
@@ -434,7 +434,7 @@ class _GuideSignupScreenState extends State<GuideSignupScreen> {
                   style: AppTextStyles.textSmall.copyWith(
                       color: AppColors.primaryBlue,
                       fontWeight: FontWeight.bold,
-                      fontSize: 13
+                      fontSize: 13.sp
                   ),
                   recognizer: TapGestureRecognizer()
                     ..onTap = () {
@@ -452,7 +452,7 @@ class _GuideSignupScreenState extends State<GuideSignupScreen> {
   Widget _buildSocialLoginRow() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
-      spacing: 20.0,
+      spacing: 20.w,
       children: [
         SocialAuthButton(
           iconPath: _googleIconPath,
@@ -475,7 +475,7 @@ class _GuideSignupScreenState extends State<GuideSignupScreen> {
       children: [
         Expanded(child: Divider(color: AppColors.secondaryGray, thickness: 1)),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          padding: EdgeInsets.symmetric(horizontal: 16.w),
           child: Text(
             'Or sign in with',
             style: AppTextStyles.textSmall
@@ -496,13 +496,13 @@ class _GuideSignupScreenState extends State<GuideSignupScreen> {
           child: Text(
             'Sign Up',
             style: AppTextStyles.headlineLarge.copyWith(
-              fontSize: 28,
+              fontSize: 28.sp,
               fontWeight: FontWeight.bold,
             ),
             overflow: TextOverflow.ellipsis,
           ),
         ),
-        const SizedBox(width: 15),
+        SizedBox(width: 15.w),
         ElevatedButton(
           onPressed: _isLoading || !_canSignUp
               ? null // Setting onPressed to null disables the button
@@ -512,12 +512,12 @@ class _GuideSignupScreenState extends State<GuideSignupScreen> {
               ? AppColors.primaryGray.withAlpha(100)
               : AppColors.primaryBlue,
             shape: const StadiumBorder(),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
           ),
           child: _isLoading
               ? const CircularProgressIndicator(color
             : Colors.white)
-              : const Icon(Icons.arrow_forward, color: Colors.white, size:30),
+              : Icon(Icons.arrow_forward, color: Colors.white, size:30.w),
         ),
 
       ],

@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'core/constants/colors.dart';
 import 'routes/app_routes.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -9,7 +10,6 @@ void main() {
   runApp(const YalooApp());
 }
 
-// This custom scroll behavior enables dragging with a mouse
 class AppScrollBehavior extends MaterialScrollBehavior {
   @override
   Set<PointerDeviceKind> get dragDevices => {
@@ -25,29 +25,32 @@ class YalooApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Yaloo - Explore Sri Lanka',
-      scrollBehavior: AppScrollBehavior(),
-      theme: ThemeData(
-        primaryColor: AppColors.primaryBlue,
-        scaffoldBackgroundColor: AppColors.thirdBlue,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: AppColors.primaryBlue,
-          primary: AppColors.primaryBlue,
-          secondary: AppColors.eggplant,
-        ),
-        textTheme: GoogleFonts.poppinsTextTheme(
-          Theme.of(context).textTheme,
-        ),
-      ),
-      // initialRoute: '/onboarding',
-      initialRoute: '/touristDashboard',
-      // initialRoute: '/touristGuideProfile',
-      // initialRoute: '/bookingDetails',
-
-
-      routes: AppRoutes.routes,
+    return ScreenUtilInit(
+      designSize: const Size(390, 844), // Base size (e.g., iPhone 12)
+      minTextAdapt: true,
+      splitScreenMode: true,
+      builder: (context, child) {
+        return MaterialApp(
+          debugShowCheckedModeBanner: false,
+          title: 'Yaloo - Explore Sri Lanka',
+          scrollBehavior: AppScrollBehavior(),
+          theme: ThemeData(
+            primaryColor: AppColors.primaryBlue,
+            scaffoldBackgroundColor: AppColors.thirdBlue,
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: AppColors.primaryBlue,
+              primary: AppColors.primaryBlue,
+              secondary: AppColors.eggplant,
+            ),
+            textTheme: GoogleFonts.poppinsTextTheme(
+              Theme.of(context).textTheme,
+            ),
+          ),
+          initialRoute: '/touristDashboard',
+          // initialRoute: '/onboarding',
+          routes: AppRoutes.routes,
+        );
+      },
     );
   }
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:yaloo/core/constants/colors.dart';
 import 'package:yaloo/core/constants/app_text_styles.dart';
 
@@ -21,9 +22,9 @@ class CustomPrimaryButton extends StatelessWidget {
       style: ElevatedButton.styleFrom(
         backgroundColor: AppColors.primaryBlue,
         foregroundColor: Colors.white,
-        minimumSize: const Size(double.infinity, 52),
+        minimumSize: Size(double.infinity, 52.h),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(12.r),
         ),
         disabledBackgroundColor: AppColors.primaryGray.withAlpha(128),
       ),
