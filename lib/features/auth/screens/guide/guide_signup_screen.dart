@@ -6,7 +6,7 @@ import '../../../../core/widgets/social_auth_button.dart';
 
 // This screen is for *Guide* signup. It only collects Email/Password.
 class GuideSignupScreen extends StatefulWidget {
-  const GuideSignupScreen({Key? key}) : super(key: key);
+  const GuideSignupScreen({super.key});
 
   @override
   State<GuideSignupScreen> createState() => _GuideSignupScreenState();

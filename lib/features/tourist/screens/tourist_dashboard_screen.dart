@@ -1,12 +1,12 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:yaloo/core/constants/colors.dart';
 import 'package:yaloo/core/constants/app_text_styles.dart';
 import 'package:yaloo/features/tourist/screens/tourist_guide_profile.dart';
 
 // Import the 4 screens for your tabs
 import '../../booking/screens/booking_details_screen.dart';
-import '../../booking/screens/payment-screen.dart';
+import '../../booking/screens/payment_screen.dart';
 import '../../booking/screens/tour_information_screen.dart';
 import 'tourist_home_screen.dart';
 import 'tourist_chat_screen.dart';
@@ -18,12 +18,11 @@ import 'package:yaloo/core/widgets/floating_chat_button.dart';
 // --- IMPORT THE OTHER SCREENS ---
 import 'package:yaloo/features/tourist/screens/find_guide_screen.dart';
 import 'package:yaloo/features/tourist/screens/guide_list_screen.dart';
-import 'package:yaloo/features/tourist/screens/tourist_guide_profile.dart'; // <-- ADDED
 
 
 
 class TouristDashboardScreen extends StatefulWidget {
-  const TouristDashboardScreen({Key? key}) : super(key: key);
+  const TouristDashboardScreen({super.key});
 
   @override
   State<TouristDashboardScreen> createState() => _TouristDashboardScreenState();
@@ -111,19 +110,19 @@ class _TouristDashboardScreenState extends State<TouristDashboardScreen> {
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
-            icon: Icon(FontAwesomeIcons.house),
+            icon: Icon(CupertinoIcons.home),
             label: 'Home',
           ),
           BottomNavigationBarItem(
-            icon: Icon(FontAwesomeIcons.comments),
+            icon: Icon(CupertinoIcons.chat_bubble_2),
             label: 'Chat',
           ),
           BottomNavigationBarItem(
-            icon: Icon(FontAwesomeIcons.calendar),
+            icon: Icon(CupertinoIcons.calendar),
             label: 'Bookings',
           ),
           BottomNavigationBarItem(
-            icon: Icon(FontAwesomeIcons.user),
+            icon: Icon(CupertinoIcons.profile_circled),
             label: 'Profile',
           ),
         ],

@@ -1,4 +1,3 @@
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:yaloo/core/constants/colors.dart';
@@ -12,7 +11,7 @@ import 'package:yaloo/core/widgets/custom_primary_button.dart';
 enum PaymentMethod { card, paypal }
 
 class PaymentScreen extends StatefulWidget {
-  const PaymentScreen({Key? key}) : super(key: key);
+  const PaymentScreen({super.key});
 
   @override
   State<PaymentScreen> createState() => _PaymentScreenState();
@@ -21,9 +20,66 @@ class PaymentScreen extends StatefulWidget {
 class _PaymentScreenState extends State<PaymentScreen> {
   PaymentMethod _paymentMethod = PaymentMethod.card;
   bool _saveCard = false;
+  String _totalPrice = "0.00"; // Default
 
-  // TODO: Receive total from previous screen
-  final String _totalPrice = "20.00";
+  bool _canPay = false;
+
+  // Form Controllers
+  final _cardNumberController = TextEditingController();
+  final _nameOnCardController = TextEditingController();
+  final _expireDateController = TextEditingController();
+  final _cvvController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _cardNumberController.addListener(_validateForm);
+    _nameOnCardController.addListener(_validateForm);
+    _expireDateController.addListener(_validateForm);
+    _cvvController.addListener(_validateForm);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Fetch the total from the previous screen
+    try {
+      final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+      if (args != null) {
+        _totalPrice = args['total']?.toStringAsFixed(2) ?? '0.00';
+      }
+    } catch (e) {
+      print("Error getting arguments: $e");
+    }
+    _validateForm();
+  }
+
+  @override
+  void dispose() {
+    _cardNumberController.dispose();
+    _nameOnCardController.dispose();
+    _expireDateController.dispose();
+    _cvvController.dispose();
+    super.dispose();
+  }
+
+  void _validateForm() {
+    bool fieldsAreValid = false;
+    if (_paymentMethod == PaymentMethod.card) {
+      fieldsAreValid = _cardNumberController.text.isNotEmpty &&
+          _nameOnCardController.text.isNotEmpty &&
+          _expireDateController.text.isNotEmpty &&
+          _cvvController.text.isNotEmpty;
+    } else if (_paymentMethod == PaymentMethod.paypal) {
+      fieldsAreValid = true; // Just need to select PayPal
+    }
+
+    if (_canPay != fieldsAreValid) {
+      setState(() {
+        _canPay = fieldsAreValid;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -88,7 +144,10 @@ class _PaymentScreenState extends State<PaymentScreen> {
                   title: 'PayPal',
                   method: PaymentMethod.paypal,
                   icons: [
-                    FaIcon(FontAwesomeIcons.paypal, color: Color(0xFF003087), size: 24),
+                    Image.network( // Using network image for PayPal logo
+                      'https://www.paypalobjects.com/webstatic/mktg/Logo/pp-logo-100px.png',
+                      height: 24,
+                    ),
                   ]
               ),
               if (_paymentMethod == PaymentMethod.paypal)
@@ -99,9 +158,10 @@ class _PaymentScreenState extends State<PaymentScreen> {
               // --- 4. Pay Button ---
               CustomPrimaryButton(
                 text: 'PAY',
-                onPressed: () {
+                onPressed: _canPay ? () {
                   // TODO: Handle Payment Logic
-                },
+                  // e.g., call Stripe/PayPal SDK
+                } : null,
               ),
               const SizedBox(height: 20),
               _buildFaqLink(),
@@ -139,6 +199,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
           setState(() {
             _paymentMethod = value;
           });
+          _validateForm(); // Re-validate when payment method changes
         }
       },
       activeColor: AppColors.primaryBlue,
@@ -150,7 +211,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
-        color: AppColors.secondaryGray.withOpacity(0.3),
+        color: AppColors.secondaryGray.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -163,6 +224,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
           const SizedBox(height: 16),
           _buildFormLabel("Card Number"),
           CustomTextField(
+            controller: _cardNumberController,
             hintText: 'XXXX XXXX XXXX XXXX',
             icon: FontAwesomeIcons.creditCard,
             keyboardType: TextInputType.number, hint: '',
@@ -170,6 +232,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
           const SizedBox(height: 16),
           _buildFormLabel("Name on Card"),
           CustomTextField(
+            controller: _nameOnCardController,
             hintText: 'Name on Card',
             icon: FontAwesomeIcons.user, hint: '',
           ),
@@ -182,6 +245,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                   children: [
                     _buildFormLabel("Expire Date"),
                     CustomTextField(
+                      controller: _expireDateController,
                       hintText: 'MM/YY',
                       icon: FontAwesomeIcons.calendar,
                       keyboardType: TextInputType.datetime, hint: '',
@@ -196,6 +260,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                   children: [
                     _buildFormLabel("CVV Code"),
                     CustomTextField(
+                      controller: _cvvController,
                       hintText: 'XXX',
                       icon: FontAwesomeIcons.lock,
                       keyboardType: TextInputType.number, hint: '',
@@ -217,7 +282,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
-        color: AppColors.secondaryGray.withOpacity(0.3),
+        color: AppColors.secondaryGray.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Text(
@@ -230,11 +295,9 @@ class _PaymentScreenState extends State<PaymentScreen> {
   Widget _buildFormLabel(String label) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8.0, left: 16.0),
-      child: Text.rich(
-        TextSpan(
-          text: label,
-          style: AppTextStyles.textSmall.copyWith(color: AppColors.primaryBlack, fontWeight: FontWeight.bold),
-        ),
+      child: Text(
+        label,
+        style: AppTextStyles.textSmall.copyWith(color: AppColors.primaryBlack, fontWeight: FontWeight.bold),
       ),
     );
   }

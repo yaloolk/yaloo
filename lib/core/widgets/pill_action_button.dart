@@ -9,11 +9,11 @@ class PillActionButton extends StatelessWidget {
   final bool isLoading;
 
   const PillActionButton({
-    Key? key,
+    super.key,
     required this.label,
     this.onPressed,
     this.isLoading = false,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

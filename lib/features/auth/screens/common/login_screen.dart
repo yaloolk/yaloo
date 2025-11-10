@@ -7,7 +7,7 @@ import '../../../../core/widgets/social_auth_button.dart';
 import '../../../../core/widgets/pill_action_button.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({Key? key}) : super(key: key);
+  const LoginScreen({super.key});
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();

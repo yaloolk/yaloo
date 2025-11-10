@@ -4,7 +4,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:yaloo/core/constants/colors.dart';
 
 class FloatingChatButton extends StatelessWidget {
-  const FloatingChatButton({Key? key}) : super(key: key);
+  const FloatingChatButton({super.key});
 
   @override
   Widget build(BuildContext context) {

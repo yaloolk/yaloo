@@ -9,7 +9,7 @@ import 'package:yaloo/core/widgets/custom_primary_button.dart';
 enum UserRole { tourist, guide, host }
 
 class UserSelectionScreen extends StatefulWidget {
-  const UserSelectionScreen({Key? key}) : super(key: key);
+  const UserSelectionScreen({super.key});
 
   @override
   State<UserSelectionScreen> createState() => _UserSelectionScreenState();

@@ -9,11 +9,11 @@ class CustomTextArea extends StatelessWidget {
   final IconData icon;
 
   const CustomTextArea({
-    Key? key,
+    super.key,
     this.controller,
     required this.hintText,
     required this.icon,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

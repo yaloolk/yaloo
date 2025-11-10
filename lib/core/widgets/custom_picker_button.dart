@@ -10,12 +10,12 @@ class CustomPickerButton extends StatelessWidget {
   final VoidCallback onTap;
 
   const CustomPickerButton({
-    Key? key,
+    super.key,
     required this.hint,
     required this.icon,
     this.value,
     required this.onTap,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

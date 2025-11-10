@@ -17,7 +17,7 @@ import '../features/tourist/screens/guide_list_screen.dart';
 import '../features/tourist/screens/tourist_guide_profile.dart';
 import '../features/booking/screens/booking_details_screen.dart';
 import '../features/booking/screens/tour_information_screen.dart';
-import '../features/booking/screens/payment-screen.dart';
+import '../features/booking/screens/payment_screen.dart';
 
 
 

@@ -3,7 +3,7 @@ import 'package:yaloo/core/constants/colors.dart';
 import 'package:yaloo/core/constants/app_text_styles.dart';
 
 class ProfileSubmittedScreen extends StatelessWidget {
-  const ProfileSubmittedScreen({Key? key}) : super(key: key);
+  const ProfileSubmittedScreen({super.key});
 
   @override
   Widget build(BuildContext context) {

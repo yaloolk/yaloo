@@ -1,5 +1,5 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:yaloo/core/constants/colors.dart';
 import 'package:yaloo/core/constants/app_text_styles.dart';
 import 'package:yaloo/core/widgets/custom_icon_button.dart';
@@ -42,7 +42,7 @@ final List<Map<String, dynamic>> availableGuides = [
 // -----------------
 
 class GuideListScreen extends StatelessWidget {
-  const GuideListScreen({Key? key}) : super(key: key);
+  const GuideListScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -53,7 +53,7 @@ class GuideListScreen extends StatelessWidget {
         actions: [
           CustomIconButton(
             onPressed: () { /* TODO: Handle Search */ },
-            icon: Icon(FontAwesomeIcons.magnifyingGlass,
+            icon: Icon(CupertinoIcons.search,
                 color: AppColors.primaryBlack, size: 24),
           ),
           const SizedBox(width: 12),
@@ -62,7 +62,7 @@ class GuideListScreen extends StatelessWidget {
             children: [
               CustomIconButton(
                 onPressed: () { /* TODO: Handle notification */ },
-                icon: Icon(FontAwesomeIcons.bell, color: AppColors.primaryBlack, size: 24),
+                icon: Icon(CupertinoIcons.bell, color: AppColors.primaryBlack, size: 24),
               ),
               Positioned(
                 top: 10,
@@ -118,9 +118,9 @@ class GuideListScreen extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
       child: Row(
         children: [
-          _buildFilterChip(FontAwesomeIcons.sliders, "Filter"),
+          _buildFilterChip(CupertinoIcons.slider_horizontal_3, "Filter"),
           const SizedBox(width: 12),
-          _buildFilterChip(FontAwesomeIcons.sort, "Sort"),
+          _buildFilterChip(CupertinoIcons.sort_down, "Sort"),
         ],
       ),
     );

@@ -7,7 +7,7 @@ import '../../../../core/widgets/social_auth_button.dart';
 import '../../../../core/widgets/pill_action_button.dart';
 
 class SignupScreen extends StatefulWidget {
-  const SignupScreen({Key? key}) : super(key: key);
+  const SignupScreen({super.key});
 
   @override
   State<SignupScreen> createState() => _SignupScreenState();

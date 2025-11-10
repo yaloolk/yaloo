@@ -4,7 +4,7 @@ import '../../../../core/constants/app_text_styles.dart';
 
 // This is the main OnboardingScreen that holds all pages
 class OnboardingScreen extends StatefulWidget {
-  const OnboardingScreen({Key? key}) : super(key: key);
+  const OnboardingScreen({super.key});
 
   @override
   State<OnboardingScreen> createState() => _OnboardingScreenState();
@@ -189,11 +189,11 @@ class _OnboardingPage extends StatelessWidget {
   final String subtitle;
 
   const _OnboardingPage({
-    Key? key,
+    super.key,
     required this.imagePath,
     required this.title,
     required this.subtitle,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

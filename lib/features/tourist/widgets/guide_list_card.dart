@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:yaloo/core/constants/colors.dart';
@@ -15,7 +16,7 @@ class GuideListCard extends StatelessWidget {
   final Map<String, dynamic> guideData;
 
   const GuideListCard({
-    Key? key,
+    super.key,
     required this.name,
     required this.location,
     required this.rating,
@@ -24,7 +25,7 @@ class GuideListCard extends StatelessWidget {
     required this.specialties,
     required this.isAvailable,
     required this.guideData, // --- ADDED ---
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -59,12 +60,12 @@ class GuideListCard extends StatelessWidget {
                     children: [
                       _buildHeader(),
                       const SizedBox(height: 8),
-                      _buildInfoRow(FontAwesomeIcons.mapPin, location),
+                      _buildInfoRow(CupertinoIcons.map_pin, location),
                       const SizedBox(height: 6),
                       _buildInfoRow(FontAwesomeIcons.language, languages.join(', ')),
                       const SizedBox(height: 6),
                       _buildInfoRow(
-                        FontAwesomeIcons.solidStar,
+                        CupertinoIcons.star_fill,
                         rating,
                         iconColor: Colors.amber,
                       ),
@@ -108,7 +109,7 @@ class GuideListCard extends StatelessWidget {
   Widget _buildAvailabilityChip() {
     final color = isAvailable ? AppColors.primaryGreen : AppColors.primaryRed;
     final bgColor = isAvailable ? AppColors.secondaryGreen : AppColors.primaryRed.withAlpha(20);
-    final icon = isAvailable ? FontAwesomeIcons.check : FontAwesomeIcons.xmark;
+    final icon = isAvailable ? CupertinoIcons.checkmark_alt : CupertinoIcons.xmark;
     final text = isAvailable ? 'Available' : 'Not Available';
 
     return Container(
@@ -184,7 +185,7 @@ class GuideListCard extends StatelessWidget {
           onPressed: () {
             // TODO: Handle Favorite
           },
-          icon: Icon(FontAwesomeIcons.heart, color: AppColors.primaryGray),
+          icon: Icon(CupertinoIcons.heart, color: AppColors.primaryGray),
         ),
         TextButton(
           onPressed: () {
@@ -206,14 +207,19 @@ class GuideListCard extends StatelessWidget {
         ElevatedButton(
           onPressed: () {
             // --- UPDATED: Navigate to Booking Details ---
-            Navigator.pushNamed(
-                context,
-                '/bookingDetails',
-                arguments: { // Pass just what the booking page needs
-                  'name': name,
-                  'image': imageUrl,
-                }
-            );
+            if (isAvailable) {
+              Navigator.pushNamed(
+                  context,
+                  '/bookingDetails',
+                  arguments: { // Pass just what the booking page needs
+                    'name': name,
+                    'image': imageUrl,
+                  }
+              );
+            }
+            else{
+
+            }
           },
           style: ElevatedButton.styleFrom(
             backgroundColor: AppColors.primaryBlue,

@@ -8,7 +8,7 @@ import 'package:yaloo/core/widgets/social_auth_button.dart';
 
 
 class HostSignupScreen extends StatefulWidget {
-  const HostSignupScreen({Key? key}) : super(key: key);
+  const HostSignupScreen({super.key});
 
   @override
   State<HostSignupScreen> createState() => _HostSignupScreenState();

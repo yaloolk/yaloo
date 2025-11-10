@@ -9,12 +9,12 @@ class CustomUploadButton extends StatelessWidget {
   final VoidCallback onPressed;
 
   const CustomUploadButton({
-    Key? key,
+    super.key,
     required this.label,
     required this.icon,
     this.fileName,
     required this.onPressed,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

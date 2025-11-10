@@ -6,14 +6,13 @@ import 'package:yaloo/core/widgets/custom_app_bar.dart';
 import 'package:yaloo/core/widgets/floating_chat_button.dart';
 import 'package:yaloo/core/widgets/step_progress_indicator.dart';
 import 'package:yaloo/core/widgets/custom_text_field.dart';
-import 'package:yaloo/core/widgets/custom_text_area.dart';
 import 'package:yaloo/core/widgets/custom_primary_button.dart';
 
 // Enums for selection
 enum TravelerType { solo, couple, group }
 
 class TourInformationScreen extends StatefulWidget {
-  const TourInformationScreen({Key? key}) : super(key: key);
+  const TourInformationScreen({super.key});
 
   @override
   State<TourInformationScreen> createState() => _TourInformationScreenState();
@@ -23,11 +22,11 @@ class _TourInformationScreenState extends State<TourInformationScreen> {
   // --- Form State ---
   TravelerType _travelerType = TravelerType.solo;
 
-  final _meetingPointController = TextEditingController();
-  final _pickupTimeHourController = TextEditingController();
-  final _pickupTimeMinuteController = TextEditingController();
+  final _meetingPointController = TextEditingController(text: 'Colombo');
+  final _pickupTimeHourController = TextEditingController(text: '00');
+  final _pickupTimeMinuteController = TextEditingController(text: '00');
   final _noteController = TextEditingController();
-  final _hoursController = TextEditingController(); // <-- NEW: For duration
+  final _hoursController = TextEditingController(text: '4'); // <-- NEW: For duration
   bool _isAm = true;
 
   // --- Validation ---
@@ -77,7 +76,6 @@ class _TourInformationScreenState extends State<TourInformationScreen> {
     final bool fieldsAreValid = _meetingPointController.text.isNotEmpty &&
         _pickupTimeHourController.text.isNotEmpty &&
         _pickupTimeMinuteController.text.isNotEmpty &&
-
         _hoursController.text.isNotEmpty;
 
     // Calculate price
@@ -151,11 +149,6 @@ class _TourInformationScreenState extends State<TourInformationScreen> {
               _buildTimePicker(),
               const SizedBox(height: 16),
               _buildFormLabel("Note"),
-              // CustomTextArea(
-              //   controller: _noteController,
-              //   hintText: 'Write here...',
-              //   icon: FontAwesomeIcons.noteSticky,
-              // ),
               _buildNoteField(),
               const SizedBox(height: 24),
 
@@ -168,8 +161,15 @@ class _TourInformationScreenState extends State<TourInformationScreen> {
                 text: 'Confirm',
                 // UPDATED: Button is enabled/disabled
                 onPressed: _canConfirm ? () {
-                  // TODO: Navigate to Payment (Step 3)
-                  Navigator.pushNamed(context, '/payment');
+                  // --- UPDATED: Navigate to Payment (Step 3) ---
+                  Navigator.pushNamed(
+                      context,
+                      '/payment',
+                      arguments: {
+                        'total': _total,
+                        // ... pass other booking data
+                      }
+                  );
                 } : null,
               ),
               const SizedBox(height: 20),
@@ -367,7 +367,7 @@ class _TourInformationScreenState extends State<TourInformationScreen> {
     return Container(
       padding: const EdgeInsets.all(20.0),
       decoration: BoxDecoration(
-        color: AppColors.secondaryGray.withOpacity(0.5),
+        color: AppColors.secondaryGray.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(

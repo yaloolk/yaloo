@@ -9,7 +9,7 @@ import '../../../../core/widgets/custom_picker_button.dart';
 import '../../../../core/widgets/circular_nav_button.dart';
 
 class ProfileCompletionScreen extends StatefulWidget {
-  const ProfileCompletionScreen({Key? key}) : super(key: key);
+  const ProfileCompletionScreen({super.key});
 
   @override
   State<ProfileCompletionScreen> createState() =>

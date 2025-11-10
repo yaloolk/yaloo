@@ -10,7 +10,7 @@ import 'package:image_picker/image_picker.dart';
 
 
 class GuideProfileCompletionScreen extends StatefulWidget {
-  const GuideProfileCompletionScreen({Key? key}) : super(key: key);
+  const GuideProfileCompletionScreen({super.key});
 
   @override
   State<GuideProfileCompletionScreen> createState() =>

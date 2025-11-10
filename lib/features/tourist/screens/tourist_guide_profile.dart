@@ -1,5 +1,5 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:yaloo/core/constants/colors.dart';
 import 'package:yaloo/core/constants/app_text_styles.dart';
 
@@ -17,7 +17,7 @@ final List<String> galleryImages = [
 // ---------------------------------
 
 class GuideProfileScreen extends StatelessWidget {
-  const GuideProfileScreen({Key? key}) : super(key: key);
+  const GuideProfileScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -29,7 +29,7 @@ class GuideProfileScreen extends StatelessWidget {
         actions: [
           CustomIconButton(
             onPressed: () { /* TODO: Handle Search */ },
-            icon: Icon(FontAwesomeIcons.magnifyingGlass,
+            icon: Icon(CupertinoIcons.search,
                 color: AppColors.primaryBlack, size: 24),
           ),
           const SizedBox(width: 12),
@@ -38,7 +38,7 @@ class GuideProfileScreen extends StatelessWidget {
             children: [
               CustomIconButton(
                 onPressed: () { /* TODO: Handle notification */ },
-                icon: Icon(FontAwesomeIcons.bell, color: AppColors.primaryBlack, size: 24),
+                icon: Icon(CupertinoIcons.bell, color: AppColors.primaryBlack, size: 24),
               ),
               Positioned(
                 top: 10,
@@ -111,7 +111,7 @@ class GuideProfileScreen extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(FontAwesomeIcons.solidStar, color: Colors.amber, size: 16),
+              Icon(CupertinoIcons.star_fill, color: Colors.amber, size: 16),
               const SizedBox(width: 8),
               Text(
                 '4.9 (128 reviews)',
@@ -127,7 +127,7 @@ class GuideProfileScreen extends StatelessWidget {
           const SizedBox(height: 16),
           Row(
             children: [
-              _buildVerfiedChip(),
+              _buildVerifiedChip(),
               const Spacer(),
               _buildCheckAvailabilityButton(),
             ],
@@ -156,7 +156,7 @@ class GuideProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildVerfiedChip() {
+  Widget _buildVerifiedChip() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
@@ -165,7 +165,7 @@ class GuideProfileScreen extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(FontAwesomeIcons.check, color: AppColors.primaryGreen, size: 14),
+          Icon(CupertinoIcons.checkmark_alt, color: AppColors.primaryGreen, size: 14),
           const SizedBox(width: 6),
           Text(
             'Yaloo Verified Guide',
@@ -192,7 +192,7 @@ class GuideProfileScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 4),
-          Icon(FontAwesomeIcons.calendarDay, color: AppColors.primaryBlue, size: 14),
+          Icon(CupertinoIcons.calendar_today, color: AppColors.primaryBlue, size: 16),
         ],
       ),
     );
@@ -226,7 +226,7 @@ class GuideProfileScreen extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
       padding: const EdgeInsets.all(20.0),
       decoration: BoxDecoration(
-        color: AppColors.secondaryGray.withOpacity(0.5),
+        color: AppColors.secondaryGray.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -271,7 +271,7 @@ class GuideProfileScreen extends StatelessWidget {
         children: [
           _buildSectionTitle('Gallery'),
           const SizedBox(height: 16),
-          Container(
+          SizedBox(
             height: 120,
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
@@ -363,8 +363,8 @@ class GuideProfileScreen extends StatelessWidget {
     return Row(
       children: List.generate(5, (index) {
         return Icon(
-          index < rating.floor() ? FontAwesomeIcons.solidStar :
-          (index < rating ? FontAwesomeIcons.starHalfAlt : FontAwesomeIcons.star),
+          index < rating.floor() ? CupertinoIcons.star_fill :
+          (index < rating ? CupertinoIcons.star_lefthalf_fill : CupertinoIcons.star_fill),
           color: Colors.amber,
           size: 16,
         );
@@ -459,7 +459,7 @@ class GuideProfileScreen extends StatelessWidget {
             ),
             child: Row(
               children: [
-                Icon(FontAwesomeIcons.shieldHalved, color: AppColors.primaryGreen, size: 20),
+                Icon(CupertinoIcons.checkmark_shield_fill, color: AppColors.primaryGreen, size: 24),
                 const SizedBox(width: 12),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -503,7 +503,7 @@ class GuideProfileScreen extends StatelessWidget {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 10,
             offset: Offset(0, -2),
           ),

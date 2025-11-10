@@ -1,4 +1,3 @@
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:yaloo/core/constants/colors.dart';
@@ -12,7 +11,7 @@ import 'package:yaloo/core/widgets/custom_primary_button.dart';
 import 'package:country_picker/country_picker.dart';
 
 class BookingDetailsScreen extends StatefulWidget {
-  const BookingDetailsScreen({Key? key}) : super(key: key);
+  const BookingDetailsScreen({super.key});
 
   @override
   State<BookingDetailsScreen> createState() => _BookingDetailsScreenState();
@@ -28,10 +27,10 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
   String _guideImage = "assets/images/guide_1.jpg";
 
   // --- Form Controllers ---
-  final _nameController = TextEditingController();
-  final _passportController = TextEditingController();
-  final _emailController = TextEditingController();
-  final _phoneController = TextEditingController();
+  final _nameController = TextEditingController(text: 'jhon');
+  final _passportController = TextEditingController(text: '0000');
+  final _emailController = TextEditingController(text: 'example@gmail.com');
+  final _phoneController = TextEditingController(text: '00000');
 
   // --- Form State Variables ---
   Country? _selectedCountry;

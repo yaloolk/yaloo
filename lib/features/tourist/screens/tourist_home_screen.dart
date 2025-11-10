@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:yaloo/core/constants/colors.dart';
@@ -26,7 +27,7 @@ final List<Map<String, dynamic>> categories = [
 
 
 class TouristHomeScreen extends StatelessWidget {
-  const TouristHomeScreen({Key? key}) : super(key: key);
+  const TouristHomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -87,7 +88,7 @@ class TouristHomeScreen extends StatelessWidget {
           const Spacer(),
           CustomIconButton(
             onPressed: () { /* TODO: Handle Settings */ },
-            icon: Icon(FontAwesomeIcons.gear,
+            icon: Icon(CupertinoIcons.gear,
                 color: AppColors.primaryBlack, size: 24),
           ),
           const SizedBox(width: 12),
@@ -95,7 +96,7 @@ class TouristHomeScreen extends StatelessWidget {
             children: [
               CustomIconButton(
                 onPressed: () { /* TODO: Handle notification */ },
-                icon: Icon(FontAwesomeIcons.bell,
+                icon: Icon(CupertinoIcons.bell,
                     color: AppColors.primaryBlack, size: 24),
               ),
               Positioned(
@@ -163,7 +164,7 @@ class TouristHomeScreen extends StatelessWidget {
                   hintStyle: AppTextStyles.bodyLarge
                       .copyWith(color: AppColors.primaryGray),
                   prefixIcon:
-                  Icon(FontAwesomeIcons.magnifyingGlass, color: AppColors.primaryGray, size: 20),
+                  Icon(CupertinoIcons.search, color: AppColors.primaryGray, size: 20),
                   border: InputBorder.none,
                   contentPadding: EdgeInsets.symmetric(vertical: 14),
                 ),
@@ -173,7 +174,7 @@ class TouristHomeScreen extends StatelessWidget {
           const SizedBox(width: 12),
           CustomIconButton(
             onPressed: () { /* TODO: Handle filter */ },
-            icon: Icon(FontAwesomeIcons.sliders,
+            icon: Icon(CupertinoIcons.slider_horizontal_3,
                 color: AppColors.primaryBlack, size: 24),
           ),
         ],
@@ -183,7 +184,7 @@ class TouristHomeScreen extends StatelessWidget {
 
   // --- 4. Featured Slider ---
   Widget _buildFeaturedSlider() {
-    return Container(
+    return SizedBox(
       height: 180,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
@@ -254,7 +255,7 @@ class TouristHomeScreen extends StatelessWidget {
                 child: _buildFindButton(
                   context: context,
                   label: "GUIDE",
-                  icon: FontAwesomeIcons.compass,
+                  icon: CupertinoIcons.compass,
                   onPressed: () {
                     // This will now push 'findGuide' onto the NESTED navigator
                     Navigator.pushNamed(context, '/findGuide');
@@ -266,7 +267,7 @@ class TouristHomeScreen extends StatelessWidget {
                 child: _buildFindButton(
                   context: context,
                   label: "HOST",
-                  icon: FontAwesomeIcons.house,
+                  icon: CupertinoIcons.house_fill,
                   onPressed: () {
                     // TODO: Create a '/findHost' screen
                     // Navigator.pushNamed(context, '/findHost');
@@ -310,7 +311,7 @@ class TouristHomeScreen extends StatelessWidget {
 
     return Card(
       elevation: 3.0,
-      shadowColor: AppColors.primaryGray.withOpacity(0.15),
+      shadowColor: AppColors.primaryGray.withValues(alpha: 0.15),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
       ),
@@ -331,7 +332,7 @@ class TouristHomeScreen extends StatelessWidget {
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.primaryGray.withOpacity(0.12),
+                      color: AppColors.primaryGray.withValues(alpha: 0.12),
                       blurRadius: 8,
                       offset: Offset(0, 4),
                     ),
@@ -393,7 +394,7 @@ class TouristHomeScreen extends StatelessWidget {
   // --- 7. Popular Destinations Slider ---
   Widget _buildPopularSlider() {
     // ... (This widget is unchanged) ...
-    return Container(
+    return SizedBox(
       height: 280,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
@@ -450,7 +451,7 @@ class TouristHomeScreen extends StatelessWidget {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(20),
               gradient: LinearGradient(
-                colors: [Colors.black.withOpacity(0.6), Colors.transparent],
+                colors: [Colors.black.withValues(alpha: 0.6), Colors.transparent],
                 begin: Alignment.bottomCenter,
                 end: Alignment.center,
               ),
@@ -462,10 +463,10 @@ class TouristHomeScreen extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
+                color: Colors.white.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Icon(FontAwesomeIcons.expand, color: Colors.white, size: 20),
+              child: Icon(CupertinoIcons.viewfinder, color: Colors.white, size: 20),
             ),
           ),
           Positioned(
@@ -473,7 +474,7 @@ class TouristHomeScreen extends StatelessWidget {
             left: 20,
             child: Row(
               children: [
-                Icon(FontAwesomeIcons.mapPin,
+                Icon(CupertinoIcons.map_pin,
                     color: Colors.white, size: 16),
                 const SizedBox(width: 4),
                 Text(
@@ -494,7 +495,7 @@ class TouristHomeScreen extends StatelessWidget {
   // --- 8. Category Slider ---
   Widget _buildCategorySlider() {
     // ... (This widget is unchanged) ...
-    return Container(
+    return SizedBox(
       height: 48,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,

@@ -6,14 +6,13 @@ import 'package:yaloo/core/constants/app_text_styles.dart';
 
 // --- IMPORT YOUR CUSTOM WIDGETS ---
 import 'package:yaloo/core/widgets/custom_text_field.dart';
-import 'package:yaloo/core/widgets/custom_text_area.dart';
 import 'package:yaloo/core/widgets/custom_picker_button.dart';
 import 'package:yaloo/core/widgets/custom_upload_button.dart';
 import 'package:yaloo/core/widgets/circular_nav_button.dart';
 // ---------------------------------
 
 class HostProfileCompletionScreen extends StatefulWidget {
-  const HostProfileCompletionScreen({Key? key}) : super(key: key);
+  const HostProfileCompletionScreen({super.key});
 
   @override
   State<HostProfileCompletionScreen> createState() =>
