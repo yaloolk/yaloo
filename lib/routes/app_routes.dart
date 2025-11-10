@@ -15,6 +15,9 @@ import '../features/tourist/screens/tourist_dashboard_screen.dart';
 import '../features/tourist/screens/find_guide_screen.dart';
 import '../features/tourist/screens/guide_list_screen.dart';
 import '../features/tourist/screens/tourist_guide_profile.dart';
+import '../features/booking/screens/booking_details_screen.dart';
+import '../features/booking/screens/tour_information_screen.dart';
+import '../features/booking/screens/payment-screen.dart';
 
 
 
@@ -37,6 +40,9 @@ class AppRoutes {
     '/findGuide': (_) => const FindGuideScreen(),
     '/guideList': (_) => const GuideListScreen(),
     '/touristGuideProfile': (_) => const GuideProfileScreen(),
+    '/bookingDetails': (_) => const BookingDetailsScreen(),
+    '/tourInformation': (_) => const TourInformationScreen(),
+    '/payment': (_) => const PaymentScreen(),
 
 
   };

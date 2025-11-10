@@ -2,15 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:yaloo/core/constants/colors.dart';
 import 'package:yaloo/core/constants/app_text_styles.dart';
+
+// --- IMPORT THE REUSABLE WIDGETS ---
 import 'package:yaloo/core/widgets/custom_app_bar.dart';
-import '../../../core/widgets/icon_Button.dart';
+import 'package:yaloo/core/widgets/custom_icon_button.dart';
 
 // --- MOCK DATA for this screen ---
 final List<String> galleryImages = [
-  "assets/images/ella.jpg",
-  "assets/images/sigiriya.jpg",
-  "assets/images/galle.jpg",
-  "assets/images/guide_1.jpg",
+  "https://placehold.co/200x200/e9c46a/white?text=Gallery+1",
+  "https://placehold.co/200x200/f4a261/white?text=Gallery+2",
+  "https://placehold.co/200x200/e76f51/white?text=Gallery+3",
+  "https://placehold.co/200x200/2a9d8f/white?text=Gallery+4",
 ];
 // ---------------------------------
 
@@ -22,9 +24,8 @@ class GuideProfileScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.white,
 
-      // --- UPDATED: Replaced local method with CustomAppBar widget ---
       appBar: CustomAppBar(
-        title: 'Guide Profile',
+        title: 'Choose Your Guide',
         actions: [
           CustomIconButton(
             onPressed: () { /* TODO: Handle Search */ },
@@ -33,7 +34,7 @@ class GuideProfileScreen extends StatelessWidget {
           ),
           const SizedBox(width: 12),
           Stack(
-            alignment: Alignment.center, // Aligns the dot better
+            alignment: Alignment.center,
             children: [
               CustomIconButton(
                 onPressed: () { /* TODO: Handle notification */ },
@@ -56,31 +57,30 @@ class GuideProfileScreen extends StatelessWidget {
           const SizedBox(width: 12),
         ],
       ),
-      // --- END OF UPDATE ---
 
       body: CustomScrollView(
         slivers: [
           SliverList(
             delegate: SliverChildListDelegate(
               [
-                _buildProfileCard(), // The card that overlaps
+                _buildProfileCard(context), // <-- Pass context
                 _buildAboutSection(),
                 _buildDetailsCard(),
                 _buildGallerySection(),
                 _buildReviewSection(),
                 _buildSafetySection(),
-                const SizedBox(height: 120), // Padding for chat & booking bar
+                const SizedBox(height: 120),
               ],
             ),
           ),
         ],
       ),
-      bottomNavigationBar: _buildBookingBar(),
+      bottomNavigationBar: _buildBookingBar(context), // <-- Pass context
     );
   }
 
   // --- 2. The Main Profile Card ---
-  Widget _buildProfileCard() {
+  Widget _buildProfileCard(BuildContext context) { // <-- Pass context
     return Container(
       transform: Matrix4.translationValues(0.0, 0.0, 0.0),
       margin: const EdgeInsets.symmetric(horizontal: 24.0),
@@ -104,7 +104,7 @@ class GuideProfileScreen extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            'Hadhi Ahamed',
+            'Hadhi Ahmed',
             style: AppTextStyles.headlineLargeBlack.copyWith(fontSize: 22, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
@@ -134,19 +134,21 @@ class GuideProfileScreen extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           ElevatedButton(
-            onPressed: () { /* TODO: Book Guide */ },
+            onPressed: () {
+              // --- UPDATED: Navigate to Booking Details ---
+              Navigator.pushNamed(context, '/bookingDetails');
+            },
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primaryWhite,
-              // foregroundColor: Colors.white,
+              backgroundColor: AppColors.primaryBlue,
+              foregroundColor: Colors.white,
               minimumSize: const Size(double.infinity, 48),
               shape: RoundedRectangleBorder(
-                side: BorderSide(color: AppColors.primaryBlue),
                 borderRadius: BorderRadius.circular(12),
               ),
             ),
             child: Text(
               'Book Guide',
-              style: AppTextStyles.bodyLarge.copyWith(color: AppColors.primaryBlue, fontWeight: FontWeight.bold),
+              style: AppTextStyles.bodyLarge.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
             ),
           ),
         ],
@@ -206,9 +208,9 @@ class GuideProfileScreen extends StatelessWidget {
           _buildSectionTitle('About Me'),
           const SizedBox(height: 8),
           Text(
-            'Ayubowan! I\'m Hadhi, a passionate storyteller and certified guide from the beautiful city of Kandy. With over 4 years of experience, I love sharing the hidden gems and rich culture of Sri Lanka with travelers from around the world. Let\'s create unforgettable memories together!',
+            'Ayubowan! I\'m John, a passionate storyteller and certified guide from the beautiful city of Kandy. With over 4 years of experience, I love sharing the hidden gems and rich culture of Sri Lanka with travelers from around the world. Let\'s create unforgettable memories together!',
             style: AppTextStyles.textSmall.copyWith(
-              color: AppColors.secondaryBlack,
+              color: AppColors.primaryGray,
               fontSize: 15,
               height: 1.5,
             ),
@@ -493,7 +495,7 @@ class GuideProfileScreen extends StatelessWidget {
   }
 
   // --- 8. Sticky Bottom Booking Bar ---
-  Widget _buildBookingBar() {
+  Widget _buildBookingBar(BuildContext context) { // <-- Pass context
     return Container(
       height: 80,
       padding: const EdgeInsets.symmetric(horizontal: 24.0),
@@ -529,7 +531,8 @@ class GuideProfileScreen extends StatelessWidget {
           ),
           ElevatedButton(
             onPressed: () {
-              // TODO: Handle Request Booking
+              // --- UPDATED: Navigate to Booking Details ---
+              Navigator.pushNamed(context, '/bookingDetails');
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primaryBlue,
@@ -563,6 +566,3 @@ class GuideProfileScreen extends StatelessWidget {
     );
   }
 }
-
-// --- REMOVED: This method is now in custom_app_bar.dart ---
-// PreferredSizeWidget _buildAppBar(BuildContext context) { ... }

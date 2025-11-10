@@ -11,6 +11,8 @@ class GuideListCard extends StatelessWidget {
   final List<String> languages;
   final List<String> specialties;
   final bool isAvailable;
+  // --- ADDED: We need the full data to pass ---
+  final Map<String, dynamic> guideData;
 
   const GuideListCard({
     Key? key,
@@ -21,6 +23,7 @@ class GuideListCard extends StatelessWidget {
     required this.languages,
     required this.specialties,
     required this.isAvailable,
+    required this.guideData, // --- ADDED ---
   }) : super(key: key);
 
   @override
@@ -54,19 +57,17 @@ class GuideListCard extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildHeader(), // <-- UPDATED
+                      _buildHeader(),
                       const SizedBox(height: 8),
                       _buildInfoRow(FontAwesomeIcons.mapPin, location),
                       const SizedBox(height: 6),
                       _buildInfoRow(FontAwesomeIcons.language, languages.join(', ')),
                       const SizedBox(height: 6),
-                      // --- MOVED RATING HERE ---
                       _buildInfoRow(
                         FontAwesomeIcons.solidStar,
                         rating,
                         iconColor: Colors.amber,
                       ),
-                      // -------------------------
                     ],
                   ),
                 ),
@@ -77,14 +78,13 @@ class GuideListCard extends StatelessWidget {
             const SizedBox(height: 12),
             Divider(color: AppColors.secondaryGray),
             const SizedBox(height: 8),
-            _buildActionButtons(),
+            _buildActionButtons(context), // <-- Pass context
           ],
         ),
       ),
     );
   }
 
-  // UPDATED: This widget now contains the name and the new availability chip
   Widget _buildHeader() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -100,15 +100,13 @@ class GuideListCard extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 8),
-        _buildAvailabilityChip(), // <-- NEW CHIP
+        _buildAvailabilityChip(),
       ],
     );
   }
 
-  // NEW: Modern "light button" style indicator
   Widget _buildAvailabilityChip() {
     final color = isAvailable ? AppColors.primaryGreen : AppColors.primaryRed;
-    // Use light green background
     final bgColor = isAvailable ? AppColors.secondaryGreen : AppColors.primaryRed.withAlpha(20);
     final icon = isAvailable ? FontAwesomeIcons.check : FontAwesomeIcons.xmark;
     final text = isAvailable ? 'Available' : 'Not Available';
@@ -136,7 +134,6 @@ class GuideListCard extends StatelessWidget {
     );
   }
 
-  // UPDATED: Added an optional iconColor parameter
   Widget _buildInfoRow(IconData icon, String text, {Color? iconColor}) {
     return Row(
       children: [
@@ -154,29 +151,32 @@ class GuideListCard extends StatelessWidget {
   }
 
   Widget _buildSpecialties() {
-    return Wrap(
-      spacing: 8.0,
-      runSpacing: 4.0,
-      children: specialties.map((specialty) {
-        return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-          decoration: BoxDecoration(
-            color: AppColors.thirdBlue,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Text(
-            specialty,
-            style: AppTextStyles.textSmall.copyWith(
-              color: AppColors.primaryBlue,
-              fontWeight: FontWeight.bold,
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Wrap(
+        spacing: 8.0,
+        runSpacing: 4.0,
+        children: specialties.map((specialty) {
+          return Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color: AppColors.thirdBlue,
+              borderRadius: BorderRadius.circular(12),
             ),
-          ),
-        );
-      }).toList(),
+            child: Text(
+              specialty,
+              style: AppTextStyles.textSmall.copyWith(
+                color: AppColors.primaryBlue,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          );
+        }).toList(),
+      ),
     );
   }
 
-  Widget _buildActionButtons() {
+  Widget _buildActionButtons(BuildContext context) { // <-- Pass context
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -188,7 +188,12 @@ class GuideListCard extends StatelessWidget {
         ),
         TextButton(
           onPressed: () {
-            // TODO: Navigate to Guide Profile
+            // --- UPDATED: Navigate to Guide Profile ---
+            Navigator.pushNamed(
+              context,
+              '/touristGuideProfile',
+              arguments: guideData, // <-- Pass the guide's data
+            );
           },
           child: Text(
             'Profile',
@@ -200,7 +205,15 @@ class GuideListCard extends StatelessWidget {
         ),
         ElevatedButton(
           onPressed: () {
-            // TODO: Handle Book
+            // --- UPDATED: Navigate to Booking Details ---
+            Navigator.pushNamed(
+                context,
+                '/bookingDetails',
+                arguments: { // Pass just what the booking page needs
+                  'name': name,
+                  'image': imageUrl,
+                }
+            );
           },
           style: ElevatedButton.styleFrom(
             backgroundColor: AppColors.primaryBlue,

@@ -12,7 +12,7 @@ class CustomTextArea extends StatelessWidget {
     Key? key,
     this.controller,
     required this.hintText,
-    required this.icon, required String hint,
+    required this.icon,
   }) : super(key: key);
 
   @override
@@ -42,7 +42,8 @@ class CustomTextArea extends StatelessWidget {
           ),
           prefixIcon: Padding(
             padding: const EdgeInsets.only(left: 20.0, right: 16.0, top: 20.0),
-            // Aligns the icon to the top-left, which is standard for text areas
+            // --- THIS IS THE FIX ---
+            // Aligns the icon to the top-left, not the center
             child: Align(
               alignment: Alignment.topCenter,
               child: Icon(icon, color: AppColors.primaryGray),
