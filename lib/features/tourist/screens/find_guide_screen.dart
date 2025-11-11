@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'package:yaloo/core/constants/colors.dart';
 import 'package:yaloo/core/constants/app_text_styles.dart';
@@ -59,22 +60,22 @@ class _FindGuideScreenState extends State<FindGuideScreen> {
           CustomIconButton(
             onPressed: () { /* TODO: Handle Search */ },
             icon: Icon(CupertinoIcons.search,
-                color: AppColors.primaryBlack, size: 24),
+                color: AppColors.primaryBlack, size: 24.w),
           ),
-          const SizedBox(width: 12),
+          SizedBox(width: 12.w),
           Stack(
             alignment: Alignment.center, // Aligns the dot better
             children: [
               CustomIconButton(
                 onPressed: () { /* TODO: Handle notification */ },
-                icon: Icon(CupertinoIcons.bell, color: AppColors.primaryBlack, size: 24),
+                icon: Icon(CupertinoIcons.bell, color: AppColors.primaryBlack, size: 24.w),
               ),
               Positioned(
-                top: 10,
-                right: 10,
+                top: 10.h,
+                right: 10.w,
                 child: Container(
-                  width: 8,
-                  height: 8,
+                  width: 8.w,
+                  height: 8.h,
                   decoration: BoxDecoration(
                     color: AppColors.primaryBlue,
                     shape: BoxShape.circle,
@@ -83,7 +84,7 @@ class _FindGuideScreenState extends State<FindGuideScreen> {
               ),
             ],
           ),
-          const SizedBox(width: 12),
+           SizedBox(width: 12.w),
         ],
       ),
       body: SafeArea(
@@ -92,15 +93,15 @@ class _FindGuideScreenState extends State<FindGuideScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // _buildHeader(),
-              const SizedBox(height: 16),
+               SizedBox(height: 16.h),
               _buildImageSlider(),
-              const SizedBox(height: 24),
+               SizedBox(height: 24.h),
               _buildFormSection(),
-              const SizedBox(height: 24),
+               SizedBox(height: 24.h),
               _buildSectionHeader("Top Rated Guides"),
-              const SizedBox(height: 16),
+               SizedBox(height: 16.h),
               _buildTopGuidesSlider(),
-              const SizedBox(height: 24), // Padding for floating button
+               SizedBox(height: 24.h), // Padding for floating button
             ],
           ),
         ),
@@ -114,15 +115,15 @@ class _FindGuideScreenState extends State<FindGuideScreen> {
     return Column(
       children: [
         SizedBox(
-          height: 180,
+          height: 180.h,
           child: PageView.builder(
             controller: _sliderPageController,
             itemCount: sliderImages.length,
             itemBuilder: (context, index) {
               return Container(
-                margin: const EdgeInsets.symmetric(horizontal: 24.0),
+                margin: EdgeInsets.symmetric(horizontal: 24.w),
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(20.r),
                   image: DecorationImage(
                     image: AssetImage(sliderImages[index]), // Use local asset
                     fit: BoxFit.cover,
@@ -132,13 +133,13 @@ class _FindGuideScreenState extends State<FindGuideScreen> {
             },
           ),
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: 12.h),
         SmoothPageIndicator(
           controller: _sliderPageController,
           count: sliderImages.length,
           effect: WormEffect(
-            dotHeight: 8,
-            dotWidth: 8,
+            dotHeight: 8.h,
+            dotWidth: 8.w,
             activeDotColor: AppColors.primaryBlue,
             dotColor: AppColors.secondaryGray,
           ),
@@ -150,18 +151,18 @@ class _FindGuideScreenState extends State<FindGuideScreen> {
   // --- 3. Form Section (Matches UI) ---
   Widget _buildFormSection() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24.0),
+      padding: EdgeInsets.symmetric(horizontal: 24.w),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             'Book a Guide Now!',
             style: AppTextStyles.headlineLarge.copyWith(
-              fontSize: 20,
+              fontSize: 20.sp,
               fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: 16),
+           SizedBox(height: 16.h),
           // City Field
           _buildFormLabel("City"),
           CustomTextField(
@@ -169,7 +170,7 @@ class _FindGuideScreenState extends State<FindGuideScreen> {
             hintText: 'e.g., Colombo',
             icon: CupertinoIcons.map, hint: '',
           ),
-          const SizedBox(height: 16),
+           SizedBox(height: 16.h),
           // Date Field
           _buildFormLabel("Date"),
           CustomPickerButton(
@@ -180,11 +181,11 @@ class _FindGuideScreenState extends State<FindGuideScreen> {
                 : "${_selectedDate!.month}/${_selectedDate!.day}/${_selectedDate!.year}",
             onTap: _showDatePicker,
           ),
-          const SizedBox(height: 16),
+           SizedBox(height: 16.h),
           // Time Field
           _buildFormLabel("Time"),
           _buildTimePicker(),
-          const SizedBox(height: 24),
+           SizedBox(height: 24.h),
           // Search Button
           ElevatedButton(
             onPressed: () {
@@ -194,7 +195,7 @@ class _FindGuideScreenState extends State<FindGuideScreen> {
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primaryBlue,
               shape: const StadiumBorder(),
-              minimumSize: const Size(double.infinity, 52),
+              minimumSize: Size(double.infinity, 52.h),
             ),
             child: Text(
               'Search',
@@ -212,7 +213,7 @@ class _FindGuideScreenState extends State<FindGuideScreen> {
   // Helper for form field labels
   Widget _buildFormLabel(String label) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8.0, left: 16.0),
+      padding: EdgeInsets.only(bottom: 8.h, left: 16.w),
       child: Text.rich(
         TextSpan(
           text: label,
@@ -228,10 +229,10 @@ class _FindGuideScreenState extends State<FindGuideScreen> {
   // Custom Time Picker Widget
   Widget _buildTimePicker() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 6.h),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(24.r),
         boxShadow: [
           BoxShadow(
             color: AppColors.primaryGray.withAlpha(20),
@@ -242,16 +243,16 @@ class _FindGuideScreenState extends State<FindGuideScreen> {
       ),
       child: Row(
         children: [
-          Icon(CupertinoIcons.time, color: AppColors.primaryGray, size: 20),
-          SizedBox(width: 16),
+          Icon(CupertinoIcons.time, color: AppColors.primaryGray, size: 20.w),
+          SizedBox(width: 16.w),
           // Hour
           SizedBox(
-            width: 40,
+            width: 40.w,
             child: TextField(
               controller: _hourController,
               keyboardType: TextInputType.number,
               textAlign: TextAlign.center,
-              style: AppTextStyles.textSmall.copyWith(color: Colors.black, fontSize: 16),
+              style: AppTextStyles.textSmall.copyWith(color: Colors.black, fontSize: 16.sp),
               decoration: InputDecoration(
                 hintText: 'HH',
                 hintStyle: AppTextStyles.textSmall.copyWith(
@@ -261,15 +262,15 @@ class _FindGuideScreenState extends State<FindGuideScreen> {
               ),
             ),
           ),
-          Text(':', style: AppTextStyles.textSmall.copyWith(color: Colors.black, fontSize: 18, fontWeight: FontWeight.bold)),
+          Text(':', style: AppTextStyles.textSmall.copyWith(color: Colors.black, fontSize: 18.sp, fontWeight: FontWeight.bold)),
           // Minute
           SizedBox(
-            width: 40,
+            width: 40.w,
             child: TextField(
               controller: _minuteController,
               keyboardType: TextInputType.number,
               textAlign: TextAlign.center,
-              style: AppTextStyles.textSmall.copyWith(color: Colors.black, fontSize: 16),
+              style: AppTextStyles.textSmall.copyWith(color: Colors.black, fontSize: 16.sp),
               decoration: InputDecoration(
                 hintText: 'MM',
                 hintStyle: AppTextStyles.textSmall.copyWith(
@@ -288,17 +289,17 @@ class _FindGuideScreenState extends State<FindGuideScreen> {
                 _isAm = index == 0;
               });
             },
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(8.r),
             selectedColor: Colors.white,
             color: AppColors.primaryBlue,
             fillColor: AppColors.primaryBlue,
             children: [
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                padding: EdgeInsets.symmetric(horizontal: 12.w),
                 child: Text('AM', style: AppTextStyles.textSmall.copyWith(fontWeight: FontWeight.bold)),
               ),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                padding: EdgeInsets.symmetric(horizontal: 12.w),
                 child: Text('PM', style: AppTextStyles.textSmall.copyWith(fontWeight: FontWeight.bold)),
               ),
             ],
@@ -312,14 +313,14 @@ class _FindGuideScreenState extends State<FindGuideScreen> {
   Widget _buildSectionHeader(String title) {
     // ... (This widget is unchanged) ...
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24.0),
+      padding: EdgeInsets.symmetric(horizontal: 24.w),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
             title,
             style: AppTextStyles.headlineLargeBlack.copyWith(
-              fontSize: 20,
+              fontSize: 20.sp,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -340,7 +341,7 @@ class _FindGuideScreenState extends State<FindGuideScreen> {
 
   Widget _buildTopGuidesSlider() {
     return SizedBox(
-      height: 260,
+      height: 260.h,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         physics: const BouncingScrollPhysics(),
@@ -369,14 +370,14 @@ class _FindGuideScreenState extends State<FindGuideScreen> {
     bool isLast = false,
   }) {
     return Container(
-      width: 200,
+      width: 200.w,
       margin: EdgeInsets.only(
-        left: isFirst ? 24.0 : 8.0,
-        right: isLast ? 24.0 : 8.0,
-        bottom: 8.0,
+        left: isFirst ? 24.w : 8.w,
+        right: isLast ? 24.w : 8.w,
+        bottom: 8.h,
       ),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(20.r),
         image: DecorationImage(
           image: NetworkImage(imageUrl),
           fit: BoxFit.cover,
@@ -394,7 +395,7 @@ class _FindGuideScreenState extends State<FindGuideScreen> {
           // Dark gradient for text
           Container(
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(20.r),
               gradient: LinearGradient(
                 colors: [Colors.black.withValues(alpha: 0.6), Colors.transparent],
                 begin: Alignment.bottomCenter,
@@ -403,22 +404,22 @@ class _FindGuideScreenState extends State<FindGuideScreen> {
             ),
           ),
           Positioned(
-            top: 12,
-            right: 12,
+            top: 12.h,
+            right: 12.w,
             child: Container(
-              padding: const EdgeInsets.all(6),
+              padding: EdgeInsets.all(6.w),
               decoration: BoxDecoration(
                 color: Colors.white.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(8.r),
               ),
-              child: Icon(CupertinoIcons.viewfinder, color: Colors.white, size: 20),
+              child: Icon(CupertinoIcons.viewfinder, color: Colors.white, size: 20.w),
             ),
           ),
           // Guide Info
           Positioned(
-            bottom: 16,
-            left: 16,
-            right: 16,
+            bottom: 16.h,
+            left: 16.w,
+            right: 16.w,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -427,21 +428,21 @@ class _FindGuideScreenState extends State<FindGuideScreen> {
                   style: AppTextStyles.bodyLarge.copyWith(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
-                    fontSize: 18,
+                    fontSize: 18.sp,
                   ),
                 ),
-                const SizedBox(height: 4),
+                SizedBox(height: 4.h),
                 Row(
                   children: [
-                    Icon(CupertinoIcons.map_pin, color: Colors.white, size: 14),
-                    const SizedBox(width: 4),
+                    Icon(CupertinoIcons.map_pin, color: Colors.white, size: 14.w),
+                    SizedBox(width: 4.w),
                     Text(
                       location,
                       style: AppTextStyles.bodySmall.copyWith(color: Colors.white),
                     ),
                     const Spacer(),
-                    Icon(CupertinoIcons.star_fill, color: Colors.yellow, size: 12),
-                    const SizedBox(width: 4),
+                    Icon(CupertinoIcons.star_fill, color: Colors.yellow, size: 12.w),
+                    SizedBox(width: 4.w),
                     Text(
                       rating,
                       style: AppTextStyles.bodySmall.copyWith(color: Colors.white, fontWeight: FontWeight.bold),

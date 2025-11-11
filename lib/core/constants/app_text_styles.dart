@@ -16,6 +16,12 @@ class AppTextStyles {
     color: AppColors.primaryBlack,
   );
 
+  static final TextStyle headlineSmallBlack = GoogleFonts.poppins(
+    fontSize: 16.sp,
+    fontWeight: FontWeight.w400,
+    color: AppColors.primaryBlack,
+  );
+
   static final TextStyle headlineMedium = GoogleFonts.poppins(
     fontSize: 22.sp,
     fontWeight: FontWeight.w600,

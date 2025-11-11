@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:yaloo/core/constants/colors.dart';
 import 'package:yaloo/core/constants/app_text_styles.dart';
 import 'package:yaloo/core/widgets/custom_icon_button.dart';
@@ -54,22 +55,22 @@ class GuideListScreen extends StatelessWidget {
           CustomIconButton(
             onPressed: () { /* TODO: Handle Search */ },
             icon: Icon(CupertinoIcons.search,
-                color: AppColors.primaryBlack, size: 24),
+                color: AppColors.primaryBlack, size: 24.w),
           ),
-          const SizedBox(width: 12),
+          SizedBox(width: 12.w),
           Stack(
             alignment: Alignment.center, // Aligns the dot better
             children: [
               CustomIconButton(
                 onPressed: () { /* TODO: Handle notification */ },
-                icon: Icon(CupertinoIcons.bell, color: AppColors.primaryBlack, size: 24),
+                icon: Icon(CupertinoIcons.bell, color: AppColors.primaryBlack, size: 24.w),
               ),
               Positioned(
-                top: 10,
-                right: 10,
+                top: 10.h,
+                right: 10.w,
                 child: Container(
-                  width: 8,
-                  height: 8,
+                  width: 8.w,
+                  height: 8.h,
                   decoration: BoxDecoration(
                     color: AppColors.primaryBlue,
                     shape: BoxShape.circle,
@@ -78,15 +79,16 @@ class GuideListScreen extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(width: 12),
+          SizedBox(width: 12.w),
         ],
       ),
       body: Column(
         children: [
+          SizedBox(height: 16.h),
           _buildFilterBar(),
           Expanded(
             child: ListView.builder(
-              padding: const EdgeInsets.only(top: 8, bottom: 80), // Padding for chat button
+              padding: EdgeInsets.only(top: 8.w, bottom: 80.h), // Padding for chat button
               itemCount: availableGuides.length,
               itemBuilder: (context, index) {
                 final guide = availableGuides[index];
@@ -115,11 +117,11 @@ class GuideListScreen extends StatelessWidget {
   // --- 2. Filter & Sort Bar ---
   Widget _buildFilterBar() {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
+      padding: EdgeInsets.fromLTRB(24.w, 0.h, 24.w, 16.h),
       child: Row(
         children: [
           _buildFilterChip(CupertinoIcons.slider_horizontal_3, "Filter"),
-          const SizedBox(width: 12),
+          SizedBox(width: 12.w),
           _buildFilterChip(CupertinoIcons.sort_down, "Sort"),
         ],
       ),
@@ -128,16 +130,16 @@ class GuideListScreen extends StatelessWidget {
 
   Widget _buildFilterChip(IconData icon, String label) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.secondaryGray, width: 1.5),
+        borderRadius: BorderRadius.circular(20.r),
+        border: Border.all(color: AppColors.secondaryGray, width: 1.5.w),
       ),
       child: Row(
         children: [
-          Icon(icon, size: 16, color: AppColors.primaryGray),
-          const SizedBox(width: 8),
+          Icon(icon, size: 16.w, color: AppColors.primaryGray),
+          SizedBox(width: 8.w),
           Text(
             label,
             style: AppTextStyles.bodyLarge.copyWith(

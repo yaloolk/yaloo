@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:yaloo/core/constants/colors.dart';
 import 'package:yaloo/core/constants/app_text_styles.dart';
@@ -32,38 +33,38 @@ class GuideListCard extends StatelessWidget {
     return Card(
       elevation: 8,
       shadowColor: AppColors.primaryGray.withAlpha(20),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.0)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.r)),
       color: AppColors.primaryWhite,
-      margin: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
+      margin:  EdgeInsets.symmetric(horizontal: 24.w, vertical: 8.h),
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding:  EdgeInsets.all(16.w),
         child: Column(
           children: [
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 ClipRRect(
-                  borderRadius: BorderRadius.circular(12.0),
+                  borderRadius: BorderRadius.circular(12.r),
                   child: Image.network(
                     imageUrl,
-                    width: 80,
-                    height: 80,
+                    width: 80.w,
+                    height: 80.h,
                     fit: BoxFit.cover,
                     errorBuilder: (context, error, stackTrace) =>
-                        Container(width: 80, height: 80, color: AppColors.secondaryGray),
+                        Container(width: 80.w, height: 80.h, color: AppColors.secondaryGray),
                   ),
                 ),
-                const SizedBox(width: 16),
+                 SizedBox(width: 16.w),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       _buildHeader(),
-                      const SizedBox(height: 8),
+                       SizedBox(height: 8.h),
                       _buildInfoRow(CupertinoIcons.map_pin, location),
-                      const SizedBox(height: 6),
+                       SizedBox(height: 6.h),
                       _buildInfoRow(FontAwesomeIcons.language, languages.join(', ')),
-                      const SizedBox(height: 6),
+                       SizedBox(height: 6.h),
                       _buildInfoRow(
                         CupertinoIcons.star_fill,
                         rating,
@@ -74,11 +75,11 @@ class GuideListCard extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+             SizedBox(height: 12.h),
             _buildSpecialties(),
-            const SizedBox(height: 12),
+             SizedBox(height: 12.h),
             Divider(color: AppColors.secondaryGray),
-            const SizedBox(height: 8),
+             SizedBox(height: 8.h),
             _buildActionButtons(context), // <-- Pass context
           ],
         ),
@@ -95,12 +96,12 @@ class GuideListCard extends StatelessWidget {
           child: Text(
             name,
             style: AppTextStyles.headlineLargeBlack.copyWith(
-              fontSize: 18,
+              fontSize: 18.sp,
               fontWeight: FontWeight.bold,
             ),
           ),
         ),
-        const SizedBox(width: 8),
+        SizedBox(width: 8.w),
         _buildAvailabilityChip(),
       ],
     );
@@ -113,16 +114,16 @@ class GuideListCard extends StatelessWidget {
     final text = isAvailable ? 'Available' : 'Not Available';
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding:  EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
       decoration: BoxDecoration(
         color: bgColor,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(20.r),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: color, size: 12),
-          const SizedBox(width: 4),
+          Icon(icon, color: color, size: 12.w),
+           SizedBox(width: 4.w),
           Text(
             text,
             style: AppTextStyles.textExtraSmall.copyWith(
@@ -138,8 +139,8 @@ class GuideListCard extends StatelessWidget {
   Widget _buildInfoRow(IconData icon, String text, {Color? iconColor}) {
     return Row(
       children: [
-        Icon(icon, size: 14, color: iconColor ?? AppColors.primaryGray),
-        const SizedBox(width: 8),
+        Icon(icon, size: 14.w, color: iconColor ?? AppColors.primaryGray),
+        SizedBox(width: 8.w),
         Expanded(
           child: Text(
             text,
@@ -159,10 +160,10 @@ class GuideListCard extends StatelessWidget {
         runSpacing: 4.0,
         children: specialties.map((specialty) {
           return Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
             decoration: BoxDecoration(
               color: AppColors.thirdBlue,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(12.r),
             ),
             child: Text(
               specialty,
@@ -225,9 +226,9 @@ class GuideListCard extends StatelessWidget {
             backgroundColor: AppColors.primaryBlue,
             foregroundColor: Colors.white,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(12.r),
             ),
-            padding: const EdgeInsets.symmetric(horizontal: 32),
+            padding: EdgeInsets.symmetric(horizontal: 32.h),
           ),
           child: Text(
             'Book',

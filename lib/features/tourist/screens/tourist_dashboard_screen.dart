@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:yaloo/core/constants/colors.dart';
 import 'package:yaloo/core/constants/app_text_styles.dart';
 import 'package:yaloo/features/tourist/screens/tourist_guide_profile.dart';
@@ -139,8 +140,8 @@ class _TouristDashboardScreenState extends State<TouristDashboardScreen> {
         unselectedItemColor: AppColors.primaryBlack,
         showSelectedLabels: true,
         showUnselectedLabels: true,
-        selectedLabelStyle: AppTextStyles.textSmall.copyWith(fontSize: 12),
-        unselectedLabelStyle: AppTextStyles.textSmall.copyWith(fontSize: 12),
+        selectedLabelStyle: AppTextStyles.textSmall.copyWith(fontSize: 12.sp),
+        unselectedLabelStyle: AppTextStyles.textSmall.copyWith(fontSize: 12.sp),
         elevation: 8.0,
       ),
     );

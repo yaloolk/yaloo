@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:yaloo/core/constants/app_text_styles.dart';
 
@@ -13,8 +14,8 @@ class BookingsScreen extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(FontAwesomeIcons.calendarCheck, size: 60, color: Colors.grey[300]),
-            SizedBox(height: 16),
+            Icon(FontAwesomeIcons.calendarCheck, size: 60.w, color: Colors.grey[300]),
+            SizedBox(height: 16.h),
             Text('Bookings Screen', style: AppTextStyles.headlineLarge),
           ],
         ),
