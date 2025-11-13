@@ -176,7 +176,7 @@ class GuideProfileScreen extends StatelessWidget {
               Navigator.pushNamed(
                   context,
                   '/bookingDetails',
-                  arguments: { 'name': name, 'image': image, 'type': 'Guide' }
+                  arguments: { 'name': name, 'image': image, 'bookingType': 'guide'}
               );
             },
             style: ElevatedButton.styleFrom(
@@ -639,7 +639,7 @@ class GuideProfileScreen extends StatelessWidget {
               Navigator.pushNamed(
                   context,
                   '/bookingDetails',
-                  arguments: { 'name': name, 'image': image, 'type': 'Guide' }
+                  arguments: { 'name': name, 'image': image, 'bookingType': 'guide'}
               );
             },
             style: ElevatedButton.styleFrom(

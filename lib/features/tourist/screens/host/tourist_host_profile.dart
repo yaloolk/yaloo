@@ -185,7 +185,7 @@ class TouristHostProfileScreen extends StatelessWidget {
               Navigator.pushNamed(
                   context,
                   '/bookingDetails',
-                  arguments: { 'name': name, 'image': image, 'type': 'Host' }
+                  arguments: { 'name': name, 'image': image, 'bookingType': 'host' }
               );
             },
             style: ElevatedButton.styleFrom(
@@ -598,7 +598,7 @@ class TouristHostProfileScreen extends StatelessWidget {
               Navigator.pushNamed(
                   context,
                   '/bookingDetails',
-                  arguments: { 'name': name, 'image': image, 'type': 'Host' }
+                  arguments: { 'name': name, 'image': image, 'bookingType': 'host' }
               );
             },
             style: ElevatedButton.styleFrom(
