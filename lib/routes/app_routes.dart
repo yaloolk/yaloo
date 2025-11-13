@@ -20,6 +20,7 @@ import '../features/booking/screens/tour_information_screen.dart';
 import '../features/booking/screens/payment_screen.dart';
 import '../features/booking/screens/booking_request_sent_screen.dart';
 import '../features/booking/screens/booking_status_screen.dart';
+import '../features/booking/screens/tour_completion_screen.dart';
 
 
 
@@ -47,6 +48,8 @@ class AppRoutes {
     '/payment': (_) => const PaymentScreen(),
     '/bookingRequestSent': (_) => const BookingRequestSentScreen(),
     '/bookingStatus': (_) => const BookingStatusScreen(),
+    '/tourCompletion': (_) => const TourCompletionScreen(),
+
 
 
   };

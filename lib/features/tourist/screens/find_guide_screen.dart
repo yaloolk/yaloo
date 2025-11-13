@@ -18,9 +18,9 @@ final List<String> sliderImages = [
   "assets/images/ella.jpg",
 ];
 final List<Map<String, String>> topGuides = [
-  {"name": "Hadhi", "location": "Kandy", "rating": "4.6", "image": "assets/images/guide_1.jpg"},
-  {"name": "Hisham", "location": "Galle", "rating": "4.8", "image": "assets/images/guide_2.jpg"},
-  {"name": "Aman", "location": "Ella", "rating": "4.7", "image": "assets/images/guide_3.jpg"},
+  {"name": "Mohamed", "location": "Kandy", "rating": "4.6", "image": "assets/images/guide_1.jpg"},
+  {"name": "Silva", "location": "Galle", "rating": "4.8", "image": "assets/images/guide_2.jpg"},
+  {"name": "Fernando", "location": "Ella", "rating": "4.7", "image": "assets/images/guide_3.jpg"},
 ];
 // -----------------
 

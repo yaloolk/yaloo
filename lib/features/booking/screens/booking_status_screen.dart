@@ -24,7 +24,7 @@ class BookingStatusScreen extends StatelessWidget {
     final String status = bookingData['status'] ?? 'confirmed';
 
     // --- Fill data from arguments ---
-    final String guideName = bookingData['guideName'] ?? 'Hadhi Ahamed';
+    final String guideName = bookingData['guideName'] ?? 'Mohamed';
     final String guideImage = bookingData['guideImage'] ?? 'assets/images/guide_1.jpg';
     final String rating = bookingData['rating'] ?? '4.8';
     final String date = bookingData['date'] ?? 'Oct 25, 2025';

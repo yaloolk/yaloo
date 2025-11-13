@@ -11,7 +11,7 @@ import '../widgets/guide_list_card.dart';
 final List<Map<String, dynamic>> availableGuides = [
   {
     "uid": "guide123", // <-- Added UID
-    "name": "Hadhi Ahamed",
+    "name": "Mohamed",
     "location": "Kandy",
     "rating": "4.6",
     "image": "assets/images/guide_1.jpg",
@@ -21,7 +21,7 @@ final List<Map<String, dynamic>> availableGuides = [
   },
   {
     "uid": "guide456", // <-- Added UID
-    "name": "Hisham",
+    "name": "Silva",
     "location": "Galle",
     "rating": "4.8",
     "image": "assets/images/guide_2.jpg",
@@ -31,7 +31,7 @@ final List<Map<String, dynamic>> availableGuides = [
   },
   {
     "uid": "guide789", // <-- Added UID
-    "name": "Dilshan",
+    "name": "Fernando",
     "location": "Ella",
     "rating": "4.7",
     "image": "assets/images/guide_3.jpg",

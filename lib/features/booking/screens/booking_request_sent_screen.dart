@@ -10,7 +10,7 @@ class BookingRequestSentScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const String guideName = "Hadhi Ahamed";
+    const String guideName = "Mohamed";
     const String guideImage = "assets/images/guide_1.jpg";
     const String date = "Mon, Oct 25, 2025";
     const String time = "10:00 AM";

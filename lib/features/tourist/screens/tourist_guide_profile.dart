@@ -110,7 +110,7 @@ class GuideProfileScreen extends StatelessWidget {
           ),
           SizedBox(height: 12.h),
           Text(
-            'Hadhi Ahmed',
+            'Mohamed',
             style: AppTextStyles.headlineLargeBlack.copyWith(
               fontSize: 22.sp,
               fontWeight: FontWeight.bold,
@@ -524,7 +524,7 @@ class GuideProfileScreen extends StatelessWidget {
             ),
             SizedBox(height: 12.h),
             Text(
-              'An absolutely incredible experience! Hadhi is so knowledgeable and friendly. He showed us places we never would have found on our own. Highly recommended!',
+              'An absolutely incredible experience! Mohamed is so knowledgeable and friendly. He showed us places we never would have found on our own. Highly recommended!',
               style: AppTextStyles.textSmall.copyWith(
                 color: AppColors.primaryGray,
                 height: 1.4,
