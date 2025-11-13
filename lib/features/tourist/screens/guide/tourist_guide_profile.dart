@@ -22,7 +22,14 @@ class GuideProfileScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Initialize screen util with context for better responsiveness
+    // --- Receive Guide data from arguments ---
+    final guideData = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>? ?? {};
+    final String guideName = guideData['name'] ?? "Mohamed";
+    final String guideImage = guideData['image'] ?? "assets/images/guide_1.png";
+    final String guideLocation = guideData['location'] ?? "Kandy, Sri Lanka";
+    final String guideRating = guideData['rating'] ?? "4.6";
+    // --------------------------------------------------
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: CustomAppBar(
@@ -67,7 +74,7 @@ class GuideProfileScreen extends StatelessWidget {
                 delegate: SliverChildListDelegate(
                   [
                     SizedBox(height: 24.h),
-                    _buildProfileCard(context),
+                    _buildProfileCard(context, guideName, guideImage),
                     _buildAboutSection(),
                     _buildDetailsCard(),
                     _buildGallerySection(),
@@ -81,12 +88,12 @@ class GuideProfileScreen extends StatelessWidget {
           );
         },
       ),
-      bottomNavigationBar: _buildBookingBar(context),
+      bottomNavigationBar: _buildBookingBar(context, guideName, guideImage),
     );
   }
 
   // --- 2. The Main Profile Card ---
-  Widget _buildProfileCard(BuildContext context) {
+  Widget _buildProfileCard(BuildContext context, String name, String image) {
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 24.w),
       padding: EdgeInsets.all(20.w),
@@ -166,7 +173,11 @@ class GuideProfileScreen extends StatelessWidget {
           SizedBox(height: 16.h),
           ElevatedButton(
             onPressed: () {
-              Navigator.pushNamed(context, '/bookingDetails');
+              Navigator.pushNamed(
+                  context,
+                  '/bookingDetails',
+                  arguments: { 'name': name, 'image': image, 'type': 'Guide' }
+              );
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primaryBlue,
@@ -589,7 +600,7 @@ class GuideProfileScreen extends StatelessWidget {
   }
 
   // --- 8. Sticky Bottom Booking Bar ---
-  Widget _buildBookingBar(BuildContext context) {
+  Widget _buildBookingBar(BuildContext context, String name, String image) {
     return Container(
       height: 80.h,
       padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
@@ -625,7 +636,11 @@ class GuideProfileScreen extends StatelessWidget {
           ),
           ElevatedButton(
             onPressed: () {
-              Navigator.pushNamed(context, '/bookingDetails');
+              Navigator.pushNamed(
+                  context,
+                  '/bookingDetails',
+                  arguments: { 'name': name, 'image': image, 'type': 'Guide' }
+              );
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primaryBlue,
