@@ -12,15 +12,20 @@ import '../features/auth/screens/common/profile_submitted_screen.dart';
 import '../features/auth/screens/host/host_signup_screen.dart.';
 import '../features/auth/screens/host/host_profile_completion_screen.dart';
 import '../features/tourist/screens/tourist_dashboard_screen.dart';
-import '../features/tourist/screens/find_guide_screen.dart';
-import '../features/tourist/screens/guide_list_screen.dart';
-import '../features/tourist/screens/tourist_guide_profile.dart';
+import '../features/tourist/screens/guide/find_guide_screen.dart';
+import '../features/tourist/screens/guide/guide_list_screen.dart';
+import '../features/tourist/screens/guide/tourist_guide_profile.dart';
 import '../features/booking/screens/booking_details_screen.dart';
 import '../features/booking/screens/tour_information_screen.dart';
 import '../features/booking/screens/payment_screen.dart';
 import '../features/booking/screens/booking_request_sent_screen.dart';
 import '../features/booking/screens/booking_status_screen.dart';
 import '../features/booking/screens/tour_completion_screen.dart';
+import '../features/tourist/screens/host/find_host_screen.dart';
+import '../features/tourist/screens/host/host_list_screen.dart';
+import '../features/tourist/screens/host/tourist_host_profile.dart';
+
+
 
 
 
@@ -49,6 +54,9 @@ class AppRoutes {
     '/bookingRequestSent': (_) => const BookingRequestSentScreen(),
     '/bookingStatus': (_) => const BookingStatusScreen(),
     '/tourCompletion': (_) => const TourCompletionScreen(),
+    '/findHost': (_) => const FindHostScreen(),
+    '/hostList': (_) => const HostListScreen(),
+    '/touristHostProfile': (_) => const TouristHostProfileScreen(),
 
 
 

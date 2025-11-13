@@ -281,6 +281,7 @@ class TouristHomeScreen extends StatelessWidget {
                       height: buttonHeight,
                       onPressed: () {
                         // TODO: Create a '/findHost' screen
+                        Navigator.pushNamed(context, '/findHost');
                       },
                     ),
                   ),

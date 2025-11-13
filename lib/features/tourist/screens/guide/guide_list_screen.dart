@@ -4,8 +4,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:yaloo/core/constants/colors.dart';
 import 'package:yaloo/core/constants/app_text_styles.dart';
 import 'package:yaloo/core/widgets/custom_icon_button.dart';
-import '../../../core/widgets/custom_app_bar.dart';
-import '../widgets/guide_list_card.dart';
+import '../../../../core/widgets/custom_app_bar.dart';
+import '../../widgets/guide_list_card.dart';
 
 // --- MOCK DATA ---
 final List<Map<String, dynamic>> availableGuides = [

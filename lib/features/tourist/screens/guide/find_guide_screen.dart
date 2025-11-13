@@ -7,8 +7,9 @@ import 'package:yaloo/core/constants/app_text_styles.dart';
 import 'package:yaloo/core/widgets/custom_text_field.dart';
 import 'package:yaloo/core/widgets/custom_picker_button.dart';
 
-import '../../../core/widgets/custom_app_bar.dart';
-import '../../../core/widgets/custom_icon_button.dart';
+import '../../../../core/widgets/custom_app_bar.dart';
+import '../../../../core/widgets/custom_icon_button.dart';
+import '../../widgets/profile_list_card.dart';
 
 // (Mock data lists remain the same...)
 // --- MOCK DATA ---
@@ -348,116 +349,118 @@ class _FindGuideScreenState extends State<FindGuideScreen> {
         itemCount: topGuides.length,
         itemBuilder: (context, index) {
           final guide = topGuides[index];
-          return _buildGuideCard(
+          return ProfileListCard(
             name: guide['name']!,
             location: guide['location']!,
             rating: guide['rating']!,
             imageUrl: guide['image']!,
-            isFirst: index == 0,
-            isLast: index == topGuides.length - 1,
+            // isFirst: index == 0,
+            // isLast: index == topGuides.length - 1,
           );
         },
       ),
     );
   }
 
-  Widget _buildGuideCard({
-    required String name,
-    required String location,
-    required String rating,
-    required String imageUrl,
-    bool isFirst = false,
-    bool isLast = false,
-  }) {
-    return Container(
-      width: 200.w,
-      margin: EdgeInsets.only(
-        left: isFirst ? 24.w : 8.w,
-        right: isLast ? 24.w : 8.w,
-        bottom: 8.h,
-      ),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20.r),
-        image: DecorationImage(
-          image: NetworkImage(imageUrl),
-          fit: BoxFit.cover,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primaryGray.withAlpha(50),
-            blurRadius: 10,
-            offset: Offset(0, 5),
-          ),
-        ],
-      ),
-      child: Stack(
-        children: [
-          // Dark gradient for text
-          Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20.r),
-              gradient: LinearGradient(
-                colors: [Colors.black.withValues(alpha: 0.6), Colors.transparent],
-                begin: Alignment.bottomCenter,
-                end: Alignment.center,
-              ),
-            ),
-          ),
-          Positioned(
-            top: 12.h,
-            right: 12.w,
-            child: Container(
-              padding: EdgeInsets.all(6.w),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(8.r),
-              ),
-              child: Icon(CupertinoIcons.viewfinder, color: Colors.white, size: 20.w),
-            ),
-          ),
-          // Guide Info
-          Positioned(
-            bottom: 16.h,
-            left: 16.w,
-            right: 16.w,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  name,
-                  style: AppTextStyles.bodyLarge.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 18.sp,
-                  ),
-                ),
-                SizedBox(height: 4.h),
-                Row(
-                  children: [
-                    Icon(CupertinoIcons.map_pin, color: Colors.white, size: 14.w),
-                    SizedBox(width: 4.w),
-                    Text(
-                      location,
-                      style: AppTextStyles.bodySmall.copyWith(color: Colors.white),
-                    ),
-                    const Spacer(),
-                    Icon(CupertinoIcons.star_fill, color: Colors.yellow, size: 12.w),
-                    SizedBox(width: 4.w),
-                    Text(
-                      rating,
-                      style: AppTextStyles.bodySmall.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  // Widget _buildGuideCard({
+  //   required String name,
+  //   required String location,
+  //   required String rating,
+  //   required String imageUrl,
+  //   bool isFirst = false,
+  //   bool isLast = false,
+  // }) {
+  //   return Container(
+  //     width: 200.w,
+  //     margin: EdgeInsets.only(
+  //       left: isFirst ? 24.w : 8.w,
+  //       right: isLast ? 24.w : 8.w,
+  //       bottom: 8.h,
+  //     ),
+  //     decoration: BoxDecoration(
+  //       borderRadius: BorderRadius.circular(20.r),
+  //       image: DecorationImage(
+  //         image: NetworkImage(imageUrl),
+  //         fit: BoxFit.cover,
+  //       ),
+  //       boxShadow: [
+  //         BoxShadow(
+  //           color: AppColors.primaryGray.withAlpha(50),
+  //           blurRadius: 10,
+  //           offset: Offset(0, 5),
+  //         ),
+  //       ],
+  //     ),
+  //     child: Stack(
+  //       children: [
+  //         // Dark gradient for text
+  //         Container(
+  //           decoration: BoxDecoration(
+  //             borderRadius: BorderRadius.circular(20.r),
+  //             gradient: LinearGradient(
+  //               colors: [Colors.black.withValues(alpha: 0.6), Colors.transparent],
+  //               begin: Alignment.bottomCenter,
+  //               end: Alignment.center,
+  //             ),
+  //           ),
+  //         ),
+  //         Positioned(
+  //           top: 12.h,
+  //           right: 12.w,
+  //           child: Container(
+  //             padding: EdgeInsets.all(6.w),
+  //             decoration: BoxDecoration(
+  //               color: Colors.white.withValues(alpha: 0.2),
+  //               borderRadius: BorderRadius.circular(8.r),
+  //             ),
+  //             child: Icon(CupertinoIcons.viewfinder, color: Colors.white, size: 20.w),
+  //           ),
+  //         ),
+  //         // Guide Info
+  //         Positioned(
+  //           bottom: 16.h,
+  //           left: 16.w,
+  //           right: 16.w,
+  //           child: Column(
+  //             crossAxisAlignment: CrossAxisAlignment.start,
+  //             children: [
+  //               Text(
+  //                 name,
+  //                 style: AppTextStyles.bodyLarge.copyWith(
+  //                   color: Colors.white,
+  //                   fontWeight: FontWeight.bold,
+  //                   fontSize: 18.sp,
+  //                 ),
+  //               ),
+  //               SizedBox(height: 4.h),
+  //               Row(
+  //                 children: [
+  //                   Icon(CupertinoIcons.map_pin, color: Colors.white, size: 14.w),
+  //                   SizedBox(width: 4.w),
+  //                   Text(
+  //                     location,
+  //                     style: AppTextStyles.bodySmall.copyWith(color: Colors.white),
+  //                   ),
+  //                   const Spacer(),
+  //                   Icon(CupertinoIcons.star_fill, color: Colors.yellow, size: 12.w),
+  //                   SizedBox(width: 4.w),
+  //                   Text(
+  //                     rating,
+  //                     style: AppTextStyles.bodySmall.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
+  //                   ),
+  //                 ],
+  //               ),
+  //             ],
+  //           ),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
 
   // --- Date Picker Logic ---
+
+
   void _showDatePicker() async {
     final DateTime? picked = await showDatePicker(
       context: context,

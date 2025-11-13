@@ -3,13 +3,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:yaloo/core/constants/colors.dart';
 import 'package:yaloo/core/constants/app_text_styles.dart';
-import 'package:yaloo/features/tourist/screens/tourist_guide_profile.dart';
+import 'package:yaloo/features/tourist/screens/guide/tourist_guide_profile.dart';
+import 'package:yaloo/features/tourist/screens/host/host_list_screen.dart';
 
 // Import the 4 screens for your tabs
 import '../../booking/screens/booking_details_screen.dart';
 import '../../booking/screens/booking_request_sent_screen.dart';
+import '../../booking/screens/booking_status_screen.dart';
 import '../../booking/screens/payment_screen.dart';
+import '../../booking/screens/tour_completion_screen.dart';
 import '../../booking/screens/tour_information_screen.dart';
+import 'host/find_host_screen.dart';
+import 'host/tourist_host_profile.dart';
 import 'tourist_home_screen.dart';
 import 'tourist_chat_screen.dart';
 import 'tourist_bookings_screen.dart';
@@ -18,8 +23,8 @@ import 'tourist_profile_screen.dart';
 // --- IMPORT THE NEW WIDGET ---
 import 'package:yaloo/core/widgets/floating_chat_button.dart';
 // --- IMPORT THE OTHER SCREENS ---
-import 'package:yaloo/features/tourist/screens/find_guide_screen.dart';
-import 'package:yaloo/features/tourist/screens/guide_list_screen.dart';
+import 'package:yaloo/features/tourist/screens/guide/find_guide_screen.dart';
+import 'package:yaloo/features/tourist/screens/guide/guide_list_screen.dart';
 
 
 
@@ -99,6 +104,21 @@ class _TouristDashboardScreenState extends State<TouristDashboardScreen> {
               break;
             case '/bookingRequestSent':
               page = const BookingRequestSentScreen();
+              break;
+            case '/bookingStatus':
+              page = const BookingStatusScreen();
+              break;
+            case '/tourCompletion':
+              page = const TourCompletionScreen();
+              break;
+            case '/findHost':
+              page = const FindHostScreen();
+              break;
+            case '/hostList':
+              page = const HostListScreen();
+              break;
+            case '/touristHostProfile':
+              page = const TouristHostProfileScreen();
               break;
             default:
               page = const TouristHomeScreen();
