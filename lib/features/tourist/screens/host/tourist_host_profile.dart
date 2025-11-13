@@ -11,7 +11,7 @@ import 'package:yaloo/core/widgets/custom_icon_button.dart';
 
 // --- MOCK DATA for this screen ---
 final List<String> galleryImages = [
-  "https://placehold.co/200x200/e9c46a/white?text=Gallery+1",
+  "assets/images/host_1.png",
   "https://placehold.co/200x200/f4a261/white?text=Gallery+2",
   "https://placehold.co/200x200/e76f51/white?text=Gallery+3",
   "https://placehold.co/200x200/2a9d8f/white?text=Gallery+4",
@@ -35,7 +35,7 @@ class TouristHostProfileScreen extends StatelessWidget {
     // --- Receive host data from arguments ---
     final hostData = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>? ?? {};
     final String hostName = hostData['name'] ?? "Silva's Village Home";
-    final String hostImage = hostData['image'] ?? "assets/images/host_1.jpg";
+    final String hostImage = hostData['image'] ?? "assets/images/host_1.png";
     final String hostLocation = hostData['location'] ?? "Kandy, Sri Lanka";
     final String hostRating = hostData['rating'] ?? "4.6";
     // --------------------------------------------------
@@ -83,13 +83,13 @@ class TouristHostProfileScreen extends StatelessWidget {
                 delegate: SliverChildListDelegate(
                   [
                     SizedBox(height: 24.h),
-                    _buildProfileCard(context),
+                    _buildProfileCard(context, hostName, hostImage),
                     _buildAboutSection(),
                     _buildGallerySection(),
                     _buildFacilitiesSection(),
                     _buildReviewSection(),
                     _buildSafetySection(),
-                    SizedBox(height: 100.h),
+                    SizedBox(height: 80.h),
                   ],
                 ),
               ),
@@ -98,99 +98,11 @@ class TouristHostProfileScreen extends StatelessWidget {
         },
       ),
       bottomNavigationBar: _buildBookingBar(context, hostName, hostImage),
-
-      // body: CustomScrollView(
-      //   slivers: [
-      //     // _buildSliverAppBar(context, hostImage),
-      //     SliverList(
-      //       delegate: SliverChildListDelegate(
-      //         [
-      //           _buildProfileCard(context, hostName, hostImage, hostLocation, hostRating),
-      //           _buildAboutSection(),
-      //           _buildGallerySection(),
-      //           _buildFacilitiesSection(),
-      //           _buildReviewSection(),
-      //           _buildSafetySection(),
-      //           SizedBox(height: 120.h),
-      //         ],
-      //       ),
-      //     ),
-      //   ],
-      // ),
-      // bottomNavigationBar: _buildBookingBar(context, hostName, hostImage),
-    );
-  }
-
-  // --- 1. The Header Image ---
-  Widget _buildSliverAppBar(BuildContext context, String image) {
-    return SliverAppBar(
-      backgroundColor: Colors.white,
-      elevation: 0,
-      pinned: true, // The app bar stays visible as you scroll
-      expandedHeight: 300.h, // Large header image
-      leading: Padding(
-        padding: EdgeInsets.all(8.w),
-        child: CircleAvatar(
-          backgroundColor: Colors.black.withOpacity(0.3),
-          child: IconButton(
-            icon: Icon(FontAwesomeIcons.arrowLeft, color: Colors.white, size: 20.w),
-            onPressed: () => Navigator.of(context).pop(),
-          ),
-        ),
-      ),
-      actions: [
-        Padding(
-          padding: EdgeInsets.all(8.w),
-          child: CircleAvatar(
-            backgroundColor: Colors.black.withOpacity(0.3),
-            child: CustomIconButton(
-              onPressed: () { /* TODO: Handle Search */ },
-              icon: Icon(CupertinoIcons.search, color: Colors.white, size: 24.w),
-            ),
-          ),
-        ),
-        Padding(
-          padding: EdgeInsets.all(8.w),
-          child: CircleAvatar(
-            backgroundColor: Colors.black.withOpacity(0.3),
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                CustomIconButton(
-                  onPressed: () { /* TODO: Handle notification */ },
-                  icon: Icon(CupertinoIcons.bell, color: Colors.white, size: 24.w),
-                ),
-                Positioned(
-                  top: 10.h,
-                  right: 10.w,
-                  child: Container(
-                    width: 8.w,
-                    height: 8.h,
-                    decoration: BoxDecoration(
-                      color: AppColors.primaryBlue,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        SizedBox(width: 12.w),
-      ],
-      flexibleSpace: FlexibleSpaceBar(
-        background: Image.network(
-          image, // Use the dynamic host image
-          fit: BoxFit.cover,
-          errorBuilder: (context, error, stackTrace) =>
-              Container(color: AppColors.secondaryGray, child: Icon(FontAwesomeIcons.house, size: 100.w, color: AppColors.primaryGray)),
-        ),
-      ),
     );
   }
 
   // --- 2. The Main Profile Card ---
-  Widget _buildProfileCard(BuildContext context) {
+  Widget _buildProfileCard(BuildContext context, String name, String image) {
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 24.w),
       padding: EdgeInsets.all(20.w),
@@ -209,7 +121,7 @@ class TouristHostProfileScreen extends StatelessWidget {
         children: [
           CircleAvatar(
             radius: 50.r,
-            backgroundImage: AssetImage("assets/images/guide_1.jpg"),
+            backgroundImage: AssetImage("assets/images/host_1.png"),
           ),
           SizedBox(height: 12.h),
           Text(
@@ -270,7 +182,11 @@ class TouristHostProfileScreen extends StatelessWidget {
           SizedBox(height: 16.h),
           ElevatedButton(
             onPressed: () {
-              Navigator.pushNamed(context, '/bookingDetails');
+              Navigator.pushNamed(
+                  context,
+                  '/bookingDetails',
+                  arguments: { 'name': name, 'image': image, 'type': 'Host' }
+              );
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primaryBlue,
@@ -281,7 +197,7 @@ class TouristHostProfileScreen extends StatelessWidget {
               ),
             ),
             child: Text(
-              'Book Guide',
+              'Reserve Stay',
               style: AppTextStyles.bodyLarge.copyWith(
                 color: Colors.white,
                 fontWeight: FontWeight.bold,
@@ -666,7 +582,7 @@ class TouristHostProfileScreen extends StatelessWidget {
             children: [
               Text(
                 '\$20 / night', // <-- UPDATED
-                style: AppTextStyles.headlineLargeBlack.copyWith(
+                style: AppTextStyles.headlineMedium.copyWith(
                   fontSize: 20.sp,
                   fontWeight: FontWeight.bold,
                 ),
@@ -682,10 +598,7 @@ class TouristHostProfileScreen extends StatelessWidget {
               Navigator.pushNamed(
                   context,
                   '/bookingDetails',
-                  arguments: {
-                    'name': name,
-                    'image': image,
-                  }
+                  arguments: { 'name': name, 'image': image, 'type': 'Host' }
               );
             },
             style: ElevatedButton.styleFrom(
@@ -697,7 +610,7 @@ class TouristHostProfileScreen extends StatelessWidget {
               padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 14.h),
             ),
             child: Text(
-              'Request Booking', // <-- UPDATED
+              'Reserve Stay', // <-- UPDATED
               style: AppTextStyles.bodyLarge.copyWith(
                 color: Colors.white,
                 fontWeight: FontWeight.bold,

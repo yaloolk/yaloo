@@ -173,7 +173,7 @@ class TouristHomeScreen extends StatelessWidget {
                   border: InputBorder.none,
                   contentPadding: EdgeInsets.symmetric(
                     horizontal: 16.w,
-                    vertical: 14.h,
+                    vertical: 20.h,
                   ),
                 ),
               ),

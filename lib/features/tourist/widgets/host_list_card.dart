@@ -143,11 +143,11 @@ class HostListCard extends StatelessWidget {
         ElevatedButton(
           onPressed: () {
             // TODO: Navigate to Booking Details for Hosts
-            // Navigator.pushNamed(
-            //   context,
-            //   '/bookingDetails',
-            //   arguments: { 'name': name, 'image': imageUrl, 'type': 'Host' }
-            // );
+            Navigator.pushNamed(
+              context,
+              '/bookingDetails',
+              arguments: { 'name': name, 'image': imageUrl, 'type': 'Host' }
+            );
           },
           style: ElevatedButton.styleFrom(
             backgroundColor: AppColors.primaryBlue,
