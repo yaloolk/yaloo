@@ -191,7 +191,11 @@ class _FindGuideScreenState extends State<FindGuideScreen> {
           ElevatedButton(
             onPressed: () {
               // TODO: Handle Search Logic
-              Navigator.pushNamed(context, '/guideList');
+              Navigator.pushNamed(
+                context,
+                '/guideList',
+                arguments: {'bookingType': 'guide'},
+              );
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primaryBlue,

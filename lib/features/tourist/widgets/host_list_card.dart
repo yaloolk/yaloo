@@ -146,7 +146,7 @@ class HostListCard extends StatelessWidget {
             Navigator.pushNamed(
               context,
               '/bookingDetails',
-              arguments: { 'name': name, 'image': imageUrl, 'type': 'Host' }
+              arguments: { 'name': name, 'image': imageUrl, 'bookingType': 'host' }
             );
           },
           style: ElevatedButton.styleFrom(

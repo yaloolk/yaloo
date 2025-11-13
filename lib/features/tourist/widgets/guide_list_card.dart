@@ -215,6 +215,7 @@ class GuideListCard extends StatelessWidget {
                   arguments: { // Pass just what the booking page needs
                     'name': name,
                     'image': imageUrl,
+                    'bookingType': 'guide'
                   }
               );
             }

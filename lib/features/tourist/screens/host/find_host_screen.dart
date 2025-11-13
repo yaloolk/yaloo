@@ -253,7 +253,11 @@ class _FindHostScreenState extends State<FindHostScreen> {
           ElevatedButton(
             onPressed: () {
               // TODO: Handle Search Logic
-              Navigator.pushNamed(context, '/hostList');
+              Navigator.pushNamed(
+                context,
+                '/hostList',
+                arguments: {'bookingType': 'host'},
+              );
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primaryBlue,

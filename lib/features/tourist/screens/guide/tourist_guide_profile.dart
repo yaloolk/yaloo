@@ -281,7 +281,7 @@ class GuideProfileScreen extends StatelessWidget {
       ),
       child: Column(
         children: [
-          _buildDetailRow("Languages", "English, Sinhala, Tamil"),
+          _buildDetailRow("Languages", "English, Tamil"),
           SizedBox(height: 16.h),
           Divider(color: Colors.grey.shade300, height: 1.h),
           SizedBox(height: 16.h),

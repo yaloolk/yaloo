@@ -19,31 +19,27 @@ class BookingDetailsScreen extends StatefulWidget {
 }
 
 class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
-  // --- Page State ---
   bool _canSubmit = false;
   bool _isLoading = false;
 
-  // --- Mock Guide Data (will be filled by arguments) ---
   String _guideName = "Guide";
   String _guideImage = "assets/images/guide_1.jpg";
+  String _bookingType = "guide";
 
-  // --- Form Controllers ---
   final _nameController = TextEditingController(text: 'jhon');
   final _passportController = TextEditingController(text: '0000');
   final _emailController = TextEditingController(text: 'example@gmail.com');
   final _phoneController = TextEditingController(text: '00000');
 
-  // --- Form State Variables ---
   Country? _selectedCountry;
-  String _phoneCountryFlag = '🇺🇸'; // Default to US flag
-  String _phoneCountryCode = '1';   // Default to US code
+  String _phoneCountryFlag = '🇺🇸';
+  String _phoneCountryCode = '1';
   String? _selectedGender = "Female";
   bool _saveDetails = false;
 
   @override
   void initState() {
     super.initState();
-    // Add listeners to all controllers
     _nameController.addListener(_validateForm);
     _passportController.addListener(_validateForm);
     _emailController.addListener(_validateForm);
@@ -53,17 +49,16 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Fetch the guide data passed from the previous screen
     try {
-      final args = ModalRoute.of(context)?.settings.arguments as Map<String, String>?;
+      final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
       if (args != null) {
         _guideName = args['name'] ?? 'Guide';
         _guideImage = args['image'] ?? 'assets/images/guide_1.jpg';
+        _bookingType = args['bookingType'] ?? 'guide';
       }
     } catch (e) {
       print("Error getting arguments: $e");
     }
-    // Run initial validation
     _validateForm();
   }
 
@@ -76,16 +71,15 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
     super.dispose();
   }
 
-  // --- Validation Logic ---
   void _validateForm() {
-    final bool fieldsAreValid = _nameController.text.isNotEmpty &&
+    final fieldsAreValid = _nameController.text.isNotEmpty &&
         _passportController.text.isNotEmpty &&
         _emailController.text.isNotEmpty &&
         _phoneController.text.isNotEmpty &&
         _selectedCountry != null &&
         _selectedGender != null;
 
-    final bool canSubmit = fieldsAreValid && _saveDetails;
+    final canSubmit = fieldsAreValid && _saveDetails;
 
     if (_canSubmit != canSubmit) {
       setState(() {
@@ -105,7 +99,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
             onPressed: () { /* TODO: Show Help */ },
             icon: Icon(FontAwesomeIcons.circleQuestion, color: AppColors.primaryBlack, size: 24.w),
           ),
-           SizedBox(width: 12.w),
+          SizedBox(width: 12.w),
         ],
       ),
       body: SingleChildScrollView(
@@ -122,10 +116,8 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                   {'Payment': FontAwesomeIcons.creditCard},
                 ],
               ),
-
               _buildProviderCard(),
-               SizedBox(height: 24.h),
-
+              SizedBox(height: 24.h),
               Text(
                 'Almost done! Kindly provide your information below.',
                 style: AppTextStyles.textSmall.copyWith(
@@ -134,32 +126,35 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                   height: 1.5.h,
                 ),
               ),
-               SizedBox(height: 24.h),
+              SizedBox(height: 24.h),
               _buildFormLabel("Full name"),
               CustomTextField(
                 controller: _nameController,
                 hintText: 'Enter your full name',
-                icon: FontAwesomeIcons.user, hint: ' Maria',
+                icon: FontAwesomeIcons.user,
+                hint: 'Maria',
               ),
-               SizedBox(height: 16.h),
+              SizedBox(height: 16.h),
               _buildFormLabel("Passport Number"),
               CustomTextField(
                 controller: _passportController,
                 hintText: 'Enter your passport number',
-                icon: FontAwesomeIcons.passport, hint: 'N478**',
+                icon: FontAwesomeIcons.passport,
+                hint: 'N478**',
               ),
-               SizedBox(height: 16.h),
+              SizedBox(height: 16.h),
               _buildFormLabel("Email"),
               CustomTextField(
                 controller: _emailController,
                 hintText: 'Enter your email',
                 icon: FontAwesomeIcons.envelope,
-                keyboardType: TextInputType.emailAddress, hint: 'youremail@domain.com',
+                keyboardType: TextInputType.emailAddress,
+                hint: 'youremail@domain.com',
               ),
-               SizedBox(height: 16.h),
+              SizedBox(height: 16.h),
               _buildFormLabel("Phone number"),
               _buildPhoneField(),
-               SizedBox(height: 16.h),
+              SizedBox(height: 16.h),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -177,7 +172,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                       ],
                     ),
                   ),
-                   SizedBox(width: 16.w),
+                  SizedBox(width: 16.w),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -194,21 +189,27 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                   ),
                 ],
               ),
-               SizedBox(height: 20.h),
+              SizedBox(height: 20.h),
               _buildSaveDetailsCheckbox(),
-               SizedBox(height: 20.h),
+              SizedBox(height: 20.h),
               CustomPrimaryButton(
                 text: 'Submit',
                 isLoading: _isLoading,
-                // UPDATED: Button is enabled/disabled based on state
-                onPressed: _canSubmit ? () {
-                  // TODO: Handle Submit Logic
-                  Navigator.pushNamed(context, '/tourInformation');
-                } : null,
+                onPressed: _canSubmit // TODO: Handle Submit Logic
+                    ? () {
+                  if (_bookingType == 'guide') {
+                    Navigator.pushNamed(context, '/tourInformation',
+                        arguments: {'bookingType': 'guide'});
+                  } else {
+                    Navigator.pushNamed(context, '/stayDetails',
+                        arguments: {'bookingType': 'host'});
+                  }
+                }
+                    : null,
               ),
-               SizedBox(height: 20.h),
+              SizedBox(height: 20.h),
               _buildFaqLink(),
-               SizedBox(height: 100.h), // Padding for chat button
+              SizedBox(height: 100.h),
             ],
           ),
         ),
@@ -216,8 +217,6 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
       floatingActionButton: const FloatingChatButton(),
     );
   }
-
-  // --- Helper Widgets for this page ---
 
   Widget _buildProviderCard() {
     return Center(
@@ -232,19 +231,19 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
           children: [
             CircleAvatar(
               radius: 24.r,
-              // UPDATED: Use dynamic image
               backgroundImage: AssetImage(_guideImage),
-              onBackgroundImageError: (e, s) => Icon(FontAwesomeIcons.user, color: AppColors.primaryGray),
+              onBackgroundImageError: (e, s) =>
+                  Icon(FontAwesomeIcons.user, color: AppColors.primaryGray),
             ),
-             SizedBox(width: 12.w),
+            SizedBox(width: 12.w),
             Text(
-              _guideName, // UPDATED: Use dynamic name
+              _guideName,
               style: AppTextStyles.bodyLarge.copyWith(
                 fontWeight: FontWeight.bold,
                 fontSize: 18.sp,
               ),
             ),
-             SizedBox(width: 8.w),
+            SizedBox(width: 8.w),
             Icon(Icons.check_circle, color: AppColors.primaryBlue, size: 20.w),
           ],
         ),
@@ -258,7 +257,8 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
       child: Text.rich(
         TextSpan(
           text: label,
-          style: AppTextStyles.textSmall.copyWith(color: AppColors.primaryBlack, fontWeight: FontWeight.bold),
+          style: AppTextStyles.textSmall
+              .copyWith(color: AppColors.primaryBlack, fontWeight: FontWeight.bold),
           children: [
             TextSpan(text: ' *', style: TextStyle(color: AppColors.primaryRed)),
           ],
@@ -298,16 +298,10 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // UPDATED: Show flag emoji
-                  Text(
-                    _phoneCountryFlag,
-                    style: TextStyle(fontSize: 24.sp),
-                  ),
+                  Text(_phoneCountryFlag, style: TextStyle(fontSize: 24.sp)),
                   SizedBox(width: 8.w),
-                  Text(
-                    "+$_phoneCountryCode",
-                    style: AppTextStyles.textSmall.copyWith(color: Colors.black),
-                  ),
+                  Text("+$_phoneCountryCode",
+                      style: AppTextStyles.textSmall.copyWith(color: Colors.black)),
                   Icon(Icons.arrow_drop_down, color: AppColors.primaryGray),
                 ],
               ),
@@ -334,7 +328,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
             setState(() {
               _saveDetails = val ?? false;
             });
-            _validateForm(); // Re-validate
+            _validateForm();
           },
           activeColor: AppColors.primaryBlue,
         ),
@@ -362,8 +356,6 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
     );
   }
 
-  // --- Action Handlers ---
-
   void _showCountryPicker({bool showPhoneCode = false}) {
     showCountryPicker(
       context: context,
@@ -377,7 +369,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
             _selectedCountry = country;
           }
         });
-        _validateForm(); // Re-validate
+        _validateForm();
       },
     );
   }
@@ -391,38 +383,45 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
               ListTile(
                 title: Text('Male'),
                 onTap: () {
-                  setState(() { _selectedGender = 'Male'; });
-                  _validateForm(); // Re-validate
+                  setState(() {
+                    _selectedGender = 'Male';
+                  });
+                  _validateForm();
                   Navigator.pop(context);
                 },
               ),
               ListTile(
                 title: Text('Female'),
                 onTap: () {
-                  setState(() { _selectedGender = 'Female'; });
-                  _validateForm(); // Re-validate
+                  setState(() {
+                    _selectedGender = 'Female';
+                  });
+                  _validateForm();
                   Navigator.pop(context);
                 },
               ),
               ListTile(
                 title: Text('Other'),
                 onTap: () {
-                  setState(() { _selectedGender = 'Other'; });
-                  _validateForm(); // Re-validate
+                  setState(() {
+                    _selectedGender = 'Other';
+                  });
+                  _validateForm();
                   Navigator.pop(context);
                 },
               ),
               ListTile(
                 title: Text('Prefer not to say'),
                 onTap: () {
-                  setState(() { _selectedGender = 'Prefer not to say'; });
-                  _validateForm(); // Re-validate
+                  setState(() {
+                    _selectedGender = 'Prefer not to say';
+                  });
+                  _validateForm();
                   Navigator.pop(context);
                 },
               ),
             ],
           );
-        }
-    );
+        });
   }
 }
