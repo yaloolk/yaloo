@@ -24,6 +24,7 @@ import '../features/booking/screens/tour_completion_screen.dart';
 import '../features/tourist/screens/host/find_host_screen.dart';
 import '../features/tourist/screens/host/host_list_screen.dart';
 import '../features/tourist/screens/host/tourist_host_profile.dart';
+import '../features/guide/screens/guide_dashboard_screen.dart';
 
 
 
@@ -57,6 +58,7 @@ class AppRoutes {
     '/findHost': (_) => const FindHostScreen(),
     '/hostList': (_) => const HostListScreen(),
     '/touristHostProfile': (_) => const TouristHostProfileScreen(),
+    '/guideDashboard': (_) => const GuideDashboardScreen(),
 
 
 

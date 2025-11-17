@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:yaloo/core/constants/colors.dart';
 import 'package:yaloo/core/constants/app_text_styles.dart';
 import 'package:yaloo/features/tourist/screens/guide/tourist_guide_profile.dart';
@@ -135,19 +136,19 @@ class _TouristDashboardScreenState extends State<TouristDashboardScreen> {
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
-            icon: Icon(CupertinoIcons.home),
+            icon: Icon(LucideIcons.house),
             label: 'Home',
           ),
           BottomNavigationBarItem(
-            icon: Icon(CupertinoIcons.chat_bubble_2),
+            icon: Icon(LucideIcons.messagesSquare),
             label: 'Chat',
           ),
           BottomNavigationBarItem(
-            icon: Icon(CupertinoIcons.calendar),
+            icon: Icon(LucideIcons.calendarCheck2),
             label: 'Bookings',
           ),
           BottomNavigationBarItem(
-            icon: Icon(CupertinoIcons.profile_circled),
+            icon: Icon(LucideIcons.user),
             label: 'Profile',
           ),
         ],
