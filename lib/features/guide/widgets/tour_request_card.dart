@@ -37,20 +37,30 @@ class TourRequestCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(18.r),
       ),
       color: Colors.white,
-      margin: EdgeInsets.only(left: 24.w, right: 8.w),
-      child: Container(
-        width: 280.w,
-        padding: EdgeInsets.all(14.w),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildHeader(),
-            SizedBox(height: 14.h),
-            _buildDetails(),
-            SizedBox(height: 28.h),
-            _buildActionButtons(),
-
-          ],
+      margin: EdgeInsets.only(left: 24.w, right: 8.w,  bottom: 6.h),
+        child: InkWell(
+          onTap: () {
+            // Navigate to the details screen, passing the full request data
+            Navigator.pushNamed(
+              context,
+              '/guideTourRequestDetails',
+              // arguments: requestData,
+            );
+          },
+          borderRadius: BorderRadius.circular(20.r),
+        child: Container(
+          width: 280.w,
+          padding: EdgeInsets.all(14.w),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildHeader(),
+              SizedBox(height: 14.h),
+              _buildDetails(),
+              SizedBox(height: 28.h),
+              _buildActionButtons(),
+            ],
+          ),
         ),
       ),
     );

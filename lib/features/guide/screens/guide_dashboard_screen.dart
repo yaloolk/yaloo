@@ -6,12 +6,14 @@ import 'package:yaloo/core/constants/colors.dart';
 import 'package:yaloo/core/constants/app_text_styles.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:lucide_icons_flutter/test_icons.dart';
+import 'package:yaloo/features/guide/screens/guide_tour_request_details.dart';
 
 
 // Import the 5 screens for your tabs
 import 'guide_home_screen.dart';
 import 'guide_chat_screen.dart';
 import 'guide_bookings_screen.dart';
+import 'guide_tour_requests_screen.dart';
 import 'guide_wallet_screen.dart';
 import 'guide_profile_screen.dart';
 
@@ -85,6 +87,12 @@ class _GuideDashboardScreenState extends State<GuideDashboardScreen> {
               break;
             case '/guideProfile':
               page = const GuideProfileScreen();
+              break;
+            case '/guideTourRequests':
+              page = const GuideTourRequestsScreen();
+              break;
+            case '/guideTourRequestDetails':
+              page = const GuideTourRequestDetailsScreen();
               break;
 
           // --- NESTED PAGES (Add detail pages here later) ---

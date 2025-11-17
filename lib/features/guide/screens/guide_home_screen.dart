@@ -9,6 +9,8 @@ import 'package:yaloo/core/widgets/custom_icon_button.dart';
 import 'package:yaloo/features/guide/widgets/tour_request_card.dart';
 import 'package:yaloo/features/guide/widgets/upcoming_booking_card.dart';
 
+import '../widgets/guide_booking_details_dialog.dart';
+
 // --- MOCK DATA ---
 final List<Map<String, dynamic>> tourRequests = [
   {
@@ -71,21 +73,21 @@ class GuideHomeScreen extends StatelessWidget {
                   SizedBox(height: 20.h),
                   _buildSearchBar(context),
                   SizedBox(height: 24.h),
-                  _buildSectionHeader(title: "Tour Requests"),
+                  _buildSectionHeader(context: context, title: "Tour Requests"),
                   SizedBox(height: 16.h),
                   _buildTourRequestsList(),
                   SizedBox(height: 24.h),
-                  _buildSectionHeader(title: "Upcoming Bookings"),
+                  _buildSectionHeader(context: context, title: "Upcoming Bookings"),
                   SizedBox(height: 16.h),
                   _buildUpcomingBookingsList(),
                   SizedBox(height: 24.h),
                   _buildInviteBanner(),
                   SizedBox(height: 60.h), // Padding for bottom nav
-            ],
-          ),
-        );
-        },
-          ),
+                ],
+              ),
+            );
+          },
+       ),
       ),
     );
   }
@@ -166,7 +168,7 @@ class GuideHomeScreen extends StatelessWidget {
                   prefixIcon:
                   Icon(FontAwesomeIcons.magnifyingGlass, color: AppColors.primaryGray, size: 20.w),
                   border: InputBorder.none,
-                  contentPadding: EdgeInsets.symmetric(vertical: 14.h),
+                  contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
                 ),
               ),
             ),
@@ -183,7 +185,7 @@ class GuideHomeScreen extends StatelessWidget {
   }
 
   // --- 3. Section Header ---
-  Widget _buildSectionHeader({required String title}) {
+  Widget _buildSectionHeader({required BuildContext context, required String title}) {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 24.w),
       child: Row(
@@ -199,6 +201,13 @@ class GuideHomeScreen extends StatelessWidget {
           TextButton(
             onPressed: () {
               // TODO: Handle "See All"
+              if (title == "Tour Requests") {
+
+                Navigator.pushNamed(context, '/guideTourRequests');
+              } else if (title == "Upcoming Bookings") {
+                // TODO: Navigate to All Bookings
+                Navigator.pushNamed(context, '/guideBookings');
+              }
             },
             child: Text(
               "See All",
@@ -249,14 +258,43 @@ class GuideHomeScreen extends StatelessWidget {
         itemCount: upcomingBookings.length,
         itemBuilder: (context, index) {
           final booking = upcomingBookings[index];
-          return UpcomingBookingCard(
-            title: booking['title'],
-            location: booking['location'],
-            guests: booking['guests'],
-            date: booking['date'],
-            duration: booking['duration'],
-            price: booking['price'],
-            imageUrl: booking['image'],
+          return Padding(
+            padding: EdgeInsets.only(left: index == 0 ? 0.w : 8.w),
+            // Wrap the card with GestureDetector to handle the tap
+            child: GestureDetector(
+              onTap: () {
+                showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    // Pass the actual booking data to your dialog
+                    return GuideBookingDetailsDialog(
+                      bookingData: {
+                        'guestName': booking['title'] ?? 'Guest',
+                        'guestImage': booking['image'] ?? '',
+                        'status': 'Confirmed',
+                        'location': booking['location'],
+                        'dateTime': '${booking['date']}, 10:00 AM', // Mock time
+                        'type': '${booking['guests']} Guest(s)',
+                        'meetingPoint': 'Main Entrance', // Mock
+                        'note': "Looking forward to the tour!", // Mock
+                        'rateCalc': '\$10 x ${booking['duration']}', // Mock calc
+                        'fee': '-\$2', // Mock fee
+                        'totalPayout': booking['price'],
+                      },
+                    );
+                  },
+                );
+              },
+              child: UpcomingBookingCard(
+                title: booking['title'],
+                location: booking['location'],
+                guests: booking['guests'],
+                date: booking['date'],
+                duration: booking['duration'],
+                price: booking['price'],
+                imageUrl: booking['image'],
+              ),
+            ),
           );
         },
       ),
