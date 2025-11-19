@@ -47,8 +47,8 @@ class YalooApp extends StatelessWidget {
             ),
           ),
           // initialRoute: '/touristDashboard',
-          initialRoute: '/guideDashboard',
-
+          // initialRoute: '/guideDashboard',
+          initialRoute: '/hostDashboard',
           // initialRoute: '/onboarding',
           // initialRoute: '/tourCompletion',
 

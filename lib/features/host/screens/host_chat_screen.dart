@@ -15,7 +15,7 @@ class HostChatScreen extends StatelessWidget {
           children: [
             Icon(FontAwesomeIcons.commentDots, size: 60, color: Colors.grey[300]),
             SizedBox(height: 16),
-            Text('Guide Chat Screen', style: AppTextStyles.headlineLarge),
+            Text('Host Chat Screen', style: AppTextStyles.headlineLarge),
           ],
         ),
       ),

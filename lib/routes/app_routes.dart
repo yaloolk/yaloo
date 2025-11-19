@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../features/guide/screens/guide_tour_request_details.dart';
 import '../features/onboarding/screens/onboarding.dart';
 import '../features/onboarding/screens/user_selection_screen.dart';
 import '../features/auth/screens/common/login_screen.dart';
@@ -27,7 +26,12 @@ import '../features/tourist/screens/host/host_list_screen.dart';
 import '../features/tourist/screens/host/tourist_host_profile.dart';
 import '../features/guide/screens/guide_dashboard_screen.dart';
 import '../features/guide/screens/guide_tour_requests_screen.dart';
+import '../features/guide/screens/guide_booking_cancellation_screen.dart';
 import '../features/guide/screens/guide_tour_request_details.dart';
+import '../features/host/screens/host_dashboard_screen.dart';
+import '../features/host/screens/host_stay_requests_screen.dart';
+import '../features/host/screens/host_stay_request_details.dart';
+
 
 
 
@@ -64,6 +68,14 @@ class AppRoutes {
     '/guideDashboard': (_) => const GuideDashboardScreen(),
     '/guideTourRequests': (_) => const GuideTourRequestsScreen(),
     '/guideTourRequestDetails': (_) => const GuideTourRequestDetailsScreen(),
+    '/guideBookingCancellation': (_) => const GuideBookingCancellationScreen(),
+    '/hostDashboard': (_) => const HostDashboardScreen(),
+    '/hostStayRequests': (_) => const HostStayRequestsScreen(),
+    '/hostStayRequestDetails': (_) => const HostStayRequestDetailsScreen(),
+
+
+
+
 
 
 

@@ -4,28 +4,34 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:yaloo/core/constants/colors.dart';
 import 'package:yaloo/core/constants/app_text_styles.dart';
 
-class GuideBookingDetailsDialog extends StatelessWidget {
-  final Map<String, dynamic> bookingData;
+class HostStayRequestDetails extends StatelessWidget {
+  final Map<String, dynamic> data;
 
-  const GuideBookingDetailsDialog({Key? key, required this.bookingData}) : super(key: key);
+  const HostStayRequestDetails({super.key, required this.data});
 
   @override
   Widget build(BuildContext context) {
-    // ... (Data extraction remains the same) ...
-    final String guestName = bookingData['guestName'] ?? 'Emil Carter';
-    final String guestImage = bookingData['guestImage'] ?? 'https://placehold.co/100x100/e9c46a/white?text=Emil';
-    final String status = bookingData['status'] ?? 'Confirmed';
-    final String location = bookingData['location'] ?? 'Ella';
-    final String dateTime = bookingData['dateTime'] ?? 'October 05, 10:00 A.M - 2:00 P.M';
-    final String type = bookingData['type'] ?? 'Couple';
-    final String meetingPoint = bookingData['meetingPoint'] ?? 'Ella Station';
-    final String note = bookingData['note'] ?? "We'd love to see hike Ella mountain.";
-    final String rateCalc = bookingData['rateCalc'] ?? '\$10 x 4h = \$40';
-    final String fee = bookingData['fee'] ?? '-\$4';
-    final String totalPayout = bookingData['totalPayout'] ?? '\$36';
+    final guestName = data['guestName'] ?? 'Emil Carter';
+    final guestImage = data['guestImage'] ?? 'https://placehold.co/100x100/4A8BDF/white?text=EC';
+    final status = data['status'] ?? 'Confirmed';
+
+    final stayDates = data['stayDates'] ?? 'October 05 - October 07 (2 Nights)';
+    final family = data['family'] ?? '2 Adults, 1 Child';
+
+    final checkIn = data['checkIn'] ?? '2:00 P.M';
+    final checkOut = data['checkOut'] ?? '11:00 A.M';
+
+    final meal = data['meal'] ?? 'Non-Veg';
+    final note = data['note'] ?? 'We would love to learn about local traditions during stay';
+
+    final rate = data['rate'] ?? '\$20 x 2 = \$40';
+    final fee = data['fee'] ?? '-\$4';
+    final total = data['total'] ?? '\$36';
 
     return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24.r)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(24.r),
+      ),
       insetPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 24.h),
       backgroundColor: Colors.white,
       child: SingleChildScrollView(
@@ -33,11 +39,9 @@ class GuideBookingDetailsDialog extends StatelessWidget {
           padding: EdgeInsets.all(20.w),
           child: Column(
             mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // ... (Title, Profile, Details, Payment sections remain exactly the same) ...
               Text(
-                'Booking Details',
+                'Stay Details',
                 style: AppTextStyles.headlineLargeBlack.copyWith(
                   fontSize: 22.sp,
                   fontWeight: FontWeight.bold,
@@ -62,7 +66,7 @@ class GuideBookingDetailsDialog extends StatelessWidget {
                         ),
                       ),
                       SizedBox(height: 4.h),
-                      _buildStatusChip(status),
+                      _statusChip(status),
                     ],
                   ),
                 ],
@@ -78,18 +82,18 @@ class GuideBookingDetailsDialog extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Tour Details',
+                      'Stay Details',
                       style: AppTextStyles.bodyLarge.copyWith(
                         fontWeight: FontWeight.bold,
-                        color: AppColors.primaryBlack,
                       ),
                     ),
                     SizedBox(height: 12.h),
-                    _buildDetailRow(FontAwesomeIcons.locationDot, location),
-                    _buildDetailRow(FontAwesomeIcons.calendar, dateTime),
-                    _buildDetailRow(FontAwesomeIcons.userGroup, type),
-                    _buildDetailRow(FontAwesomeIcons.clock, meetingPoint),
-                    _buildDetailRow(FontAwesomeIcons.userPen, 'Special Note: "$note"'),
+                    _detailRow(FontAwesomeIcons.calendar, stayDates),
+                    _detailRow(FontAwesomeIcons.userGroup, family),
+                    _detailRow(FontAwesomeIcons.clock, 'Check in: $checkIn'),
+                    _detailRow(FontAwesomeIcons.clock, 'Check out: $checkOut'),
+                    _detailRow(FontAwesomeIcons.bowlFood, meal),
+                    _detailRow(FontAwesomeIcons.pen, 'Special Note: "$note"'),
                   ],
                 ),
               ),
@@ -107,36 +111,36 @@ class GuideBookingDetailsDialog extends StatelessWidget {
                       'Payment Summary',
                       style: AppTextStyles.bodyLarge.copyWith(
                         fontWeight: FontWeight.bold,
-                        color: AppColors.primaryBlack,
                       ),
                     ),
                     SizedBox(height: 12.h),
-                    _buildPaymentRow("Rate/hour:", rateCalc),
-                    _buildPaymentRow("Platform Fee (10%):", fee),
+                    _paymentRow('Rate/night:', rate),
+                    _paymentRow('Platform Fee (10%):', fee),
                     Divider(height: 20.h, color: AppColors.secondaryGray),
-                    _buildPaymentRow("Total Payout:", totalPayout, isTotal: true),
+                    _paymentRow('Total Payout:', total, isTotal: true),
                   ],
                 ),
               ),
               SizedBox(height: 24.h),
-
-              // --- Action Buttons ---
               Row(
                 children: [
                   Expanded(
                     child: ElevatedButton(
-                      onPressed: () {
-                        // TODO: Handle Message Client
-                      },
+                      onPressed: () {},
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF0056D2),
                         foregroundColor: Colors.white,
                         padding: EdgeInsets.symmetric(vertical: 12.h),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12.r),
+                        ),
                       ),
                       child: Text(
                         'Message Client',
-                        style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          fontSize: 14.sp,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ),
@@ -144,26 +148,30 @@ class GuideBookingDetailsDialog extends StatelessWidget {
                   Expanded(
                     child: OutlinedButton(
                       onPressed: () {
-                        // --- UPDATED: Close dialog AND Navigate to Cancellation Screen ---
-                        Navigator.of(context).pop(); // Close dialog first
+                        Navigator.of(context).pop();
                         Navigator.pushNamed(
-                            context,
-                            '/guideBookingCancellation',
-                            arguments: {
-                              'touristName': guestName,
-                              'touristImage': guestImage,
-                            }
+                          context,
+                          '/stayCancellation',
+                          arguments: {
+                            'guestName': guestName,
+                            'guestImage': guestImage,
+                          },
                         );
                       },
                       style: OutlinedButton.styleFrom(
                         foregroundColor: AppColors.primaryRed,
                         side: BorderSide(color: AppColors.primaryRed),
                         padding: EdgeInsets.symmetric(vertical: 12.h),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12.r),
+                        ),
                       ),
                       child: Text(
-                        'Cancel Booking',
-                        style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.bold),
+                        'Cancel Stay',
+                        style: TextStyle(
+                          fontSize: 14.sp,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ),
@@ -176,15 +184,16 @@ class GuideBookingDetailsDialog extends StatelessWidget {
     );
   }
 
-  // ... (Helper methods _buildStatusChip, _buildDetailRow, _buildPaymentRow remain unchanged) ...
-  Widget _buildStatusChip(String status) {
+  Widget _statusChip(String status) {
     Color bg = AppColors.secondaryGreen;
     Color text = AppColors.primaryGreen;
 
     if (status.toLowerCase() == 'pending') {
-      bg = const Color(0xFFFFF8E1); // Yellow
+      bg = const Color(0xFFFFF8E1);
       text = const Color(0xFFB45309);
-    } else if (status.toLowerCase() == 'declined') {
+    }
+
+    if (status.toLowerCase() == 'declined') {
       bg = AppColors.primaryRed.withOpacity(0.1);
       text = AppColors.primaryRed;
     }
@@ -198,15 +207,15 @@ class GuideBookingDetailsDialog extends StatelessWidget {
       child: Text(
         status,
         style: AppTextStyles.textExtraSmall.copyWith(
-            color: text,
-            fontWeight: FontWeight.bold,
-            fontSize: 10.sp
+          color: text,
+          fontWeight: FontWeight.bold,
+          fontSize: 10.sp,
         ),
       ),
     );
   }
 
-  Widget _buildDetailRow(IconData icon, String text) {
+  Widget _detailRow(IconData icon, String text) {
     return Padding(
       padding: EdgeInsets.symmetric(vertical: 6.h),
       child: Row(
@@ -218,9 +227,9 @@ class GuideBookingDetailsDialog extends StatelessWidget {
             child: Text(
               text,
               style: AppTextStyles.textSmall.copyWith(
-                  color: const Color(0xFF4A4A4A),
-                  fontSize: 13.sp,
-                  height: 1.4
+                color: const Color(0xFF4A4A4A),
+                fontSize: 13.sp,
+                height: 1.4,
               ),
             ),
           ),
@@ -229,7 +238,7 @@ class GuideBookingDetailsDialog extends StatelessWidget {
     );
   }
 
-  Widget _buildPaymentRow(String label, String value, {bool isTotal = false}) {
+  Widget _paymentRow(String label, String value, {bool isTotal = false}) {
     return Padding(
       padding: EdgeInsets.symmetric(vertical: 4.h),
       child: Row(
@@ -238,17 +247,17 @@ class GuideBookingDetailsDialog extends StatelessWidget {
           Text(
             label,
             style: AppTextStyles.textSmall.copyWith(
-                color: isTotal ? const Color(0xFF0056D2) : AppColors.primaryGray,
-                fontWeight: isTotal ? FontWeight.bold : FontWeight.normal,
-                fontSize: isTotal ? 14.sp : 12.sp
+              color: isTotal ? const Color(0xFF0056D2) : AppColors.primaryGray,
+              fontWeight: isTotal ? FontWeight.bold : FontWeight.normal,
+              fontSize: isTotal ? 14.sp : 12.sp,
             ),
           ),
           Text(
             value,
             style: AppTextStyles.textSmall.copyWith(
-                color: isTotal ? const Color(0xFF0056D2) : AppColors.primaryBlack,
-                fontWeight: isTotal ? FontWeight.bold : FontWeight.normal,
-                fontSize: isTotal ? 14.sp : 12.sp
+              color: isTotal ? const Color(0xFF0056D2) : AppColors.primaryBlack,
+              fontWeight: isTotal ? FontWeight.bold : FontWeight.normal,
+              fontSize: isTotal ? 14.sp : 12.sp,
             ),
           ),
         ],

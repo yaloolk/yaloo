@@ -1,34 +1,33 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:yaloo/core/constants/colors.dart';
 import 'package:yaloo/core/constants/app_text_styles.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
-import 'package:lucide_icons_flutter/test_icons.dart';
-import 'package:yaloo/features/guide/screens/guide_tour_request_details.dart';
-
-
-// Import the 5 screens for your tabs
-import 'guide_booking_cancellation_screen.dart';
-import 'guide_home_screen.dart';
-import 'guide_chat_screen.dart';
-import 'guide_bookings_screen.dart';
-import 'guide_tour_requests_screen.dart';
-import 'guide_wallet_screen.dart';
-import 'guide_profile_screen.dart';
 
 // --- IMPORT THE REUSABLE CHAT BUTTON ---
 import 'package:yaloo/core/widgets/floating_chat_button.dart';
+import 'package:yaloo/features/host/screens/host_stay_request_details.dart';
 
-class GuideDashboardScreen extends StatefulWidget {
-  const GuideDashboardScreen({Key? key}) : super(key: key);
+
+import 'host_home_screen.dart';
+// TODO: Create these other screens later, reusing guide/tourist ones for now if needed
+
+import 'host_profile_screen.dart';
+import 'host_chat_screen.dart';
+import 'host_bookings_screen.dart';
+import 'host_wallet_screen.dart';
+import 'host_stay_requests_screen.dart';
+
+
+class HostDashboardScreen extends StatefulWidget {
+  const HostDashboardScreen({super.key});
 
   @override
-  State<GuideDashboardScreen> createState() => _GuideDashboardScreenState();
+  State<HostDashboardScreen> createState() => _HostDashboardScreenState();
 }
 
-class _GuideDashboardScreenState extends State<GuideDashboardScreen> {
+class _HostDashboardScreenState extends State<HostDashboardScreen> {
   int _selectedIndex = 0;
 
   // This is the key: A global key for our nested Navigator
@@ -36,16 +35,15 @@ class _GuideDashboardScreenState extends State<GuideDashboardScreen> {
 
   // This list holds the *route names* for our tabs
   final List<String> _tabRoutes = [
-    '/guideHome',
-    '/guideChat',
-    '/guideBookings',
-    '/guideWallet',
-    '/guideProfile',
+    '/hostHome',
+    '/hostChat',
+    '/hostBookings',
+    '/hostWallet',
+    '/hostProfile',
   ];
 
   void _onItemTapped(int index) {
     if (_selectedIndex == index) {
-      // If tapping the same tab, pop to the first route in that stack
       _navigatorKey.currentState?.popUntil((route) => route.isFirst);
       return;
     }
@@ -53,14 +51,12 @@ class _GuideDashboardScreenState extends State<GuideDashboardScreen> {
     setState(() {
       _selectedIndex = index;
     });
-    // Reset the navigator stack for the new tab
     _navigatorKey.currentState?.popUntil((route) => route.isFirst);
     _navigatorKey.currentState?.pushReplacementNamed(_tabRoutes[index]);
   }
 
   @override
   Widget build(BuildContext context) {
-    // Ensure ScreenUtil is initialized (if this is the first screen loaded)
     ScreenUtil.init(context, designSize: const Size(375, 812), minTextAdapt: true, splitScreenMode: true);
 
     return Scaffold(
@@ -69,55 +65,47 @@ class _GuideDashboardScreenState extends State<GuideDashboardScreen> {
       // The body is now a Navigator, which hosts all other screens
       body: Navigator(
         key: _navigatorKey,
-        initialRoute: '/guideHome', // Start on the home tab
+        initialRoute: '/hostHome', // Start on the home tab
         onGenerateRoute: (settings) {
           Widget page;
           switch (settings.name) {
           // --- TAB SCREENS ---
-            case '/guideHome':
-              page = const GuideHomeScreen();
+            case '/hostHome':
+              page = const HostHomeScreen();
               break;
-            case '/guideChat':
+            case '/hostChat':
               page = const HostChatScreen();
               break;
-            case '/guideBookings':
+            case '/hostBookings':
               page = const HostBookingsScreen();
               break;
-            case '/guideWallet':
-              page = const GuideWalletScreen();
+            case '/hostWallet':
+              page = const HostWalletScreen();
               break;
-            case '/guideProfile':
-              page = const GuideProfileScreen();
+            case '/hostProfile':
+              page = const HostProfileScreen();
               break;
-            case '/guideTourRequests':
-              page = const GuideTourRequestsScreen();
+            case '/hostStayRequests':
+              page = const HostStayRequestsScreen();
               break;
-            case '/guideTourRequestDetails':
-              page = const GuideTourRequestDetailsScreen();
-              break;
-            case '/guideBookingCancellation':
-              page = const GuideBookingCancellationScreen();
+            case '/hostStayRequestDetails':
+              page = const HostStayRequestDetailsScreen();
               break;
 
           // --- NESTED PAGES (Add detail pages here later) ---
-          // Example:
-          // case '/tourRequestDetails':
-          //   page = TourRequestDetailsScreen();
-          //   break;
 
             default:
-              page = const GuideHomeScreen();
+              page = const HostHomeScreen();
           }
           return MaterialPageRoute(
             builder: (context) => page,
-            settings: settings, // Passes arguments if any
+            settings: settings,
           );
         },
       ),
 
       // The persistent chat button
       floatingActionButton: const FloatingChatButton(),
-      // floatingActionButtonLocation: FloatingActionButtonLocation.endFloat, // Default
 
       // 5-Tab Bottom Navigation Bar
       bottomNavigationBar: BottomNavigationBar(
