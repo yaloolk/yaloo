@@ -208,7 +208,7 @@ class HostHomeScreen extends StatelessWidget {
                 Navigator.pushNamed(context, '/hostStayRequests');
               } else if (title == "Upcoming Stays") {
                 // TODO: Navigate to All Bookings
-                Navigator.pushNamed(context, '/hostStays');
+                Navigator.pushNamed(context, '/hostBookings');
               }
             },
             child: Text(
