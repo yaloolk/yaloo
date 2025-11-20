@@ -154,7 +154,7 @@ class HostStayRequestDetails extends StatelessWidget {
                           '/hostStayCancellation',
                           arguments: {
                             'guestName': guestName,
-                            'guestImage': guestImage,
+                            'touristImage': guestImage,
                           },
                         );
                       },
