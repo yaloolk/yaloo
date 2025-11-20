@@ -10,6 +10,7 @@ import 'package:yaloo/features/guide/screens/guide_tour_request_details.dart';
 
 
 // Import the 5 screens for your tabs
+import '../../tourist/screens/tourist_public_profile_screen.dart';
 import 'guide_booking_cancellation_screen.dart';
 import 'guide_home_screen.dart';
 import 'guide_chat_screen.dart';
@@ -97,6 +98,9 @@ class _GuideDashboardScreenState extends State<GuideDashboardScreen> {
               break;
             case '/guideBookingCancellation':
               page = const GuideBookingCancellationScreen();
+              break;
+            case '/touristPublicProfile':
+              page = const TouristPublicProfileScreen();
               break;
 
           // --- NESTED PAGES (Add detail pages here later) ---

@@ -7,9 +7,11 @@ import 'package:yaloo/core/constants/app_text_styles.dart';
 
 // --- IMPORT THE REUSABLE CHAT BUTTON ---
 import 'package:yaloo/core/widgets/floating_chat_button.dart';
+import 'package:yaloo/features/host/screens/host_stay_cancellation_screen.dart';
 import 'package:yaloo/features/host/screens/host_stay_request_details.dart';
 
 
+import '../../tourist/screens/tourist_public_profile_screen.dart';
 import 'host_home_screen.dart';
 // TODO: Create these other screens later, reusing guide/tourist ones for now if needed
 
@@ -90,6 +92,12 @@ class _HostDashboardScreenState extends State<HostDashboardScreen> {
               break;
             case '/hostStayRequestDetails':
               page = const HostStayRequestDetailsScreen();
+              break;
+            case '/touristPublicProfile':
+              page = const TouristPublicProfileScreen();
+              break;
+            case '/hostStayCancellation':
+              page = const HostStayCancellationScreen();
               break;
 
           // --- NESTED PAGES (Add detail pages here later) ---

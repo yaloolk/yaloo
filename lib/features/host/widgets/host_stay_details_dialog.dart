@@ -151,7 +151,7 @@ class HostStayRequestDetails extends StatelessWidget {
                         Navigator.of(context).pop();
                         Navigator.pushNamed(
                           context,
-                          '/stayCancellation',
+                          '/hostStayCancellation',
                           arguments: {
                             'guestName': guestName,
                             'guestImage': guestImage,

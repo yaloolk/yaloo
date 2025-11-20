@@ -105,13 +105,26 @@ class _HostStayRequestDetailsScreenState
               ],
             ),
             const Spacer(),
-            Text(
-              'View Profile',
-              style: AppTextStyles.textSmall.copyWith(
-                  color: AppColors.primaryBlue,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12.sp),
-            ),
+            GestureDetector(
+              onTap: () {
+                Navigator.pushNamed(context, '/touristPublicProfile');
+              },
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.end,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  SizedBox(height: 28.h),
+                  Text(
+                    'View Profile →',
+                    style: AppTextStyles.textSmall.copyWith(
+                      color: AppColors.primaryBlue,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12.sp,
+                    ),
+                  ),
+                ],
+              ),
+            )
           ],
         ),
       ),

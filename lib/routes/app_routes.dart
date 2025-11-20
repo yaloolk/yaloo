@@ -31,8 +31,8 @@ import '../features/guide/screens/guide_tour_request_details.dart';
 import '../features/host/screens/host_dashboard_screen.dart';
 import '../features/host/screens/host_stay_requests_screen.dart';
 import '../features/host/screens/host_stay_request_details.dart';
-
-
+import '../features/tourist/screens/tourist_public_profile_screen.dart';
+import '../features/host/screens/host_stay_cancellation_screen.dart';
 
 
 
@@ -72,7 +72,8 @@ class AppRoutes {
     '/hostDashboard': (_) => const HostDashboardScreen(),
     '/hostStayRequests': (_) => const HostStayRequestsScreen(),
     '/hostStayRequestDetails': (_) => const HostStayRequestDetailsScreen(),
-
+    '/touristPublicProfile': (_) => const TouristPublicProfileScreen(),
+    '/hostStayCancellation': (_) => const HostStayCancellationScreen(),
 
 
 

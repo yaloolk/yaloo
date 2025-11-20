@@ -27,8 +27,7 @@ class _GuideTourRequestDetailsScreenState
 
     // --- Fill data from arguments ---
     final String touristName = requestData['name'] ?? 'Emil Carter';
-    final String touristImage =
-        requestData['image'] ?? 'assets/images/tourist_3.jpg';
+    final String touristImage = requestData['image'] ?? 'assets/images/tourist_3.jpg';
     final String touristCountryCode = requestData['countryCode'] ?? 'DE';
     final String touristCountryName = "Germany"; // TODO: Pass this or get from code
     final int guests = requestData['guests'] ?? 2;
@@ -121,21 +120,26 @@ class _GuideTourRequestDetailsScreenState
               ],
             ),
             const Spacer(),
-            Column(
-              mainAxisAlignment: MainAxisAlignment.end,
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                SizedBox(height: 28.h),
-                Text(
-                  'View Profile →',
-                  style: AppTextStyles.textSmall.copyWith(
+            GestureDetector(
+              onTap: () {
+                Navigator.pushNamed(context, '/touristPublicProfile');
+              },
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.end,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  SizedBox(height: 28.h),
+                  Text(
+                    'View Profile →',
+                    style: AppTextStyles.textSmall.copyWith(
                       color: AppColors.primaryBlue,
                       fontWeight: FontWeight.bold,
-                      fontSize: 12.sp
+                      fontSize: 12.sp,
+                    ),
                   ),
-                ),
-              ],
-            ),
+                ],
+              ),
+            )
           ],
         ),
       ),
