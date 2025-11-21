@@ -25,6 +25,13 @@ final List<Map<String, dynamic>> facilities = [
   {"icon": FontAwesomeIcons.utensils, "name": "Free Breakfast"},
   {"icon": FontAwesomeIcons.shirt, "name": "Laundry Facilities"},
 ];
+
+final List<Map<String, dynamic>> activities = [
+  {"icon": FontAwesomeIcons.bowlFood, "name": "Cooking Lession"},
+  {"icon": FontAwesomeIcons.treeCity, "name": "Village Tour"},
+  {"icon": FontAwesomeIcons.hiking, "name": "Hiking Tour"},
+
+];
 // ---------------------------------
 
 class TouristHostProfileScreen extends StatelessWidget {
@@ -87,6 +94,7 @@ class TouristHostProfileScreen extends StatelessWidget {
                     _buildAboutSection(),
                     _buildGallerySection(),
                     _buildFacilitiesSection(),
+                    _buildActivitiesSection(),
                     _buildReviewSection(),
                     _buildSafetySection(),
                     SizedBox(height: 80.h),
@@ -343,7 +351,53 @@ class TouristHostProfileScreen extends StatelessWidget {
     );
   }
 
+  Widget _buildActivitiesSection() {
+    return Padding(
+      padding: EdgeInsets.fromLTRB(24.w, 16.h, 24.w, 16.h),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildSectionTitle('Activities'),
+          SizedBox(height: 16.h),
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              crossAxisSpacing: 16.w,
+              mainAxisSpacing: 16.h,
+              childAspectRatio: 3.5, // Make items wider
+            ),
+            itemCount: activities.length,
+            itemBuilder: (context, index) {
+              final activity = activities[index];
+              return _buildActivityItem(activity['icon'], activity['name']);
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildFacilityItem(IconData icon, String name) {
+    return Row(
+      children: [
+        Icon(icon, color: AppColors.primaryBlue, size: 20.w),
+        SizedBox(width: 12.w),
+        Expanded(
+          child: Text(
+            name,
+            style: AppTextStyles.textSmall.copyWith(
+              color: AppColors.primaryBlack,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildActivityItem(IconData icon, String name) {
     return Row(
       children: [
         Icon(icon, color: AppColors.primaryBlue, size: 20.w),
