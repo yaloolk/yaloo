@@ -91,7 +91,9 @@ class TouristHomeScreen extends StatelessWidget {
             ),
           ),
           CustomIconButton(
-            onPressed: () { /* TODO: Handle Settings */ },
+            onPressed: () {
+
+            },
             icon: Icon(CupertinoIcons.gear,
                 color: AppColors.primaryBlack, size: 24.w),
           ),

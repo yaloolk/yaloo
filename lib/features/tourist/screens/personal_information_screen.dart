@@ -32,20 +32,28 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
   DateTime? _dateOfBirth;
   String? _selectedGender = "Female";
 
-  // --- UPDATED: Multi-select Languages ---
-  // We store the selected Language objects
+  // --- Multi-select Languages ---
   List<Language> _selectedLanguages = [];
+
+  // --- All Available Languages ---
+  final List<Language> _allLanguages = [
+    Languages.english,
+    Languages.spanish,
+    Languages.french,
+    Languages.german,
+    Languages.chinese,
+    Languages.japanese,
+    Languages.arabic,
+    Languages.hindi,
+    Languages.portuguese,
+    Languages.russian,
+  ];
 
   @override
   void initState() {
     super.initState();
     _dateOfBirth = DateTime(1995, 10, 26);
-
-    // Initialize with some default languages if needed
-    _selectedLanguages = [
-      Languages.english,
-      Languages.spanish,
-    ];
+    _selectedLanguages = [Languages.english, Languages.spanish];
   }
 
   @override
@@ -63,13 +71,12 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: CustomAppBar(title: 'Personal Information'),
+      appBar: const CustomAppBar(title: 'Personal Information'),
       body: SingleChildScrollView(
         padding: EdgeInsets.all(24.w),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // --- Personal Info Section ---
             _buildLabel("Email"),
             _buildTextField(controller: _emailController, icon: FontAwesomeIcons.envelope),
             SizedBox(height: 16.h),
@@ -111,17 +118,14 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
 
             _buildLabel("Languages"),
             _buildPickerField(
-              // UPDATED: Display comma-separated list of names
               text: _selectedLanguages.isEmpty
                   ? "Select Languages"
                   : _selectedLanguages.map((l) => l.name).join(", "),
               icon: FontAwesomeIcons.language,
-              onTap: _showMultiSelectLanguageDialog, // <-- Calls new dialog
+              onTap: _showMultiSelectLanguageDialog,
             ),
-
             SizedBox(height: 32.h),
 
-            // --- Emergency Contact Section ---
             Text(
               "EMERGENCY CONTACT",
               style: AppTextStyles.bodyLarge.copyWith(
@@ -146,7 +150,6 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
 
             SizedBox(height: 40.h),
 
-            // --- Save Button ---
             CustomPrimaryButton(
               text: "Save Changes",
               onPressed: _saveProfileChanges,
@@ -158,26 +161,18 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
     );
   }
 
-  // --- Helper Widgets ---
-
-  Widget _buildLabel(String text) {
-    return Padding(
-      padding: EdgeInsets.only(bottom: 8.h),
-      child: Text(
-        text,
-        style: AppTextStyles.textSmall.copyWith(
-          fontWeight: FontWeight.w600,
-          color: const Color(0xFF1F2937), // Dark gray
-        ),
+  Widget _buildLabel(String text) => Padding(
+    padding: EdgeInsets.only(bottom: 8.h),
+    child: Text(
+      text,
+      style: AppTextStyles.textSmall.copyWith(
+        fontWeight: FontWeight.w600,
+        color: const Color(0xFF1F2937),
       ),
-    );
-  }
+    ),
+  );
 
-  Widget _buildTextField({
-    TextEditingController? controller,
-    String? hint,
-    IconData? icon,
-  }) {
+  Widget _buildTextField({TextEditingController? controller, String? hint, IconData? icon}) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -190,9 +185,7 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
         decoration: InputDecoration(
           hintText: hint,
           hintStyle: TextStyle(color: AppColors.primaryGray.withOpacity(0.5)),
-          prefixIcon: icon != null
-              ? Icon(icon, color: AppColors.primaryGray, size: 18.w)
-              : null,
+          prefixIcon: icon != null ? Icon(icon, color: AppColors.primaryGray, size: 18.w) : null,
           border: InputBorder.none,
           contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
         ),
@@ -200,11 +193,7 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
     );
   }
 
-  Widget _buildPickerField({
-    required String text,
-    required IconData icon,
-    required VoidCallback onTap,
-  }) {
+  Widget _buildPickerField({required String text, required IconData icon, required VoidCallback onTap}) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -226,7 +215,7 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
                 overflow: TextOverflow.ellipsis,
               ),
             ),
-            Icon(Icons.keyboard_arrow_down, color: AppColors.primaryGray),
+            const Icon(Icons.keyboard_arrow_down, color: Colors.grey),
           ],
         ),
       ),
@@ -258,12 +247,12 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
                 isExpanded: true,
                 style: AppTextStyles.textSmall.copyWith(color: Colors.black),
                 onChanged: onChanged,
-                items: items.map<DropdownMenuItem<String>>((String value) {
-                  return DropdownMenuItem<String>(
-                    value: value,
-                    child: Text(value),
-                  );
-                }).toList(),
+                items: items
+                    .map((value) => DropdownMenuItem<String>(
+                  value: value,
+                  child: Text(value),
+                ))
+                    .toList(),
               ),
             ),
           ),
@@ -272,17 +261,11 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
     );
   }
 
-  // --- Actions ---
-
   void _pickCountry() {
     showCountryPicker(
       context: context,
       showPhoneCode: false,
-      onSelect: (Country country) {
-        setState(() {
-          _selectedCountry = country.name;
-        });
-      },
+      onSelect: (Country country) => setState(() => _selectedCountry = country.name),
     );
   }
 
@@ -294,97 +277,64 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
       lastDate: DateTime.now(),
       builder: (context, child) {
         return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: ColorScheme.light(primary: AppColors.primaryBlue),
-          ),
+          data: Theme.of(context).copyWith(colorScheme: ColorScheme.light(primary: AppColors.primaryBlue)),
           child: child!,
         );
       },
     );
-    if (picked != null) {
-      setState(() {
-        _dateOfBirth = picked;
-      });
-    }
+    if (picked != null) setState(() => _dateOfBirth = picked);
   }
 
-  // --- UPDATED: Multi-Select Language Logic ---
   void _showMultiSelectLanguageDialog() {
-    // We create a temporary list to hold changes inside the dialog
-    // Initialize it with the currently selected languages
     List<Language> tempSelected = List.from(_selectedLanguages);
-
-    // Common languages to show at the top or filter
-    // For this example, we will use the full list from the package `defaultLanguages`
-    final List<Language> allLanguages = _selectedLanguages;
 
     showDialog(
       context: context,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            return AlertDialog(
-              title: const Text("Select Languages"),
-              content: SizedBox(
-                width: double.maxFinite,
-                height: 400.h, // Fixed height for the list
-                child: Column(
-                  children: [
-                    // Optional: Search Bar could go here
-                    Expanded(
-                      child: ListView.builder(
-                        itemCount: allLanguages.length,
-                        itemBuilder: (context, index) {
-                          final language = allLanguages[index];
-                          final isSelected = tempSelected.contains(language);
-
-                          return CheckboxListTile(
-                            title: Text(language.name),
-                            subtitle: Text(language.isoCode),
-                            value: isSelected,
-                            activeColor: AppColors.primaryBlue,
-                            onChanged: (bool? value) {
-                              setDialogState(() {
-                                if (value == true) {
-                                  tempSelected.add(language);
-                                } else {
-                                  tempSelected.remove(language);
-                                }
-                              });
-                            },
-                          );
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text("Cancel", style: TextStyle(color: Colors.grey)),
-                ),
-                TextButton(
-                  onPressed: () {
-                    // Update the main state with the new selection
-                    setState(() {
-                      _selectedLanguages = tempSelected;
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text("Select Languages"),
+          content: SizedBox(
+            width: double.maxFinite,
+            height: 400.h,
+            child: ListView.builder(
+              itemCount: _allLanguages.length,
+              itemBuilder: (context, index) {
+                final language = _allLanguages[index];
+                final isSelected = tempSelected.contains(language);
+                return CheckboxListTile(
+                  title: Text(language.name),
+                  subtitle: Text(language.isoCode),
+                  value: isSelected,
+                  activeColor: AppColors.primaryBlue,
+                  onChanged: (bool? value) {
+                    setDialogState(() {
+                      if (value == true) {
+                        tempSelected.add(language);
+                      } else {
+                        tempSelected.remove(language);
+                      }
                     });
-                    Navigator.pop(context);
                   },
-                  child: Text("Save", style: TextStyle(color: AppColors.primaryBlue, fontWeight: FontWeight.bold)),
-                ),
-              ],
-            );
-          },
-        );
-      },
+                );
+              },
+            ),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context), child: const Text("Cancel", style: TextStyle(color: Colors.grey))),
+            TextButton(
+              onPressed: () {
+                setState(() => _selectedLanguages = tempSelected);
+                Navigator.pop(context);
+              },
+              child: Text("Save", style: TextStyle(color: AppColors.primaryBlue, fontWeight: FontWeight.bold)),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
-  // --- Save Function ---
   void _saveProfileChanges() {
-    // 1. Collect all data
     final updatedData = {
       'email': _emailController.text,
       'phone': _phoneController.text,
@@ -399,16 +349,8 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
         'phone': _ecPhoneController.text,
       }
     };
-
-    // 2. TODO: Send `updatedData` to your Backend / Firebase
     print("Saving Data: $updatedData");
-
-    // 3. Navigate back
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: const Text('Profile Updated Successfully!')));
     Navigator.pop(context);
-
-    // Optional: Show a success snackbar
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Profile Updated Successfully!')),
-    );
   }
 }

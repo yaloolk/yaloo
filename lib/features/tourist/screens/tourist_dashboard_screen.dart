@@ -16,6 +16,9 @@ import '../../booking/screens/payment_screen.dart';
 import '../../booking/screens/stay_details_screen.dart';
 import '../../booking/screens/tour_completion_screen.dart';
 import '../../booking/screens/tour_information_screen.dart';
+import '../../common/screens/settings/change_password_screen.dart';
+import '../../common/screens/settings/language_screen.dart';
+import '../../common/screens/settings/settings_screen.dart';
 import 'host/find_host_screen.dart';
 import 'host/tourist_host_profile.dart';
 import 'tourist_home_screen.dart';
@@ -92,7 +95,6 @@ class _TouristDashboardScreenState extends State<TouristDashboardScreen> {
             case '/guideList':
               page = const GuideListScreen();
               break;
-          // --- UPDATED: Add the new routes ---
             case '/touristGuideProfile':
               page = const GuideProfileScreen();
               break;
@@ -128,6 +130,15 @@ class _TouristDashboardScreenState extends State<TouristDashboardScreen> {
               break;
             case '/stayDetails':
               page = const StayDetailsScreen();
+              break;
+            case '/settings':
+              page = const SettingsScreen();
+              break;
+            case '/changePassword':
+              page = const ChangePasswordScreen();
+              break;
+            case '/language':
+              page = const LanguageScreen();
               break;
             default:
               page = const TouristHomeScreen();

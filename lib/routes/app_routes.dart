@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../features/common/screens/settings/change_password_screen.dart';
+import '../features/common/screens/settings/language_screen.dart';
 import '../features/onboarding/screens/onboarding.dart';
 import '../features/onboarding/screens/user_selection_screen.dart';
 import '../features/auth/screens/common/login_screen.dart';
@@ -35,6 +37,7 @@ import '../features/host/screens/host_stay_requests_screen.dart';
 import '../features/host/screens/host_stay_request_details.dart';
 import '../features/tourist/screens/tourist_public_profile_screen.dart';
 import '../features/host/screens/host_stay_cancellation_screen.dart';
+import '../features/common/screens/settings/settings_screen.dart';
 
 
 
@@ -78,7 +81,9 @@ class AppRoutes {
     '/touristPublicProfile': (_) => const TouristPublicProfileScreen(),
     '/hostStayCancellation': (_) => const HostStayCancellationScreen(),
     '/personalInformation' : (_) => const PersonalInformationScreen(),
-
+    '/settings' : (_) => const SettingsScreen(),
+    '/changePassword': (_) => const ChangePasswordScreen(),
+    '/language': (_) => const LanguageScreen(),
 
 
 
