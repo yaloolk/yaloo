@@ -25,6 +25,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
 
   bool _canPay = false;
 
+
   // Form Controllers
   final _cardNumberController = TextEditingController();
   final _nameOnCardController = TextEditingController();
@@ -84,6 +85,9 @@ class _PaymentScreenState extends State<PaymentScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>? ?? {};
+    final String bookingType = args['bookingType'] ?? 'tourist'; // default value
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: CustomAppBar(
@@ -105,9 +109,12 @@ class _PaymentScreenState extends State<PaymentScreen> {
               // --- 1. Step Progress (Now on Step 3) ---
               StepProgressIndicator(
                 currentStep: 2, // We are on the third step
-                steps: const [
+                steps: [
                   {'Details': FontAwesomeIcons.user},
-                  {'Tour Info': FontAwesomeIcons.map},
+                  if (bookingType == 'guide')
+                    {'Tour Info': FontAwesomeIcons.mountain}
+                  else
+                    {'Stay Info': FontAwesomeIcons.house},
                   {'Payment': FontAwesomeIcons.creditCard},
                 ],
               ),

@@ -168,6 +168,7 @@ class _TourInformationScreenState extends State<TourInformationScreen> {
                       '/payment',
                       arguments: {
                         'total': _total,
+                        'bookingType': 'guide',
                         // ... pass other booking data
                       }
                   );

@@ -11,6 +11,7 @@ import '../features/auth/screens/guide/guide_profile_completion_screen.dart';
 import '../features/auth/screens/common/profile_submitted_screen.dart';
 import '../features/auth/screens/host/host_signup_screen.dart.';
 import '../features/auth/screens/host/host_profile_completion_screen.dart';
+import '../features/tourist/screens/personal_information_screen.dart';
 import '../features/tourist/screens/tourist_dashboard_screen.dart';
 import '../features/tourist/screens/guide/find_guide_screen.dart';
 import '../features/tourist/screens/guide/guide_list_screen.dart';
@@ -24,6 +25,7 @@ import '../features/booking/screens/tour_completion_screen.dart';
 import '../features/tourist/screens/host/find_host_screen.dart';
 import '../features/tourist/screens/host/host_list_screen.dart';
 import '../features/tourist/screens/host/tourist_host_profile.dart';
+import '../features/booking/screens/stay_details_screen.dart';
 import '../features/guide/screens/guide_dashboard_screen.dart';
 import '../features/guide/screens/guide_tour_requests_screen.dart';
 import '../features/guide/screens/guide_booking_cancellation_screen.dart';
@@ -65,6 +67,7 @@ class AppRoutes {
     '/findHost': (_) => const FindHostScreen(),
     '/hostList': (_) => const HostListScreen(),
     '/touristHostProfile': (_) => const TouristHostProfileScreen(),
+    '/stayDetails': (_) => const StayDetailsScreen(),
     '/guideDashboard': (_) => const GuideDashboardScreen(),
     '/guideTourRequests': (_) => const GuideTourRequestsScreen(),
     '/guideTourRequestDetails': (_) => const GuideTourRequestDetailsScreen(),
@@ -74,7 +77,7 @@ class AppRoutes {
     '/hostStayRequestDetails': (_) => const HostStayRequestDetailsScreen(),
     '/touristPublicProfile': (_) => const TouristPublicProfileScreen(),
     '/hostStayCancellation': (_) => const HostStayCancellationScreen(),
-
+    '/personalInformation' : (_) => const PersonalInformationScreen(),
 
 
 

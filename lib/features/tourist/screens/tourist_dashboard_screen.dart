@@ -6,12 +6,14 @@ import 'package:yaloo/core/constants/colors.dart';
 import 'package:yaloo/core/constants/app_text_styles.dart';
 import 'package:yaloo/features/tourist/screens/guide/tourist_guide_profile.dart';
 import 'package:yaloo/features/tourist/screens/host/host_list_screen.dart';
+import 'package:yaloo/features/tourist/screens/personal_information_screen.dart';
 
 // Import the 4 screens for your tabs
 import '../../booking/screens/booking_details_screen.dart';
 import '../../booking/screens/booking_request_sent_screen.dart';
 import '../../booking/screens/booking_status_screen.dart';
 import '../../booking/screens/payment_screen.dart';
+import '../../booking/screens/stay_details_screen.dart';
 import '../../booking/screens/tour_completion_screen.dart';
 import '../../booking/screens/tour_information_screen.dart';
 import 'host/find_host_screen.dart';
@@ -120,6 +122,12 @@ class _TouristDashboardScreenState extends State<TouristDashboardScreen> {
               break;
             case '/touristHostProfile':
               page = const TouristHostProfileScreen();
+              break;
+            case '/personalInformation':
+              page = const PersonalInformationScreen();
+              break;
+            case '/stayDetails':
+              page = const StayDetailsScreen();
               break;
             default:
               page = const TouristHomeScreen();

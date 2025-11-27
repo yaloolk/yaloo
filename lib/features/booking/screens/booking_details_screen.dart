@@ -110,9 +110,12 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
             children: [
               StepProgressIndicator(
                 currentStep: 0,
-                steps: const [
+                steps: [
                   {'Details': FontAwesomeIcons.user},
-                  {'Tour Info': FontAwesomeIcons.map},
+                  if (_bookingType == 'guide')
+                    {'Tour Info': FontAwesomeIcons.mountain}
+                  else
+                    {'Stay Info': FontAwesomeIcons.house},
                   {'Payment': FontAwesomeIcons.creditCard},
                 ],
               ),
