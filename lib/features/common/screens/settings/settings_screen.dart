@@ -139,14 +139,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
               icon: FontAwesomeIcons.circleQuestion,
               iconColor: const Color(0xFF9D174D),
               bgColor: const Color(0xFFFCE7F3),
-              onTap: () {},
+              onTap: () {Navigator.pushNamed(context, '/helpSupport');},
             ),
             _buildSettingsTile(
               title: "Contact Support",
               icon: FontAwesomeIcons.headset,
               iconColor: const Color(0xFF9D174D),
               bgColor: const Color(0xFFFCE7F3),
-              onTap: () {},
+              onTap: () {Navigator.pushNamed(context, '/contactSupport');},
             ),
             _buildSettingsTile(
               title: "Terms & Conditions",

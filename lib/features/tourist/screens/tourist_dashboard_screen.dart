@@ -16,6 +16,9 @@ import '../../booking/screens/payment_screen.dart';
 import '../../booking/screens/stay_details_screen.dart';
 import '../../booking/screens/tour_completion_screen.dart';
 import '../../booking/screens/tour_information_screen.dart';
+import '../../common/screens/help&support/contact_support_screen.dart';
+import '../../common/screens/help&support/faq_screen.dart';
+import '../../common/screens/help&support/help_support_screen.dart';
 import '../../common/screens/settings/change_password_screen.dart';
 import '../../common/screens/settings/language_screen.dart';
 import '../../common/screens/settings/settings_screen.dart';
@@ -140,8 +143,18 @@ class _TouristDashboardScreenState extends State<TouristDashboardScreen> {
             case '/language':
               page = const LanguageScreen();
               break;
+            case '/helpSupport':
+              page = const HelpSupportScreen();
+              break;
+            case '/contactSupport':
+              page = const ContactSupportScreen();
+              break;
+            case '/faqs':
+              page = const FAQScreen();
+              break;
             default:
               page = const TouristHomeScreen();
+
           }
           return MaterialPageRoute(
             builder: (context) => page,

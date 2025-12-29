@@ -287,7 +287,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
             _buildMenuItem(CupertinoIcons.heart, "Saved", () {}),
             SizedBox(height: 12.h),
             _buildMenuItem(
-                CupertinoIcons.question_circle, "Help & Support", () {}),
+                CupertinoIcons.question_circle, "Help & Support", () {
+              Navigator.pushNamed(context, '/helpSupport');
+            }),
 
             SizedBox(height: 100.h),
           ],

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../features/common/screens/help&support/help_support_screen.dart';
 import '../features/common/screens/settings/change_password_screen.dart';
 import '../features/common/screens/settings/language_screen.dart';
 import '../features/onboarding/screens/onboarding.dart';
@@ -84,6 +85,8 @@ class AppRoutes {
     '/settings' : (_) => const SettingsScreen(),
     '/changePassword': (_) => const ChangePasswordScreen(),
     '/language': (_) => const LanguageScreen(),
+    '/helpSupport': (_) => const HelpSupportScreen(),
+
 
 
 
