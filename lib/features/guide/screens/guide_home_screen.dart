@@ -124,7 +124,7 @@ class GuideHomeScreen extends StatelessWidget {
           Stack(
             children: [
               CustomIconButton(
-                onPressed: () { /* TODO: Handle notification */ },
+                onPressed: () { /* TODO: Handle Settings */ },
                 icon: Icon(CupertinoIcons.bell,
                     color: AppColors.primaryBlack, size: 24.w),
               ),

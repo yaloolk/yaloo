@@ -16,12 +16,14 @@ import '../../booking/screens/payment_screen.dart';
 import '../../booking/screens/stay_details_screen.dart';
 import '../../booking/screens/tour_completion_screen.dart';
 import '../../booking/screens/tour_information_screen.dart';
-import '../../common/screens/help&support/contact_support_screen.dart';
-import '../../common/screens/help&support/faq_screen.dart';
-import '../../common/screens/help&support/help_support_screen.dart';
+import '../../chat/screens/message_screen.dart';
+import '../../common/screens/help_support/contact_support_screen.dart';
+import '../../common/screens/help_support/faq_screen.dart';
+import '../../common/screens/help_support/help_support_screen.dart';
 import '../../common/screens/settings/change_password_screen.dart';
 import '../../common/screens/settings/language_screen.dart';
 import '../../common/screens/settings/settings_screen.dart';
+import '../../common/screens/notification/notification_screen.dart';
 import 'host/find_host_screen.dart';
 import 'host/tourist_host_profile.dart';
 import 'tourist_home_screen.dart';
@@ -34,6 +36,7 @@ import 'package:yaloo/core/widgets/floating_chat_button.dart';
 // --- IMPORT THE OTHER SCREENS ---
 import 'package:yaloo/features/tourist/screens/guide/find_guide_screen.dart';
 import 'package:yaloo/features/tourist/screens/guide/guide_list_screen.dart';
+import 'package:yaloo/features/chat/screens/chat_list_screen.dart';
 
 
 
@@ -84,7 +87,7 @@ class _TouristDashboardScreenState extends State<TouristDashboardScreen> {
               page = const TouristHomeScreen();
               break;
             case '/touristChat':
-              page = const ChatScreen();
+              page = const ChatListScreen();
               break;
             case '/touristBookings':
               page = const BookingsScreen();
@@ -151,6 +154,12 @@ class _TouristDashboardScreenState extends State<TouristDashboardScreen> {
               break;
             case '/faqs':
               page = const FAQScreen();
+              break;
+            case '/notification':
+              page = const NotificationScreen();
+              break;
+              case '/messageScreen':
+              page = const MessageScreen();
               break;
             default:
               page = const TouristHomeScreen();

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../features/common/screens/help&support/help_support_screen.dart';
+import '../features/common/screens/help_support/help_support_screen.dart';
 import '../features/common/screens/settings/change_password_screen.dart';
 import '../features/common/screens/settings/language_screen.dart';
 import '../features/onboarding/screens/onboarding.dart';
@@ -39,8 +39,9 @@ import '../features/host/screens/host_stay_request_details.dart';
 import '../features/tourist/screens/tourist_public_profile_screen.dart';
 import '../features/host/screens/host_stay_cancellation_screen.dart';
 import '../features/common/screens/settings/settings_screen.dart';
-
-
+import '../features/common/screens/notification/notification_screen.dart';
+import 'package:yaloo/features/chat/screens/chat_list_screen.dart';
+import 'package:yaloo/features/chat/screens/message_screen.dart';
 
 
 
@@ -86,7 +87,8 @@ class AppRoutes {
     '/changePassword': (_) => const ChangePasswordScreen(),
     '/language': (_) => const LanguageScreen(),
     '/helpSupport': (_) => const HelpSupportScreen(),
-
+    '/notification': (_) => const NotificationScreen(),
+    '/messageScreen': (_) => const MessageScreen(),
 
 
 

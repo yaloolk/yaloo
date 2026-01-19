@@ -40,7 +40,7 @@ class TouristHomeScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildHeader(),
+                  _buildHeader(context),
                   SizedBox(height: 20.h),
                   _buildTitle(),
                   SizedBox(height: 20.h),
@@ -68,7 +68,63 @@ class TouristHomeScreen extends StatelessWidget {
   }
 
   // --- 1. Header ---
-  Widget _buildHeader() {
+  // Widget _buildHeader() {
+  //   return Padding(
+  //     padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
+  //     child: Row(
+  //       children: [
+  //         Image.asset(
+  //           'assets/images/yaloo_logo.png',
+  //           width: 40.w,
+  //           height: 40.h,
+  //         ),
+  //         SizedBox(width: 12.w),
+  //         Expanded(
+  //           child: Text(
+  //             'Hi, yaloo',
+  //             style: AppTextStyles.bodyLarge.copyWith(
+  //               fontWeight: FontWeight.bold,
+  //               fontSize: 16.sp,
+  //               color: AppColors.primaryBlack,
+  //             ),
+  //             overflow: TextOverflow.ellipsis,
+  //           ),
+  //         ),
+  //         CustomIconButton(
+  //           onPressed: () {
+  //
+  //           },
+  //           icon: Icon(CupertinoIcons.gear,
+  //               color: AppColors.primaryBlack, size: 24.w),
+  //         ),
+  //         SizedBox(width: 12.w),
+  //         Stack(
+  //           children: [
+  //             CustomIconButton(
+  //               onPressed: () { Navigator.pushNamed(context, '/notification'); },
+  //               icon: Icon(CupertinoIcons.bell,
+  //                   color: AppColors.primaryBlack, size: 24.w),
+  //             ),
+  //             Positioned(
+  //               top: 10.h,
+  //               right: 10.w,
+  //               child: Container(
+  //                 width: 8.w,
+  //                 height: 8.h,
+  //                 decoration: BoxDecoration(
+  //                   color: AppColors.primaryBlue,
+  //                   shape: BoxShape.circle,
+  //                 ),
+  //               ),
+  //             ),
+  //           ],
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }6
+
+  Widget _buildHeader(BuildContext context) {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
       child: Row(
@@ -90,20 +146,31 @@ class TouristHomeScreen extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
             ),
           ),
+
           CustomIconButton(
             onPressed: () {
-
+              Navigator.pushNamed(context, '/settings');
             },
-            icon: Icon(CupertinoIcons.gear,
-                color: AppColors.primaryBlack, size: 24.w),
+            icon: Icon(
+              CupertinoIcons.gear,
+              color: AppColors.primaryBlack,
+              size: 24.w,
+            ),
           ),
+
           SizedBox(width: 12.w),
+
           Stack(
             children: [
               CustomIconButton(
-                onPressed: () { /* TODO: Handle notification */ },
-                icon: Icon(CupertinoIcons.bell,
-                    color: AppColors.primaryBlack, size: 24.w),
+                onPressed: () {
+                  Navigator.pushNamed(context, '/notification');
+                },
+                icon: Icon(
+                  CupertinoIcons.bell,
+                  color: AppColors.primaryBlack,
+                  size: 24.w,
+                ),
               ),
               Positioned(
                 top: 10.h,
@@ -123,6 +190,7 @@ class TouristHomeScreen extends StatelessWidget {
       ),
     );
   }
+
 
   // --- 2. Title ---
   Widget _buildTitle() {
