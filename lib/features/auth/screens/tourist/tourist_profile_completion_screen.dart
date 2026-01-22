@@ -314,7 +314,7 @@ class _ProfileCompletionScreenState extends State<ProfileCompletionScreen> {
       children: [
         TextButton(
           onPressed: () {
-            // TODO: Handle Skip
+            Navigator.pushNamed(context, '/touristDashboard');
           },
           child: Text(
             'Skip',

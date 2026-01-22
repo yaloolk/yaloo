@@ -1,8 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-// import 'package:firebase_auth/firebase_auth.dart';
-// import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:yaloo/core/constants/colors.dart';
 import 'package:yaloo/core/constants/app_text_styles.dart';
 
@@ -14,46 +13,20 @@ class EmailVerificationScreen extends StatefulWidget {
 }
 
 class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
-  bool _isEmailVerified = false;
-  Timer? _timer;
-  String _userEmail = '';
-  String _userRole = ''; // <-- ADDED: To store the user's role
   bool _isLoading = false;
-
-  @override
-  void initState() {
-    super.initState();
-    // We use didChangeDependencies to safely get ModalRoute arguments
-  }
+  String _userEmail = '';
+  String _userRole = '';
+  Timer? _timer;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
 
-    // --- MOCKUP: Get arguments from the previous screen ---
-    try {
-      final args = ModalRoute.of(context)?.settings.arguments as Map<String, String>?;
-      _userEmail = args?['email'] ?? 'your email';
-      _userRole = args?['role'] ?? 'Tourist'; // Default to Tourist if something goes wrong
-    } catch (e) {
-      _userEmail = 'your email';
-      _userRole = 'Tourist';
-    }
-    setState(() {});
-    // --- END MOCKUP ---
+    final args = ModalRoute.of(context)?.settings.arguments as Map<String, String>?;
+    _userEmail = args?['email'] ?? 'your email';
+    _userRole = args?['role'] ?? 'Tourist';
 
-    // --- TODO: BACKEND LOGIC ---
-    // final user = FirebaseAuth.instance.currentUser;
-    // if (user != null) {
-    //   _userEmail = user.email ?? 'your email';
-    //   _isEmailVerified = user.emailVerified;
-    //   if (!_isEmailVerified) {
-    //     _timer = Timer.periodic(const Duration(seconds: 3), (timer) {
-    //       _checkEmailVerification();
-    //     });
-    //   }
-    // }
-    // --- END BACKEND LOGIC ---
+    _timer = Timer.periodic(const Duration(seconds: 3), (_) => _checkEmailVerified());
   }
 
   @override
@@ -62,41 +35,52 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
     super.dispose();
   }
 
-  Future<void> _checkEmailVerification() async {
-    // --- TODO: BACKEND LOGIC ---
-    // final user = FirebaseAuth.instance.currentUser;
-    // await user?.reload();
-    // setState(() {
-    //   _isEmailVerified = user?.emailVerified ?? false;
-    // });
+  Future<void> _checkEmailVerified() async {
+    try {
+      final session = Supabase.instance.client.auth.currentSession;
+      if (session == null) return;
 
-    // if (_isEmailVerified) {
-    //   _timer?.cancel();
-    //   // Email is verified! Now find out what profile to show.
-    //   final userDoc = await FirebaseFirestore.instance.collection('users').doc(user!.uid).get();
-    //   final role = userDoc.get('role');
-    //
-    //   // UPDATED: This logic is now correct for all roles
-    //   if (role == 'Tourist') {
-    //     Navigator.pushReplacementNamed(context, '/profileCompletion');
-    //   } else if (role == 'Guide') {
-    //     Navigator.pushReplacementNamed(context, '/guideProfileCompletion');
-    //   } else if (role == 'Host') {
-    //     Navigator.pushReplacementNamed(context, '/hostProfileCompletion');
-    //   }
-    // }
-    // --- END BACKEND LOGIC ---
+      // Refresh session to get updated user info
+      final refreshedSession = await Supabase.instance.client.auth.refreshSession();
+      final user = refreshedSession.user;
+
+      final role = user?.userMetadata?['role'] as String? ?? 'Tourist';
+      final isVerified = user?.emailConfirmedAt != null;
+
+      if (isVerified) {
+        _timer?.cancel(); // stop polling
+        if (role == 'Guide') {
+          Navigator.pushReplacementNamed(context, '/guideProfileCompletion');
+        } else if (role == 'Host') {
+          Navigator.pushReplacementNamed(context, '/hostProfileCompletion');
+        } else {
+          Navigator.pushReplacementNamed(context, '/profileCompletion');
+        }
+      }
+    } catch (e) {
+      // silently fail, could log for debugging
+    }
   }
 
+  /// Resends verification email using new SDK method
   Future<void> _resendVerificationEmail() async {
-    setState(() { _isLoading = true; });
-    // --- MOCKUP: Simulate API call ---
-    await Future.delayed(const Duration(seconds: 1));
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Verification email resent successfully.')),
-    );
-    // --- END MOCKUP ---
-    setState(() { _isLoading = false; });
+    setState(() => _isLoading = true);
+    try {
+      await Supabase.instance.client.auth.signInWithOtp(
+        email: _userEmail,
+
+      );
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Verification email resent successfully.')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to resend email: $e')),
+      );
+    } finally {
+      setState(() => _isLoading = false);
+    }
   }
 
   @override
@@ -121,54 +105,49 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                 style: AppTextStyles.headlineLarge
                     .copyWith(fontSize: 32.sp, fontWeight: FontWeight.bold),
               ),
-               SizedBox(height: 10.h),
+              SizedBox(height: 10.h),
               RichText(
                 text: TextSpan(
-                  style: AppTextStyles.textSmall
-                      .copyWith(color: AppColors.primaryGray, fontSize: 16.sp, height: 1.5.h),
+                  style: AppTextStyles.textSmall.copyWith(
+                    color: AppColors.primaryGray,
+                    fontSize: 16.sp,
+                    height: 1.5.h,
+                  ),
                   children: [
-                    TextSpan(text: 'We\'ve sent a verification link to '),
+                    const TextSpan(text: 'We\'ve sent a verification link to '),
                     TextSpan(
                       text: _userEmail,
-                      style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.primaryBlue),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.primaryBlue,
+                      ),
                     ),
-                    TextSpan(text: '. Please check your inbox (and spam folder) and click the link to continue.'),
+                    const TextSpan(
+                        text: '. Please check your inbox (and spam folder) and click the link to continue.'),
                   ],
                 ),
               ),
-               SizedBox(height: 30.h),
+              SizedBox(height: 30.h),
 
-              // --- UPDATED MOCKUP BUTTON ---
+              // Optional manual verification button
               Center(
                 child: ElevatedButton(
-                  onPressed: () {
-                    // This button now correctly navigates based on the role
-                    // passed from the signup screen.
-                    if (_userRole == 'Guide') {
-                      Navigator.pushReplacementNamed(context, '/guideProfileCompletion');
-                    } else if (_userRole == 'Host') {
-                      Navigator.pushReplacementNamed(context, '/hostProfileCompletion');
-                    } else {
-                      // Default to Tourist
-                      Navigator.pushReplacementNamed(context, '/profileCompletion');
-                    }
-                  },
+                  onPressed: _checkEmailVerified,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primaryBlue,
                     foregroundColor: Colors.white,
-                    padding: EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
                   ),
-                  child: Text('I\'ve Verified, Continue (Mockup)'),
+                  child: const Text('I\'ve Verified, Continue'),
                 ),
               ),
-              // --- END MOCKUP ---
 
               const Spacer(),
 
               // Resend Email Button
               Center(
                 child: _isLoading
-                    ? CircularProgressIndicator()
+                    ? const CircularProgressIndicator()
                     : TextButton(
                   onPressed: _resendVerificationEmail,
                   child: Text(
@@ -180,7 +159,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                   ),
                 ),
               ),
-               SizedBox(height: 40.h),
+              SizedBox(height: 40.h),
             ],
           ),
         ),

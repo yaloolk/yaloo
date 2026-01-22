@@ -5,7 +5,7 @@ import '../features/common/screens/settings/language_screen.dart';
 import '../features/onboarding/screens/onboarding.dart';
 import '../features/onboarding/screens/user_selection_screen.dart';
 import '../features/auth/screens/common/login_screen.dart';
-import '../features/auth/screens/tourist/tourist_signup_screen.dart';
+import '../features/auth/screens/common/signup_screen.dart';
 import '../features/auth/screens/tourist/tourist_profile_completion_screen.dart';
 import '../features/auth/screens/common/forgot_password_screen.dart';
 import '../features/auth/screens/guide/guide_signup_screen.dart';

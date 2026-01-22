@@ -1,12 +1,27 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'core/constants/colors.dart';
 import 'routes/app_routes.dart';
-import 'package:google_fonts/google_fonts.dart';
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Load environment variables from .env file
+  await dotenv.load(fileName: ".env");
+
+  final supabaseUrl = dotenv.env['SUPABASE_URL']!;
+  final supabaseAnonKey = dotenv.env['SUPABASE_ANON_KEY']!;
+
+  await Supabase.initialize(
+    url: supabaseUrl,
+    anonKey: supabaseAnonKey,
+    debug: false,
+  );
+
   runApp(const YalooApp());
 }
 
@@ -26,7 +41,7 @@ class YalooApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ScreenUtilInit(
-      designSize: const Size(390, 844), // Base size (e.g., iPhone 12)
+      designSize: const Size(390, 844),
       minTextAdapt: true,
       splitScreenMode: true,
       builder: (context, child) {
@@ -46,12 +61,7 @@ class YalooApp extends StatelessWidget {
               Theme.of(context).textTheme,
             ),
           ),
-          initialRoute: '/touristDashboard',
-          // initialRoute: '/guideDashboard',
-          // initialRoute: '/hostDashboard',
-          // initialRoute: '/onboarding',
-          // initialRoute: '/tourCompletion',
-
+          initialRoute: '/onboarding',
           routes: AppRoutes.routes,
         );
       },

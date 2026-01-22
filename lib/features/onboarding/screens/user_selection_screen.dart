@@ -93,19 +93,11 @@ class _UserSelectionScreenState extends State<UserSelectionScreen> {
                   onPressed: _selectedRole == null
                       ? null
                       : () {
-                    switch (_selectedRole) {
-                      case UserRole.tourist:
-                        Navigator.pushNamed(context, '/signup');
-                        break;
-                      case UserRole.guide:
-                        Navigator.pushNamed(context, '/guideSignup');
-                        break;
-                      case UserRole.host:
-                        Navigator.pushNamed(context, '/hostSignup');
-                        break;
-                      default:
-                        break;
-                    }
+                    Navigator.pushNamed(
+                      context,
+                      '/signup',
+                      arguments: _selectedRole!.name,
+                    );
                   },
                 ),
                 SizedBox(height: 20.h),
