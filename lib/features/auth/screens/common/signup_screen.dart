@@ -1,3 +1,5 @@
+// lib/features/auth/presentation/screens/signup_screen.dart
+
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -8,6 +10,7 @@ import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/widgets/custom_text_field.dart';
 import '../../../../core/widgets/social_auth_button.dart';
 import '../../../../core/widgets/pill_action_button.dart';
+import 'package:yaloo/core/storage/secure_storage.dart'; // ADD THIS
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -21,6 +24,8 @@ class _SignupScreenState extends State<SignupScreen> {
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
 
+  final SecureStorage _secureStorage = SecureStorage(); // ADD THIS
+
   late final String selectedRole;
 
   bool _isPasswordObscure = true;
@@ -33,6 +38,7 @@ class _SignupScreenState extends State<SignupScreen> {
   final String _googleIconPath = 'assets/icons/google.png';
   final String _facebookIconPath = 'assets/icons/facebook.png';
   final String _appleIconPath = 'assets/icons/apple.png';
+
 
   @override
   void initState() {
@@ -70,66 +76,151 @@ class _SignupScreenState extends State<SignupScreen> {
     }
   }
 
-
   Future<void> _handleSignup() async {
     if (_isLoading) return;
+
+    // Validate password strength
+    final password = _passwordController.text.trim();
+    if (!_isPasswordValid(password)) {
+      _showError(
+          'Password must be at least 8 characters with 1 uppercase, 1 number, and 1 symbol'
+      );
+      return;
+    }
 
     setState(() => _isLoading = true);
 
     final email = _emailController.text.trim();
-    final password = _passwordController.text.trim();
-
-
 
     try {
+      print('🔐 Starting signup process...');
+      print('Email: $email');
+      print('Role: $selectedRole');
+
+      // Create user in Supabase Auth with metadata
       final res = await Supabase.instance.client.auth.signUp(
         email: email,
         password: password,
         data: {
-          'role': selectedRole, // tourist | guide | host
+          'role': selectedRole, // This will be stored in user_metadata
         },
       );
 
+      if (res.session != null) {
+        final token = res.session!.accessToken;
+        await _secureStorage.setAccessToken(token); // ADD THIS
+        print('✅ Token saved after signup');
+      }
+
       final user = res.user;
       if (user == null) {
-        _showError('Signup failed');
+        _showError('Signup failed - no user returned');
         return;
+      }
+
+      print('✅ Supabase user created: ${user.id}');
+      print('User metadata: ${user.userMetadata}');
+
+      // Create user_profile record in Supabase database
+      try {
+        await _createUserProfile(user.id, selectedRole);
+        print('✅ User profile created in database');
+      } catch (e) {
+        print('⚠️ Profile creation error: $e');
+        // Continue anyway - Django will create it on first login if needed
       }
 
       if (!mounted) return;
       _showSuccessDialog(email);
 
     } on AuthException catch (e) {
+      print('❌ Auth Exception: ${e.message}');
       // Check if email already exists
       if (e.message.toLowerCase().contains('already')) {
-        _showAccountExistsDialog(); // Show dialog to login instead
+        _showAccountExistsDialog();
       } else {
         _showError(e.message);
       }
     } catch (e) {
+      print('❌ Unexpected error: $e');
       if (!mounted) return;
-      _showError('Unexpected error occurred');
+      _showError('Unexpected error occurred: ${e.toString()}');
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
   }
 
+  /// Create user profile in Supabase database
+  Future<void> _createUserProfile(String authUserId, String role) async {
+    try {
+      // Check if profile already exists
+      final existing = await Supabase.instance.client
+          .from('user_profile')
+          .select()
+          .eq('auth_user_id', authUserId)
+          .maybeSingle();
+
+      if (existing != null) {
+        print('Profile already exists');
+        return;
+      }
+
+      // Create new profile
+      await Supabase.instance.client.from('user_profile').insert({
+        'auth_user_id': authUserId,
+        'user_role': role,
+        'profile_status': 'active',
+        'is_complete': false,
+      });
+
+      print('User profile created successfully');
+    } catch (e) {
+      print('Error creating user profile: $e');
+      // Don't throw - let it fail silently as Django will create it later
+    }
+  }
+
+  /// Validate password strength
+  bool _isPasswordValid(String password) {
+    if (password.length < 8) return false;
+
+    // Check for uppercase letter
+    if (!password.contains(RegExp(r'[A-Z]'))) return false;
+
+    // Check for number
+    if (!password.contains(RegExp(r'[0-9]'))) return false;
+
+    // Check for special character
+    if (!password.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'))) return false;
+
+    return true;
+  }
 
   void _showSuccessDialog(String email) {
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16.r),
+        ),
         title: Row(
           children: [
             Icon(Icons.check_circle, color: Colors.green, size: 32.w),
             SizedBox(width: 12.w),
-            Text('Verify Your Email'),
+            Expanded(
+              child: Text(
+                'Verify Your Email',
+                style: AppTextStyles.headlineMedium,
+              ),
+            ),
           ],
         ),
         content: Text(
           'We\'ve sent a verification link to $email.\n\n'
-              'Please check your inbox and click the link to verify your account before logging in.',
+              'Please check your inbox and click the link to verify your account before logging in.\n\n'
+              '💡 Check your spam folder if you don\'t see it.',
+          style: AppTextStyles.bodySmall,
         ),
         actions: [
           FilledButton(
@@ -139,8 +230,15 @@ class _SignupScreenState extends State<SignupScreen> {
             },
             style: FilledButton.styleFrom(
               backgroundColor: AppColors.primaryBlue,
+              padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8.r),
+              ),
             ),
-            child: Text('Go to Login'),
+            child: Text(
+              'Go to Login',
+              style: AppTextStyles.bodySmall.copyWith(color: Colors.white),
+            ),
           ),
         ],
       ),
@@ -148,8 +246,21 @@ class _SignupScreenState extends State<SignupScreen> {
   }
 
   void _showError(String message) {
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red.shade700,
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 4),
+        action: SnackBarAction(
+          label: 'Dismiss',
+          textColor: Colors.white,
+          onPressed: () {
+            ScaffoldMessenger.of(context).hideCurrentSnackBar();
+          },
+        ),
+      ),
     );
   }
 
@@ -157,24 +268,46 @@ class _SignupScreenState extends State<SignupScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Account Exists'),
-        content: const Text(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16.r),
+        ),
+        title: Row(
+          children: [
+            Icon(Icons.info_outline, color: AppColors.primaryBlue, size: 28.w),
+            SizedBox(width: 12.w),
+            Text('Account Exists', style: AppTextStyles.headlineMedium),
+          ],
+        ),
+        content: Text(
           'This email is already registered. Would you like to log in instead?',
+          style: AppTextStyles.bodySmall,
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text(
+              'Cancel',
+              style: AppTextStyles.bodySmall.copyWith(
+                color: AppColors.primaryGray,
+              ),
+            ),
           ),
           FilledButton(
             onPressed: () {
               Navigator.pop(context); // Close dialog
-              Navigator.pushReplacementNamed(context, '/login'); // Go to Login
+              Navigator.pushReplacementNamed(context, '/login');
             },
             style: FilledButton.styleFrom(
               backgroundColor: AppColors.primaryBlue,
+              padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8.r),
+              ),
             ),
-            child: const Text('Log In'),
+            child: Text(
+              'Log In',
+              style: AppTextStyles.bodySmall.copyWith(color: Colors.white),
+            ),
           ),
         ],
       ),
@@ -261,12 +394,24 @@ class _SignupScreenState extends State<SignupScreen> {
                   hint: '',
                 ),
                 SizedBox(height: 8.h),
-                Text(
-                  'At least 8 characters, 1 uppercase letter, 1 number, 1 symbol',
-                  style: AppTextStyles.textSmall.copyWith(
-                    color: AppColors.primaryGray,
-                    fontSize: 12.sp,
-                  ),
+                Row(
+                  children: [
+                    Icon(
+                      Icons.info_outline,
+                      size: 16.w,
+                      color: AppColors.primaryGray,
+                    ),
+                    SizedBox(width: 8.w),
+                    Expanded(
+                      child: Text(
+                        'At least 8 characters, 1 uppercase letter, 1 number, 1 symbol',
+                        style: AppTextStyles.textSmall.copyWith(
+                          color: AppColors.primaryGray,
+                          fontSize: 12.sp,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
                 SizedBox(height: 20.h),
                 _buildTermsAndConditionsRow(),
@@ -314,6 +459,11 @@ class _SignupScreenState extends State<SignupScreen> {
                     color: AppColors.primaryBlue,
                     fontWeight: FontWeight.bold,
                   ),
+                  recognizer: TapGestureRecognizer()
+                    ..onTap = () {
+                      // TODO: Navigate to Terms of Service
+                      print('Navigate to Terms of Service');
+                    },
                 ),
                 const TextSpan(text: ' and '),
                 TextSpan(
@@ -322,6 +472,11 @@ class _SignupScreenState extends State<SignupScreen> {
                     color: AppColors.primaryBlue,
                     fontWeight: FontWeight.bold,
                   ),
+                  recognizer: TapGestureRecognizer()
+                    ..onTap = () {
+                      // TODO: Navigate to Privacy Policy
+                      print('Navigate to Privacy Policy');
+                    },
                 ),
               ],
             ),
@@ -337,7 +492,7 @@ class _SignupScreenState extends State<SignupScreen> {
         Expanded(child: Divider()),
         Padding(
           padding: EdgeInsets.symmetric(horizontal: 12),
-          child: Text('Or sign in with'),
+          child: Text('Or sign up with'),
         ),
         Expanded(child: Divider()),
       ],
@@ -348,11 +503,26 @@ class _SignupScreenState extends State<SignupScreen> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        SocialAuthButton(iconPath: _googleIconPath, onPressed: () {}),
+        SocialAuthButton(
+          iconPath: _googleIconPath,
+          onPressed: () {
+            _showError('Google signup coming soon!');
+          },
+        ),
         SizedBox(width: 20.w),
-        SocialAuthButton(iconPath: _facebookIconPath, onPressed: () {}),
+        SocialAuthButton(
+          iconPath: _facebookIconPath,
+          onPressed: () {
+            _showError('Facebook signup coming soon!');
+          },
+        ),
         SizedBox(width: 20.w),
-        SocialAuthButton(iconPath: _appleIconPath, onPressed: () {}),
+        SocialAuthButton(
+          iconPath: _appleIconPath,
+          onPressed: () {
+            _showError('Apple signup coming soon!');
+          },
+        ),
       ],
     );
   }
@@ -370,9 +540,10 @@ class _SignupScreenState extends State<SignupScreen> {
                 color: AppColors.primaryBlue,
                 fontWeight: FontWeight.bold,
               ),
-              recognizer: TapGestureRecognizer()..onTap = () {
-                Navigator.pushNamed(context, '/login');
-              },
+              recognizer: TapGestureRecognizer()
+                ..onTap = () {
+                  Navigator.pushNamed(context, '/login');
+                },
             ),
           ],
         ),

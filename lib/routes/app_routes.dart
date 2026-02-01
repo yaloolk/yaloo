@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import '../features/auth/screens/common/approval_rejected_screen.dart';
+import '../features/auth/screens/common/guide_welcome_screen.dart';
+import '../features/auth/screens/host/host_stay_details_screen.dart';
 import '../features/common/screens/help_support/help_support_screen.dart';
 import '../features/common/screens/settings/change_password_screen.dart';
 import '../features/common/screens/settings/language_screen.dart';
@@ -42,6 +45,8 @@ import '../features/common/screens/settings/settings_screen.dart';
 import '../features/common/screens/notification/notification_screen.dart';
 import 'package:yaloo/features/chat/screens/chat_list_screen.dart';
 import 'package:yaloo/features/chat/screens/message_screen.dart';
+import 'package:yaloo/features/auth/screens/common/approval_pending_screen.dart';
+
 
 
 
@@ -89,6 +94,14 @@ class AppRoutes {
     '/helpSupport': (_) => const HelpSupportScreen(),
     '/notification': (_) => const NotificationScreen(),
     '/messageScreen': (_) => const MessageScreen(),
+    '/chatListScreen': (_) => const ChatListScreen(),
+    '/approvalPending': (context) => const ApprovalPendingScreen(),
+    '/approvalRejected': (context) => const ApprovalRejectedScreen(),
+    '/guideWelcome': (context) => const GuideWelcomeScreen(),
+    '/hostStayDetails': (context) => const HostStayDetailsScreen(),
+
+
+
 
 
 

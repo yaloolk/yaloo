@@ -1,3 +1,5 @@
+// lib/features/auth/presentation/screens/login_screen.dart
+
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:yaloo/core/constants/colors.dart';
@@ -5,6 +7,9 @@ import 'package:yaloo/core/constants/app_text_styles.dart';
 import 'package:yaloo/core/widgets/custom_text_field.dart';
 import 'package:yaloo/core/widgets/social_auth_button.dart';
 import 'package:yaloo/core/widgets/pill_action_button.dart';
+import 'package:yaloo/core/services/api_service.dart';
+import 'package:yaloo/core/services/auth_guard_service.dart';
+import 'package:yaloo/core/storage/secure_storage.dart'; // ADD THIS
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -19,11 +24,21 @@ class _LoginScreenState extends State<LoginScreen> {
 
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  final DjangoApiService _apiService = DjangoApiService();
+  final AuthGuardService _authGuard = AuthGuardService();
+  final SecureStorage _secureStorage = SecureStorage(); // ADD THIS
 
   final String _logoPath = 'assets/images/yaloo_logo.png';
   final String _googleIconPath = 'assets/icons/google.png';
   final String _facebookIconPath = 'assets/icons/facebook.png';
   final String _appleIconPath = 'assets/icons/apple.png';
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
 
   Future<void> _login() async {
     final email = _emailController.text.trim();
@@ -37,61 +52,102 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _isLoading = true);
 
     try {
-      // Supabase sign in
+      print('📧 Logging in with email: $email');
+
+      // Step 1: Authenticate with Supabase
       final response = await Supabase.instance.client.auth.signInWithPassword(
         email: email,
         password: password,
       );
 
       final user = response.user;
+      final session = response.session; // GET THE SESSION
 
-      if (user == null) {
+      if (user == null || session == null) {
         _showError('Invalid login credentials.');
         return;
       }
 
+      print('✅ Supabase login successful');
+      print('User ID: ${user.id}');
+
       // Check if email is verified
       if (user.emailConfirmedAt == null) {
         _showError('Please verify your email before logging in.');
+        await Supabase.instance.client.auth.signOut();
         return;
       }
 
-      // Fetch user profile to get role
-      final profileRes = await Supabase.instance.client
-          .from('user_profile')
-          .select('user_role')
-          .eq('auth_user_id', user.id)
-          .single();
+      // ⭐ CRITICAL FIX: Save the JWT token to SecureStorage
+      final accessToken = session.accessToken;
+      await _secureStorage.setAccessToken(accessToken);
+      print('✅ JWT Token saved to SecureStorage');
+      print('Token (first 50 chars): ${accessToken.substring(0, 50)}...');
 
-      final user_role = profileRes['user_role'] as String?;
+      // Step 2: Test Django connection
+      print('🔍 Testing Django connection...');
+      final isConnected = await _apiService.testConnection();
 
-      if (user_role == null) {
-        _showError('User role not found.');
+      if (!isConnected) {
+        _showError('Cannot connect to server. Please try again.');
         return;
       }
 
-      // Navigate based on role
-      if (user_role.toLowerCase() == 'tourist') {
-        Navigator.pushReplacementNamed(context, '/profileCompletion');
-      } else if (user_role.toLowerCase() == 'guide') {
-        Navigator.pushReplacementNamed(context, '/guideProfileCompletion');
-      } else if (user_role.toLowerCase() == 'host') {
-        Navigator.pushReplacementNamed(context, '/hostProfileCompletion');
-      } else {
-        _showError('Unknown user role.');
+      print('✅ Django server is reachable');
+
+      // Step 3: Verify authentication with Django
+      try {
+        print('🔐 Testing Django authentication...');
+        await _apiService.testAuth();
+        print('✅ Django authentication successful');
+      } catch (e) {
+        print('⚠️ Django auth test failed: $e');
+        _showError('Authentication failed: ${e.toString()}');
+        return;
       }
+
+      // Step 4: Get route based on profile status
+      print('🧭 Determining route...');
+      final route = await _authGuard.getInitialRoute();
+
+      print('🚀 Navigating to: $route');
+
+      if (!mounted) return;
+      Navigator.pushReplacementNamed(context, route);
+
     } on AuthException catch (error) {
+      print('❌ Supabase Auth Error: ${error.message}');
       _showError(error.message);
-    } catch (e) {
-      _showError('Unexpected error: ${e.toString()}');
+    } catch (e, stackTrace) {
+      print('❌ Login error: $e');
+      print('Stack trace: $stackTrace');
+      _showError('Login failed: ${e.toString()}');
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
   void _showError(String message) {
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red,
+        duration: const Duration(seconds: 3),
+      ),
+    );
+  }
+
+  void _showSuccess(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.green,
+        duration: const Duration(seconds: 2),
+      ),
     );
   }
 
@@ -125,6 +181,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       color: AppColors.primaryGray, fontSize: 16),
                 ),
                 const SizedBox(height: 40),
+
 
                 // Email
                 CustomTextField(
@@ -165,7 +222,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   onPressed: _isLoading ? null : _login,
                 ),
 
-                const SizedBox(height: 40),
+                const SizedBox(height: 70),
 
                 // Social Login
                 Row(
@@ -173,17 +230,23 @@ class _LoginScreenState extends State<LoginScreen> {
                   children: [
                     SocialAuthButton(
                       iconPath: _googleIconPath,
-                      onPressed: () {}, // TODO: Google login
+                      onPressed: () {
+                        _showError('Google login coming soon!');
+                      },
                     ),
                     const SizedBox(width: 20),
                     SocialAuthButton(
                       iconPath: _facebookIconPath,
-                      onPressed: () {}, // TODO: Facebook login
+                      onPressed: () {
+                        _showError('Facebook login coming soon!');
+                      },
                     ),
                     const SizedBox(width: 20),
                     SocialAuthButton(
                       iconPath: _appleIconPath,
-                      onPressed: () {}, // TODO: Apple login
+                      onPressed: () {
+                        _showError('Apple login coming soon!');
+                      },
                     ),
                   ],
                 ),
