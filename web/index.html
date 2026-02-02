@@ -34,6 +34,19 @@
   <link rel="manifest" href="manifest.json">
 </head>
 <body>
+    <script src="secrets.js"></script>
+
+    <script>
+        if (window.googleMapsApiKey) {
+          var script = document.createElement('script');
+          script.src = "https://maps.googleapis.com/maps/api/js?key=" + window.googleMapsApiKey;
+          script.async = true;
+          script.defer = true;
+          document.head.appendChild(script);
+        } else {
+          console.error("Google Maps Key missing! Create web/secrets.js");
+        }
+    </script>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>
