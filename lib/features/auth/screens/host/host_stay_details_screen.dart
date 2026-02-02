@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:yaloo/core/constants/colors.dart';
 import 'package:yaloo/core/constants/app_text_styles.dart';
@@ -56,7 +55,7 @@ class _HostStayDetailsScreenState extends State<HostStayDetailsScreen> {
   bool _isSltdaRegistered = false;
   XFile? _sltdaFile;
   String? _sltdaFileName;
-  List<XFile> _propertyPhotos = [];
+  final List<XFile> _propertyPhotos = [];
 
   @override
   void initState() {
@@ -817,7 +816,7 @@ class _HostStayDetailsScreenState extends State<HostStayDetailsScreen> {
             SizedBox(width: 12.w),
             Expanded(
               child: Text(
-                isUploaded ? fileName! : label,
+                isUploaded ? fileName : label,
                 style: AppTextStyles.textSmall.copyWith(
                   color: isUploaded
                       ? AppColors.primaryBlue

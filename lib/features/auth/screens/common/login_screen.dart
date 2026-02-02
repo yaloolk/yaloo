@@ -1,5 +1,6 @@
 // lib/features/auth/presentation/screens/login_screen.dart
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:yaloo/core/constants/colors.dart';
@@ -52,7 +53,9 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _isLoading = true);
 
     try {
-      print('📧 Logging in with email: $email');
+      if (kDebugMode) {
+        print('📧 Logging in with email: $email');
+      }
 
       // Step 1: Authenticate with Supabase
       final response = await Supabase.instance.client.auth.signInWithPassword(
@@ -68,8 +71,12 @@ class _LoginScreenState extends State<LoginScreen> {
         return;
       }
 
-      print('✅ Supabase login successful');
-      print('User ID: ${user.id}');
+      if (kDebugMode) {
+        print('✅ Supabase login successful');
+      }
+      if (kDebugMode) {
+        print('User ID: ${user.id}');
+      }
 
       // Check if email is verified
       if (user.emailConfirmedAt == null) {
@@ -81,11 +88,17 @@ class _LoginScreenState extends State<LoginScreen> {
       // ⭐ CRITICAL FIX: Save the JWT token to SecureStorage
       final accessToken = session.accessToken;
       await _secureStorage.setAccessToken(accessToken);
-      print('✅ JWT Token saved to SecureStorage');
-      print('Token (first 50 chars): ${accessToken.substring(0, 50)}...');
+      if (kDebugMode) {
+        print('✅ JWT Token saved to SecureStorage');
+      }
+      if (kDebugMode) {
+        print('Token (first 50 chars): ${accessToken.substring(0, 50)}...');
+      }
 
       // Step 2: Test Django connection
-      print('🔍 Testing Django connection...');
+      if (kDebugMode) {
+        print('🔍 Testing Django connection...');
+      }
       final isConnected = await _apiService.testConnection();
 
       if (!isConnected) {
@@ -93,34 +106,52 @@ class _LoginScreenState extends State<LoginScreen> {
         return;
       }
 
-      print('✅ Django server is reachable');
+      if (kDebugMode) {
+        print('✅ Django server is reachable');
+      }
 
       // Step 3: Verify authentication with Django
       try {
-        print('🔐 Testing Django authentication...');
+        if (kDebugMode) {
+          print('🔐 Testing Django authentication...');
+        }
         await _apiService.testAuth();
-        print('✅ Django authentication successful');
+        if (kDebugMode) {
+          print('✅ Django authentication successful');
+        }
       } catch (e) {
-        print('⚠️ Django auth test failed: $e');
+        if (kDebugMode) {
+          print('⚠️ Django auth test failed: $e');
+        }
         _showError('Authentication failed: ${e.toString()}');
         return;
       }
 
       // Step 4: Get route based on profile status
-      print('🧭 Determining route...');
+      if (kDebugMode) {
+        print('🧭 Determining route...');
+      }
       final route = await _authGuard.getInitialRoute();
 
-      print('🚀 Navigating to: $route');
+      if (kDebugMode) {
+        print('🚀 Navigating to: $route');
+      }
 
       if (!mounted) return;
       Navigator.pushReplacementNamed(context, route);
 
     } on AuthException catch (error) {
-      print('❌ Supabase Auth Error: ${error.message}');
+      if (kDebugMode) {
+        print('❌ Supabase Auth Error: ${error.message}');
+      }
       _showError(error.message);
     } catch (e, stackTrace) {
-      print('❌ Login error: $e');
-      print('Stack trace: $stackTrace');
+      if (kDebugMode) {
+        print('❌ Login error: $e');
+      }
+      if (kDebugMode) {
+        print('Stack trace: $stackTrace');
+      }
       _showError('Login failed: ${e.toString()}');
     } finally {
       if (mounted) {
@@ -140,16 +171,6 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  void _showSuccess(String message) {
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.green,
-        duration: const Duration(seconds: 2),
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {

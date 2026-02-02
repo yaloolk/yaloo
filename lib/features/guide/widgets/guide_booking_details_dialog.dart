@@ -7,7 +7,7 @@ import 'package:yaloo/core/constants/app_text_styles.dart';
 class GuideBookingDetailsDialog extends StatelessWidget {
   final Map<String, dynamic> bookingData;
 
-  const GuideBookingDetailsDialog({Key? key, required this.bookingData}) : super(key: key);
+  const GuideBookingDetailsDialog({super.key, required this.bookingData});
 
   @override
   Widget build(BuildContext context) {
@@ -71,7 +71,7 @@ class GuideBookingDetailsDialog extends StatelessWidget {
               Container(
                 padding: EdgeInsets.all(16.w),
                 decoration: BoxDecoration(
-                  color: AppColors.secondaryGray.withOpacity(0.1),
+                  color: AppColors.secondaryGray.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(16.r),
                 ),
                 child: Column(
@@ -97,7 +97,7 @@ class GuideBookingDetailsDialog extends StatelessWidget {
               Container(
                 padding: EdgeInsets.all(16.w),
                 decoration: BoxDecoration(
-                  color: AppColors.secondaryGray.withOpacity(0.1),
+                  color: AppColors.secondaryGray.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(16.r),
                 ),
                 child: Column(
@@ -185,7 +185,7 @@ class GuideBookingDetailsDialog extends StatelessWidget {
       bg = const Color(0xFFFFF8E1); // Yellow
       text = const Color(0xFFB45309);
     } else if (status.toLowerCase() == 'declined') {
-      bg = AppColors.primaryRed.withOpacity(0.1);
+      bg = AppColors.primaryRed.withValues(alpha: 0.1);
       text = AppColors.primaryRed;
     }
 

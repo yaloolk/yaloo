@@ -1,15 +1,11 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:yaloo/core/constants/colors.dart';
 import 'package:yaloo/core/constants/app_text_styles.dart';
 import 'package:yaloo/features/tourist/screens/guide/tourist_guide_profile.dart';
 import 'package:yaloo/features/tourist/screens/host/host_list_screen.dart';
 import 'package:yaloo/features/tourist/screens/personal_information_screen.dart';
-
-// Import the 4 screens for your tabs
 import '../../booking/screens/booking_details_screen.dart';
 import '../../booking/screens/booking_request_sent_screen.dart';
 import '../../booking/screens/booking_status_screen.dart';
@@ -28,7 +24,6 @@ import '../../common/screens/notification/notification_screen.dart';
 import 'host/find_host_screen.dart';
 import 'host/tourist_host_profile.dart';
 import 'tourist_home_screen.dart';
-import 'tourist_chat_screen.dart';
 import 'tourist_bookings_screen.dart';
 import 'tourist_profile_screen.dart';
 

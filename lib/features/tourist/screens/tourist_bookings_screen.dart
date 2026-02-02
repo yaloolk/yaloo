@@ -37,7 +37,7 @@ final List<Map<String, dynamic>> userBookings = [
 // -----------------------------
 
 class BookingsScreen extends StatelessWidget {
-  const BookingsScreen({Key? key}) : super(key: key);
+  const BookingsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {

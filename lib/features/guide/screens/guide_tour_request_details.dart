@@ -196,7 +196,7 @@ class _GuideTourRequestDetailsScreenState
             _buildPaymentRow("Rate/hour:",
                 "\$${rate.toStringAsFixed(2)} x ${duration.toInt()}h = \$${(rate * duration).toStringAsFixed(2)}"),
             _buildPaymentRow("Platform Fee (10%):", "-\$${fee.abs().toStringAsFixed(2)}"),
-            Divider(height: 24.h, color: AppColors.secondaryGray.withOpacity(0.5)),
+            Divider(height: 24.h, color: AppColors.secondaryGray.withValues(alpha: 0.5)),
             _buildPaymentRow("Total Payout:", "\$${total.toStringAsFixed(2)}",
                 isTotal: true),
           ],
@@ -256,7 +256,7 @@ class _GuideTourRequestDetailsScreenState
     return Container(
       padding: EdgeInsets.fromLTRB(24.w, 16.h, 24.w, 32.h), // Padding for safe area
       decoration: BoxDecoration(
-        color: AppColors.primaryBlack.withOpacity(0.9),
+        color: AppColors.primaryBlack.withValues(alpha: 0.9),
         borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
       ),
       child: Column(
@@ -289,7 +289,7 @@ class _GuideTourRequestDetailsScreenState
                     setState(() => _isDeclining = true);
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primaryGray.withOpacity(0.3),
+                    backgroundColor: AppColors.primaryGray.withValues(alpha: 0.3),
                     foregroundColor: Colors.white,
                     elevation: 0,
                     padding: EdgeInsets.symmetric(vertical: 14.h),

@@ -6,7 +6,15 @@ class EnvConfig {
   static String get supabaseAnonKey => dotenv.env['SUPABASE_ANON_KEY'] ?? '';
 
   // Backend API
-  static String get apiBaseUrl => dotenv.env['API_BASE_URL'] ?? '';
+  // static String get apiBaseUrl => dotenv.env['API_BASE_URL'] ?? '';
+
+  static String get apiBaseUrl {
+    final url = dotenv.env['API_BASE_URL'];
+    if (url == null || url.isEmpty) {
+      throw Exception('CRITICAL: API_BASE_URL is missing from .env file!');
+    }
+    return url;
+  }
 
   // Google Maps
   static String get googleMapsApiKey => dotenv.env['GOOGLE_MAPS_API_KEY'] ?? '';

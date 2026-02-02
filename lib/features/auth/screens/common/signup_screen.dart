@@ -1,5 +1,6 @@
 // lib/features/auth/presentation/screens/signup_screen.dart
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -93,9 +94,15 @@ class _SignupScreenState extends State<SignupScreen> {
     final email = _emailController.text.trim();
 
     try {
-      print('🔐 Starting signup process...');
-      print('Email: $email');
-      print('Role: $selectedRole');
+      if (kDebugMode) {
+        print('🔐 Starting signup process...');
+      }
+      if (kDebugMode) {
+        print('Email: $email');
+      }
+      if (kDebugMode) {
+        print('Role: $selectedRole');
+      }
 
       // Create user in Supabase Auth with metadata
       final res = await Supabase.instance.client.auth.signUp(
@@ -109,7 +116,9 @@ class _SignupScreenState extends State<SignupScreen> {
       if (res.session != null) {
         final token = res.session!.accessToken;
         await _secureStorage.setAccessToken(token); // ADD THIS
-        print('✅ Token saved after signup');
+        if (kDebugMode) {
+          print('✅ Token saved after signup');
+        }
       }
 
       final user = res.user;
@@ -118,15 +127,23 @@ class _SignupScreenState extends State<SignupScreen> {
         return;
       }
 
-      print('✅ Supabase user created: ${user.id}');
-      print('User metadata: ${user.userMetadata}');
+      if (kDebugMode) {
+        print('✅ Supabase user created: ${user.id}');
+      }
+      if (kDebugMode) {
+        print('User metadata: ${user.userMetadata}');
+      }
 
       // Create user_profile record in Supabase database
       try {
         await _createUserProfile(user.id, selectedRole);
-        print('✅ User profile created in database');
+        if (kDebugMode) {
+          print('✅ User profile created in database');
+        }
       } catch (e) {
-        print('⚠️ Profile creation error: $e');
+        if (kDebugMode) {
+          print('⚠️ Profile creation error: $e');
+        }
         // Continue anyway - Django will create it on first login if needed
       }
 
@@ -134,7 +151,9 @@ class _SignupScreenState extends State<SignupScreen> {
       _showSuccessDialog(email);
 
     } on AuthException catch (e) {
-      print('❌ Auth Exception: ${e.message}');
+      if (kDebugMode) {
+        print('❌ Auth Exception: ${e.message}');
+      }
       // Check if email already exists
       if (e.message.toLowerCase().contains('already')) {
         _showAccountExistsDialog();
@@ -142,7 +161,9 @@ class _SignupScreenState extends State<SignupScreen> {
         _showError(e.message);
       }
     } catch (e) {
-      print('❌ Unexpected error: $e');
+      if (kDebugMode) {
+        print('❌ Unexpected error: $e');
+      }
       if (!mounted) return;
       _showError('Unexpected error occurred: ${e.toString()}');
     } finally {
@@ -161,7 +182,9 @@ class _SignupScreenState extends State<SignupScreen> {
           .maybeSingle();
 
       if (existing != null) {
-        print('Profile already exists');
+        if (kDebugMode) {
+          print('Profile already exists');
+        }
         return;
       }
 
@@ -173,9 +196,13 @@ class _SignupScreenState extends State<SignupScreen> {
         'is_complete': false,
       });
 
-      print('User profile created successfully');
+      if (kDebugMode) {
+        print('User profile created successfully');
+      }
     } catch (e) {
-      print('Error creating user profile: $e');
+      if (kDebugMode) {
+        print('Error creating user profile: $e');
+      }
       // Don't throw - let it fail silently as Django will create it later
     }
   }
@@ -462,7 +489,9 @@ class _SignupScreenState extends State<SignupScreen> {
                   recognizer: TapGestureRecognizer()
                     ..onTap = () {
                       // TODO: Navigate to Terms of Service
-                      print('Navigate to Terms of Service');
+                      if (kDebugMode) {
+                        print('Navigate to Terms of Service');
+                      }
                     },
                 ),
                 const TextSpan(text: ' and '),
@@ -475,7 +504,9 @@ class _SignupScreenState extends State<SignupScreen> {
                   recognizer: TapGestureRecognizer()
                     ..onTap = () {
                       // TODO: Navigate to Privacy Policy
-                      print('Navigate to Privacy Policy');
+                      if (kDebugMode) {
+                        print('Navigate to Privacy Policy');
+                      }
                     },
                 ),
               ],

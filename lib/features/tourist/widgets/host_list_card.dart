@@ -86,7 +86,7 @@ class HostListCard extends StatelessWidget {
               ],
             ),
             SizedBox(height: 16.h),
-            Divider(color: AppColors.secondaryGray.withOpacity(0.7)),
+            Divider(color: AppColors.secondaryGray.withValues(alpha: 0.7)),
             SizedBox(height: 8.h),
             _buildActionButtons(context),
           ],

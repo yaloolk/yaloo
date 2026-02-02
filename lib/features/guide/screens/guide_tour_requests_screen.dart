@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:yaloo/core/constants/colors.dart';
-import 'package:yaloo/core/constants/app_text_styles.dart';
 import 'package:yaloo/core/widgets/custom_app_bar.dart';
 import 'package:yaloo/features/guide/widgets/tour_request_card.dart';
 

@@ -42,6 +42,9 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
 
       // Refresh session to get updated user info
       final refreshedSession = await Supabase.instance.client.auth.refreshSession();
+
+      if (!mounted) return;
+
       final user = refreshedSession.user;
 
       final role = user?.userMetadata?['role'] as String? ?? 'Tourist';
@@ -70,11 +73,12 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
         email: _userEmail,
 
       );
-
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Verification email resent successfully.')),
       );
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to resend email: $e')),
       );

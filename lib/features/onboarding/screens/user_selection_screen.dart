@@ -128,7 +128,7 @@ class _UserSelectionScreenState extends State<UserSelectionScreen> {
         padding: EdgeInsets.all(16.w),
         decoration: BoxDecoration(
           color: isSelected
-              ? AppColors.thirdBlue.withOpacity(0.1)
+              ? AppColors.thirdBlue.withValues(alpha: 0.1)
               : Colors.white,
           borderRadius: BorderRadius.circular(12.r),
           border: Border.all(
@@ -185,8 +185,8 @@ class _UserSelectionScreenState extends State<UserSelectionScreen> {
                 });
               },
               activeColor: AppColors.primaryBlue,
-              fillColor: MaterialStateProperty.resolveWith((states) {
-                if (states.contains(MaterialState.selected)) {
+              fillColor: WidgetStateProperty.resolveWith((states) {
+                if (states.contains(WidgetState.selected)) {
                   return AppColors.primaryBlue;
                 }
                 return AppColors.secondaryGray;

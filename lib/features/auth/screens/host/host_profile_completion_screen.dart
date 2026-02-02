@@ -48,7 +48,7 @@ class _HostProfileCompletionScreenState
   void initState() {
     super.initState();
 
-    final apiClient = ApiClient(baseUrl: 'http://192.1680.10.23:8000/api');
+    final apiClient = ApiClient();
     final secureStorage = SecureStorage();
 
     _profileApi = ProfileCompletionApi(
@@ -574,7 +574,7 @@ class _HostProfileCompletionScreenState
             SizedBox(width: 12.w),
             Expanded(
               child: Text(
-                isUploaded ? fileName! : label,
+                isUploaded ? fileName : label,
                 style: AppTextStyles.textSmall.copyWith(
                   color: isUploaded
                       ? AppColors.primaryBlue

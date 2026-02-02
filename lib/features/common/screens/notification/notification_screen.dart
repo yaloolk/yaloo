@@ -86,7 +86,7 @@ class NotificationScreen extends StatelessWidget {
         itemCount: mockNotifications.length,
         separatorBuilder: (context, index) => Divider(
           height: 1,
-          color: AppColors.secondaryGray.withOpacity(0.3),
+          color: AppColors.secondaryGray.withValues(alpha: 0.3),
           indent: 84.w, // Indent to match text alignment
           endIndent: 24.w,
         ),
@@ -107,7 +107,7 @@ class NotificationScreen extends StatelessWidget {
           Container(
             padding: EdgeInsets.all(24.w),
             decoration: BoxDecoration(
-              color: AppColors.secondaryGray.withOpacity(0.1),
+              color: AppColors.secondaryGray.withValues(alpha: 0.3),
               shape: BoxShape.circle,
             ),
             child: Icon(
@@ -256,7 +256,7 @@ class NotificationTile extends StatelessWidget {
       default:
         iconData = FontAwesomeIcons.bell;
         color = AppColors.primaryGray;
-        bgColor = AppColors.secondaryGray.withOpacity(0.2);
+        bgColor = AppColors.secondaryGray.withValues(alpha: 0.2);
         break;
     }
 

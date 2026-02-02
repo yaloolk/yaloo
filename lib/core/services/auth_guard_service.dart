@@ -1,5 +1,6 @@
 // lib/core/services/auth_guard_service.dart
 
+import 'package:flutter/foundation.dart';
 import 'package:yaloo/core/services/api_service.dart';
 
 class AuthGuardService {
@@ -14,11 +15,21 @@ class AuthGuardService {
       final verificationStatus = user['verification_status'] as String? ?? 'not_required';
       final hasVerifiedStay = user['has_verified_stay'] as bool? ?? false;
 
-      print('🔐 Auth Guard Check:');
-      print('  Role: $userRole');
-      print('  Profile Complete: $isComplete');
-      print('  Verification Status: $verificationStatus');
-      print('  Has Verified Stay: $hasVerifiedStay');
+      if (kDebugMode) {
+        debugPrint('🔐 Auth Guard Check:');
+      }
+      if (kDebugMode) {
+        debugPrint('  Role: $userRole');
+      }
+      if (kDebugMode) {
+        debugPrint('  Profile Complete: $isComplete');
+      }
+      if (kDebugMode) {
+        debugPrint('  Verification Status: $verificationStatus');
+      }
+      if (kDebugMode) {
+        debugPrint('  Has Verified Stay: $hasVerifiedStay');
+      }
 
       // Profile not complete → Go to profile completion
       if (!isComplete) {
@@ -29,7 +40,9 @@ class AuthGuardService {
       return _getHomeRoute(userRole, verificationStatus, hasVerifiedStay);
 
     } catch (e) {
-      print('❌ Auth guard error: $e');
+      if (kDebugMode) {
+        debugPrint('❌ Auth guard error: $e');
+      }
       return '/login';
     }
   }

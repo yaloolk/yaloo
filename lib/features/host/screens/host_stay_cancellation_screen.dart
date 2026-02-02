@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:yaloo/core/constants/colors.dart';
 import 'package:yaloo/core/constants/app_text_styles.dart';
 import 'package:yaloo/core/widgets/custom_app_bar.dart';
@@ -88,7 +87,7 @@ class _HostStayCancellationScreenState
             Container(
               padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
               decoration: BoxDecoration(
-                color: AppColors.secondaryGreen.withOpacity(0.3),
+                color: AppColors.secondaryGreen.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(20.r),
               ),
               child: Text(
@@ -147,7 +146,7 @@ class _HostStayCancellationScreenState
               ],
             ),
           );
-        }).toList(),
+        }),
 
         // Show text area only if "Other" is checked (optional, but good UX)
         if (_cancellationReasons['Other (please specify)'] == true) ...[
@@ -166,7 +165,7 @@ class _HostStayCancellationScreenState
                 border: InputBorder.none,
                 hintText: 'Please provide more details...',
                 hintStyle: AppTextStyles.textSmall
-                    .copyWith(color: AppColors.primaryGray.withOpacity(0.5)),
+                    .copyWith(color: AppColors.primaryGray.withValues(alpha: 0.5)),
               ),
             ),
           ),

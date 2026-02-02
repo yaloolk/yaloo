@@ -16,14 +16,20 @@ class DjangoApiService {
       final token = session?.accessToken;
 
       if (token != null) {
-        print('✅ Got auth token: ${token.substring(0, 20)}...');
+        if (kDebugMode) {
+          debugPrint('✅ Got auth token: ${token.substring(0, 20)}...');
+        }
       } else {
-        print('❌ No auth token found');
+        if (kDebugMode) {
+          debugPrint('❌ No auth token found');
+        }
       }
 
       return token;
     } catch (e) {
-      print('❌ Error getting auth token: $e');
+      if (kDebugMode) {
+        debugPrint('❌ Error getting auth token: $e');
+      }
       return null;
     }
   }
@@ -31,7 +37,9 @@ class DjangoApiService {
   /// Test connection to Django server (no auth required)
   Future<bool> testConnection() async {
     try {
-      print('🔍 Testing Django server connection at: $baseUrl/accounts/health/');
+      if (kDebugMode) {
+        debugPrint('🔍 Testing Django server connection at: $baseUrl/accounts/health/');
+      }
 
       final response = await http.get(
         Uri.parse('$baseUrl/accounts/health/'),
@@ -43,10 +51,14 @@ class DjangoApiService {
         },
       );
 
-      print('📡 Health check response: ${response.statusCode}');
+      if (kDebugMode) {
+        debugPrint('📡 Health check response: ${response.statusCode}');
+      }
       return response.statusCode == 200;
     } catch (e) {
-      print('❌ Connection test failed: $e');
+      if (kDebugMode) {
+        debugPrint('❌ Connection test failed: $e');
+      }
       return false;
     }
   }
@@ -60,7 +72,9 @@ class DjangoApiService {
     }
 
     final url = '$baseUrl/$endpoint';
-    print('🌐 GET Request: $url');
+    if (kDebugMode) {
+      debugPrint('🌐 GET Request: $url');
+    }
 
     try {
       final response = await http.get(
@@ -72,7 +86,9 @@ class DjangoApiService {
         },
       ).timeout(const Duration(seconds: 15));
 
-      print('📡 Response Status: ${response.statusCode}');
+      if (kDebugMode) {
+        debugPrint('📡 Response Status: ${response.statusCode}');
+      }
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
@@ -80,11 +96,15 @@ class DjangoApiService {
       } else if (response.statusCode == 401) {
         throw Exception('Unauthorized - Please login again');
       } else {
-        print('❌ Error: ${response.body}');
+        if (kDebugMode) {
+          debugPrint('❌ Error: ${response.body}');
+        }
         throw Exception('Request failed: ${response.statusCode}');
       }
     } catch (e) {
-      print('❌ Network Error: $e');
+      if (kDebugMode) {
+        debugPrint('❌ Network Error: $e');
+      }
       rethrow;
     }
   }
@@ -98,7 +118,9 @@ class DjangoApiService {
     }
 
     final url = '$baseUrl/$endpoint';
-    print('🌐 GET Request (List): $url');
+    if (kDebugMode) {
+      debugPrint('🌐 GET Request (List): $url');
+    }
 
     try {
       final response = await http.get(
@@ -110,7 +132,9 @@ class DjangoApiService {
         },
       ).timeout(const Duration(seconds: 15));
 
-      print('📡 Response Status: ${response.statusCode}');
+      if (kDebugMode) {
+        debugPrint('📡 Response Status: ${response.statusCode}');
+      }
 
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
@@ -118,11 +142,15 @@ class DjangoApiService {
       } else if (response.statusCode == 401) {
         throw Exception('Unauthorized - Please login again');
       } else {
-        print('❌ Error: ${response.body}');
+        if (kDebugMode) {
+          debugPrint('❌ Error: ${response.body}');
+        }
         throw Exception('Request failed: ${response.statusCode}');
       }
     } catch (e) {
-      print('❌ Network Error: $e');
+      if (kDebugMode) {
+        debugPrint('❌ Network Error: $e');
+      }
       rethrow;
     }
   }
@@ -136,8 +164,12 @@ class DjangoApiService {
     }
 
     final url = '$baseUrl/$endpoint';
-    print('🌐 POST Request: $url');
-    print('📦 Data: ${json.encode(data)}');
+    if (kDebugMode) {
+      debugPrint('🌐 POST Request: $url');
+    }
+    if (kDebugMode) {
+      debugPrint('📦 Data: ${json.encode(data)}');
+    }
 
     try {
       final response = await http.post(
@@ -150,18 +182,24 @@ class DjangoApiService {
         body: json.encode(data),
       ).timeout(const Duration(seconds: 15));
 
-      print('📡 Response Status: ${response.statusCode}');
+      if (kDebugMode) {
+        debugPrint('📡 Response Status: ${response.statusCode}');
+      }
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         return json.decode(response.body);
       } else if (response.statusCode == 401) {
         throw Exception('Unauthorized');
       } else {
-        print('❌ Error: ${response.body}');
+        if (kDebugMode) {
+          debugPrint('❌ Error: ${response.body}');
+        }
         throw Exception('Request failed: ${response.statusCode}');
       }
     } catch (e) {
-      print('❌ Network Error: $e');
+      if (kDebugMode) {
+        debugPrint('❌ Network Error: $e');
+      }
       rethrow;
     }
   }
@@ -195,7 +233,9 @@ class DjangoApiService {
     }
 
     final url = '$baseUrl/accounts/interests/user/add/';
-    print('🌐 POST Request: $url');
+    if (kDebugMode) {
+      debugPrint('🌐 POST Request: $url');
+    }
 
     try {
       final response = await http.post(
@@ -208,17 +248,23 @@ class DjangoApiService {
         body: json.encode({'interest_ids': interestIds}),
       ).timeout(const Duration(seconds: 15));
 
-      print('📡 Response Status: ${response.statusCode}');
+      if (kDebugMode) {
+        debugPrint('📡 Response Status: ${response.statusCode}');
+      }
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final List<dynamic> data = json.decode(response.body);
         return data.cast<Map<String, dynamic>>();
       } else {
-        print('❌ Error: ${response.body}');
+        if (kDebugMode) {
+          debugPrint('❌ Error: ${response.body}');
+        }
         throw Exception('Request failed: ${response.statusCode}');
       }
     } catch (e) {
-      print('❌ Network Error: $e');
+      if (kDebugMode) {
+        debugPrint('❌ Network Error: $e');
+      }
       rethrow;
     }
   }

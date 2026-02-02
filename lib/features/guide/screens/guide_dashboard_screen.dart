@@ -1,15 +1,9 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:yaloo/core/constants/colors.dart';
 import 'package:yaloo/core/constants/app_text_styles.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
-import 'package:lucide_icons_flutter/test_icons.dart';
 import 'package:yaloo/features/guide/screens/guide_tour_request_details.dart';
-
-
-// Import the 5 screens for your tabs
 import '../../tourist/screens/tourist_public_profile_screen.dart';
 import 'guide_booking_cancellation_screen.dart';
 import 'guide_home_screen.dart';
@@ -18,12 +12,10 @@ import 'guide_bookings_screen.dart';
 import 'guide_tour_requests_screen.dart';
 import 'guide_wallet_screen.dart';
 import 'guide_profile_screen.dart';
-
-// --- IMPORT THE REUSABLE CHAT BUTTON ---
 import 'package:yaloo/core/widgets/floating_chat_button.dart';
 
 class GuideDashboardScreen extends StatefulWidget {
-  const GuideDashboardScreen({Key? key}) : super(key: key);
+  const GuideDashboardScreen({super.key});
 
   @override
   State<GuideDashboardScreen> createState() => _GuideDashboardScreenState();

@@ -61,7 +61,7 @@ class _ContactSupportScreenState extends State<ContactSupportScreen> {
               children: [
                 Expanded(
                   child: _buildIssueCard(
-                    icon: FontAwesomeIcons.userCircle,
+                    icon: FontAwesomeIcons.circleUser,
                     label: "Account Access",
                     issueType: "account",
                   ),
@@ -127,7 +127,7 @@ class _ContactSupportScreenState extends State<ContactSupportScreen> {
       child: Container(
         height: 100.h,
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.primaryBlue.withOpacity(0.1) : const Color(0xFFF5F7FA),
+          color: isSelected ? AppColors.primaryBlue.withValues(alpha: 0.1) : const Color(0xFFF5F7FA),
           borderRadius: BorderRadius.circular(12.r),
           border: Border.all(
             color: isSelected ? AppColors.primaryBlue : Colors.transparent,

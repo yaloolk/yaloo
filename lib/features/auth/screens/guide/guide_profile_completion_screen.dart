@@ -6,7 +6,7 @@ import 'package:yaloo/core/constants/colors.dart';
 import 'package:yaloo/core/constants/app_text_styles.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:yaloo/features/auth/data/api/profile_completion_api.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show kDebugMode, kIsWeb;
 
 import '../../../../core/network/api_client.dart';
 import '../../../../core/storage/secure_storage.dart';
@@ -58,7 +58,7 @@ class _GuideProfileCompletionScreenState
     super.initState();
     _debugToken();
     final dio = Dio(BaseOptions(
-      baseUrl: 'http://192.168.10.38:8000/api',
+      baseUrl: 'http://192.168.10.23:8000/api',
       connectTimeout: const Duration(seconds: 10),
       receiveTimeout: const Duration(seconds: 10),
       headers: {
@@ -67,7 +67,7 @@ class _GuideProfileCompletionScreenState
       },
     ));
 
-    final apiClient = ApiClient(baseUrl: 'http://192.168.10.23:8000/api');
+    final apiClient = ApiClient();
     final secureStorage = SecureStorage();
 
     _profileApi = ProfileCompletionApi(
@@ -91,10 +91,16 @@ class _GuideProfileCompletionScreenState
   Future<void> _debugToken() async {
     final token = await SecureStorage().getAccessToken();
     if (token != null) {
-      print('✅ TOKEN EXISTS: ${token.substring(0, 50)}...');
+      if (kDebugMode) {
+        print('✅ TOKEN EXISTS: ${token.substring(0, 50)}...');
+      }
     } else {
-      print('❌ NO TOKEN FOUND!');
-      print('⚠️  Please login again');
+      if (kDebugMode) {
+        print('❌ NO TOKEN FOUND!');
+      }
+      if (kDebugMode) {
+        print('⚠️  Please login again');
+      }
     }
   }
 

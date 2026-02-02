@@ -32,7 +32,7 @@ class UpcomingBookingCard extends StatelessWidget {
 
     return Card(
       elevation: 6,
-      shadowColor: AppColors.primaryGray.withOpacity(0.15),
+      shadowColor: AppColors.primaryGray.withValues(alpha: 0.15),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20.r),
       ),
@@ -95,7 +95,7 @@ class UpcomingBookingCard extends StatelessWidget {
             child: Container(
               padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
               decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.4),
+                color: Colors.black.withValues(alpha: 0.4),
                 borderRadius: BorderRadius.circular(8.r),
               ),
               child: Text(

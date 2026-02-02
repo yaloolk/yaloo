@@ -1,5 +1,6 @@
 // lib/core/storage/secure_storage.dart
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class SecureStorage {
@@ -11,7 +12,6 @@ class SecureStorage {
   // Initialize flutter_secure_storage
   final FlutterSecureStorage _storage = const FlutterSecureStorage(
     aOptions: AndroidOptions(
-      encryptedSharedPreferences: true,
     ),
     iOptions: IOSOptions(
       accessibility: KeychainAccessibility.first_unlock,
@@ -31,9 +31,13 @@ class SecureStorage {
   Future<void> setAccessToken(String token) async {
     try {
       await _storage.write(key: _accessTokenKey, value: token);
-      print('✅ Access token saved to SecureStorage');
+      if (kDebugMode) {
+        debugPrint('✅ Access token saved to SecureStorage');
+      }
     } catch (e) {
-      print('❌ Error saving access token: $e');
+      if (kDebugMode) {
+        debugPrint('❌ Error saving access token: $e');
+      }
       rethrow;
     }
   }
@@ -43,13 +47,19 @@ class SecureStorage {
     try {
       final token = await _storage.read(key: _accessTokenKey);
       if (token != null) {
-        print('✅ Access token retrieved from SecureStorage');
+        if (kDebugMode) {
+          debugPrint('✅ Access token retrieved from SecureStorage');
+        }
       } else {
-        print('⚠️ No access token found in SecureStorage');
+        if (kDebugMode) {
+          debugPrint('⚠️ No access token found in SecureStorage');
+        }
       }
       return token;
     } catch (e) {
-      print('❌ Error reading access token: $e');
+      if (kDebugMode) {
+        debugPrint('❌ Error reading access token: $e');
+      }
       return null;
     }
   }
@@ -58,9 +68,13 @@ class SecureStorage {
   Future<void> deleteAccessToken() async {
     try {
       await _storage.delete(key: _accessTokenKey);
-      print('✅ Access token deleted from SecureStorage');
+      if (kDebugMode) {
+        debugPrint('✅ Access token deleted from SecureStorage');
+      }
     } catch (e) {
-      print('❌ Error deleting access token: $e');
+      if (kDebugMode) {
+        debugPrint('❌ Error deleting access token: $e');
+      }
     }
   }
 
@@ -70,9 +84,13 @@ class SecureStorage {
   Future<void> setRefreshToken(String token) async {
     try {
       await _storage.write(key: _refreshTokenKey, value: token);
-      print('✅ Refresh token saved to SecureStorage');
+      if (kDebugMode) {
+        debugPrint('✅ Refresh token saved to SecureStorage');
+      }
     } catch (e) {
-      print('❌ Error saving refresh token: $e');
+      if (kDebugMode) {
+        debugPrint('❌ Error saving refresh token: $e');
+      }
       rethrow;
     }
   }
@@ -82,7 +100,9 @@ class SecureStorage {
     try {
       return await _storage.read(key: _refreshTokenKey);
     } catch (e) {
-      print('❌ Error reading refresh token: $e');
+      if (kDebugMode) {
+        debugPrint('❌ Error reading refresh token: $e');
+      }
       return null;
     }
   }
@@ -91,9 +111,13 @@ class SecureStorage {
   Future<void> deleteRefreshToken() async {
     try {
       await _storage.delete(key: _refreshTokenKey);
-      print('✅ Refresh token deleted from SecureStorage');
+      if (kDebugMode) {
+        debugPrint('✅ Refresh token deleted from SecureStorage');
+      }
     } catch (e) {
-      print('❌ Error deleting refresh token: $e');
+      if (kDebugMode) {
+        debugPrint('❌ Error deleting refresh token: $e');
+      }
     }
   }
 
@@ -104,7 +128,9 @@ class SecureStorage {
     try {
       await _storage.write(key: _userIdKey, value: userId);
     } catch (e) {
-      print('❌ Error saving user ID: $e');
+      if (kDebugMode) {
+        debugPrint('❌ Error saving user ID: $e');
+      }
     }
   }
 
@@ -113,7 +139,9 @@ class SecureStorage {
     try {
       return await _storage.read(key: _userIdKey);
     } catch (e) {
-      print('❌ Error reading user ID: $e');
+      if (kDebugMode) {
+        debugPrint('❌ Error reading user ID: $e');
+      }
       return null;
     }
   }
@@ -123,7 +151,9 @@ class SecureStorage {
     try {
       await _storage.write(key: _userRoleKey, value: role);
     } catch (e) {
-      print('❌ Error saving user role: $e');
+      if (kDebugMode) {
+        debugPrint('❌ Error saving user role: $e');
+      }
     }
   }
 
@@ -132,7 +162,9 @@ class SecureStorage {
     try {
       return await _storage.read(key: _userRoleKey);
     } catch (e) {
-      print('❌ Error reading user role: $e');
+      if (kDebugMode) {
+        debugPrint('❌ Error reading user role: $e');
+      }
       return null;
     }
   }
@@ -145,7 +177,9 @@ class SecureStorage {
         value: isComplete.toString(),
       );
     } catch (e) {
-      print('❌ Error saving profile completion status: $e');
+      if (kDebugMode) {
+        debugPrint('❌ Error saving profile completion status: $e');
+      }
     }
   }
 
@@ -155,7 +189,9 @@ class SecureStorage {
       final value = await _storage.read(key: _isProfileCompleteKey);
       return value == 'true';
     } catch (e) {
-      print('❌ Error reading profile completion status: $e');
+      if (kDebugMode) {
+        debugPrint('❌ Error reading profile completion status: $e');
+      }
       return false;
     }
   }
@@ -175,16 +211,22 @@ class SecureStorage {
     if (userId != null) await setUserId(userId);
     if (userRole != null) await setUserRole(userRole);
     if (isProfileComplete != null) await setProfileComplete(isProfileComplete);
-    print('✅ Complete session saved to SecureStorage');
+    if (kDebugMode) {
+      debugPrint('✅ Complete session saved to SecureStorage');
+    }
   }
 
   /// Clear all session data (logout)
   Future<void> clearSession() async {
     try {
       await _storage.deleteAll();
-      print('✅ All session data cleared from SecureStorage');
+      if (kDebugMode) {
+        debugPrint('✅ All session data cleared from SecureStorage');
+      }
     } catch (e) {
-      print('❌ Error clearing session: $e');
+      if (kDebugMode) {
+        debugPrint('❌ Error clearing session: $e');
+      }
     }
   }
 
@@ -198,19 +240,33 @@ class SecureStorage {
 
   /// Print all stored values (for debugging only)
   Future<void> debugPrintAll() async {
-    print('=== SECURE STORAGE DEBUG ===');
+    if (kDebugMode) {
+      debugPrint('=== SECURE STORAGE DEBUG ===');
+    }
     final accessToken = await getAccessToken();
     final refreshToken = await getRefreshToken();
     final userId = await getUserId();
     final userRole = await getUserRole();
     final profileComplete = await isProfileComplete();
 
-    print('Access Token: ${accessToken?.substring(0, 50)}...');
-    print('Refresh Token: ${refreshToken?.substring(0, 50) ?? 'null'}...');
-    print('User ID: $userId');
-    print('User Role: $userRole');
-    print('Profile Complete: $profileComplete');
-    print('=== END DEBUG ===');
+    if (kDebugMode) {
+      debugPrint('Access Token: ${accessToken?.substring(0, 50)}...');
+    }
+    if (kDebugMode) {
+      debugPrint('Refresh Token: ${refreshToken?.substring(0, 50) ?? 'null'}...');
+    }
+    if (kDebugMode) {
+      debugPrint('User ID: $userId');
+    }
+    if (kDebugMode) {
+      debugPrint('User Role: $userRole');
+    }
+    if (kDebugMode) {
+      debugPrint('Profile Complete: $profileComplete');
+    }
+    if (kDebugMode) {
+      debugPrint('=== END DEBUG ===');
+    }
   }
 
   /// Read all keys and values (for debugging)
@@ -218,7 +274,9 @@ class SecureStorage {
     try {
       return await _storage.readAll();
     } catch (e) {
-      print('❌ Error reading all values: $e');
+      if (kDebugMode) {
+        debugPrint('❌ Error reading all values: $e');
+      }
       return {};
     }
   }

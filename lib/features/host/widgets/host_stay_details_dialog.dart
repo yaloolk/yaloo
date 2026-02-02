@@ -75,7 +75,7 @@ class HostStayRequestDetails extends StatelessWidget {
               Container(
                 padding: EdgeInsets.all(16.w),
                 decoration: BoxDecoration(
-                  color: AppColors.secondaryGray.withOpacity(0.1),
+                  color: AppColors.secondaryGray.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(16.r),
                 ),
                 child: Column(
@@ -101,7 +101,7 @@ class HostStayRequestDetails extends StatelessWidget {
               Container(
                 padding: EdgeInsets.all(16.w),
                 decoration: BoxDecoration(
-                  color: AppColors.secondaryGray.withOpacity(0.1),
+                  color: AppColors.secondaryGray.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(16.r),
                 ),
                 child: Column(
@@ -194,7 +194,7 @@ class HostStayRequestDetails extends StatelessWidget {
     }
 
     if (status.toLowerCase() == 'declined') {
-      bg = AppColors.primaryRed.withOpacity(0.1);
+      bg = AppColors.primaryRed.withValues(alpha: 0.1);
       text = AppColors.primaryRed;
     }
 

@@ -53,7 +53,7 @@ class ChatListScreen extends StatelessWidget {
               itemCount: chatList.length,
               separatorBuilder: (context, index) => Divider(
                 height: 1,
-                color: AppColors.secondaryGray.withOpacity(0.3),
+                color: AppColors.secondaryGray.withValues(alpha: 0.3),
                 indent: 84.w, // Indent to align with text
                 endIndent: 24.w,
               ),

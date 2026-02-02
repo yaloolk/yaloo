@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -51,7 +52,9 @@ class _PaymentScreenState extends State<PaymentScreen> {
         _totalPrice = args['total']?.toStringAsFixed(2) ?? '0.00';
       }
     } catch (e) {
-      print("Error getting arguments: $e");
+      if (kDebugMode) {
+        print("Error getting arguments: $e");
+      }
     }
     _validateForm();
   }

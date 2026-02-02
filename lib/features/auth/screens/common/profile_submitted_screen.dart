@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:yaloo/core/constants/colors.dart';
@@ -71,7 +72,9 @@ class ProfileSubmittedScreen extends StatelessWidget {
             // Navigator.pushReplacementNamed(context, '/guideDashboard');
 
             // --- MOCKUP: For now, just print ---
-            print("Navigating to Guide Dashboard (placeholder)");
+            if (kDebugMode) {
+              print("Navigating to Guide Dashboard (placeholder)");
+            }
           },
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primaryBlue,

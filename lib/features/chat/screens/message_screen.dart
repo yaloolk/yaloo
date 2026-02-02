@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:yaloo/core/constants/colors.dart';
 import 'package:yaloo/core/constants/app_text_styles.dart';
 import 'package:yaloo/features/chat/models/chat_user.dart';
@@ -74,7 +73,7 @@ class _MessageScreenState extends State<MessageScreen> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 1, // Slight elevation for separation
-        shadowColor: Colors.grey.withOpacity(0.1),
+        shadowColor: Colors.grey.withValues(alpha: 0.1),
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: AppColors.primaryBlack),
           onPressed: () => Navigator.pop(context),
@@ -209,9 +208,9 @@ class _MessageScreenState extends State<MessageScreen> {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(12.r),
-          border: Border.all(color: AppColors.secondaryGray.withOpacity(0.5)),
+          border: Border.all(color: AppColors.secondaryGray.withValues(alpha: 0.5)),
           boxShadow: [
-            BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 5, offset: const Offset(0, 2)),
+            BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 5, offset: const Offset(0, 2)),
           ],
         ),
         child: Column(
@@ -244,7 +243,7 @@ class _MessageScreenState extends State<MessageScreen> {
         width: 200.w,
         padding: EdgeInsets.all(4.w),
         decoration: BoxDecoration(
-          color: isMe ? AppColors.primaryBlue.withOpacity(0.1) : const Color(0xFFF3F4F6),
+          color: isMe ? AppColors.primaryBlue.withValues(alpha: 0.1) : const Color(0xFFF3F4F6),
           borderRadius: BorderRadius.circular(16.r),
           border: Border.all(color: isMe ? AppColors.primaryBlue : Colors.transparent),
         ),
@@ -288,7 +287,7 @@ class _MessageScreenState extends State<MessageScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 5, offset: const Offset(0, -2)),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 5, offset: const Offset(0, -2)),
         ],
       ),
       child: SafeArea(

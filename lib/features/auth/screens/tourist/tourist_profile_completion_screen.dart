@@ -1,10 +1,10 @@
 // lib/features/auth/presentation/screens/tourist_profile_completion_screen.dart
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/constants/colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import 'package:country_picker/country_picker.dart';
-import 'package:language_picker/language_picker.dart';
 import 'package:language_picker/languages.dart';
 import '../../../../core/widgets/custom_text_field.dart';
 import '../../../../core/widgets/custom_picker_button.dart';
@@ -49,6 +49,15 @@ class _ProfileCompletionScreenState extends State<ProfileCompletionScreen> {
   List<Map<String, dynamic>> _apiLanguages = [];
   String? _selectedLanguageId; // We store the UUID now, not the name
 
+  final Map<String, String> _travelStyleOptions = {
+    'solo': 'Solo Traveler',
+    'couple': 'Couple',
+    'family': 'Family',
+    'group': 'Group',
+    'business': 'Business',
+    'backpacker': 'Backpacker',
+  };
+
   @override
   void initState() {
     super.initState();
@@ -63,7 +72,9 @@ class _ProfileCompletionScreenState extends State<ProfileCompletionScreen> {
         _apiLanguages = languages;
       });
     } catch (e) {
-      print("Error fetching languages: $e");
+      if (kDebugMode) {
+        print("Error fetching languages: $e");
+      }
     }
   }
 
@@ -87,7 +98,9 @@ class _ProfileCompletionScreenState extends State<ProfileCompletionScreen> {
         });
       }
     } catch (e) {
-      print('❌ Error fetching interests: $e');
+      if (kDebugMode) {
+        print('❌ Error fetching interests: $e');
+      }
       if (mounted) setState(() => _isLoadingInterests = false);
     }
   }
@@ -169,7 +182,7 @@ class _ProfileCompletionScreenState extends State<ProfileCompletionScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: AppColors.primaryBlue.withOpacity(0.1),
+                  color: AppColors.primaryBlue.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
@@ -242,7 +255,15 @@ class _ProfileCompletionScreenState extends State<ProfileCompletionScreen> {
         _buildSectionLabel("Preferences"),
         CustomPickerButton(hint: 'Language', icon: Icons.translate_outlined, value: _selectedLanguage?.name, onTap: _showLanguagePicker),
         const SizedBox(height: 16),
-        _buildTravelStylePicker(),
+        CustomPickerButton(
+          hint: 'Travel Style',
+          icon: Icons.style_outlined,
+          // Show the display name from the map, or null if nothing selected
+          value: _selectedTravelStyle != null
+              ? _travelStyleOptions[_selectedTravelStyle]
+              : null,
+          onTap: _showTravelStylePicker,
+        ),
         const SizedBox(height: 40),
       ],
     );
@@ -328,7 +349,7 @@ class _ProfileCompletionScreenState extends State<ProfileCompletionScreen> {
                         width: 1.5,
                       ),
                       boxShadow: isActive ? [
-                        BoxShadow(color: AppColors.primaryBlue.withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 4))
+                        BoxShadow(color: AppColors.primaryBlue.withValues(alpha: 0.3), blurRadius: 8, offset: const Offset(0, 4))
                       ] : [],
                     ),
                     child: Row(
@@ -384,7 +405,7 @@ class _ProfileCompletionScreenState extends State<ProfileCompletionScreen> {
                     duration: const Duration(milliseconds: 200),
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                     decoration: BoxDecoration(
-                      color: isSelected ? AppColors.primaryBlue.withOpacity(0.08) : Colors.white,
+                      color: isSelected ? AppColors.primaryBlue.withValues(alpha: 0.08) : Colors.white,
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
                         color: isSelected ? AppColors.primaryBlue : Colors.grey[200]!,
@@ -392,7 +413,7 @@ class _ProfileCompletionScreenState extends State<ProfileCompletionScreen> {
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.03),
+                          color: Colors.black.withValues(alpha: 0.03),
                           blurRadius: 10,
                           offset: const Offset(0, 4),
                         ),
@@ -434,7 +455,7 @@ class _ProfileCompletionScreenState extends State<ProfileCompletionScreen> {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 20,
             offset: const Offset(0, -5),
           ),
@@ -455,16 +476,16 @@ class _ProfileCompletionScreenState extends State<ProfileCompletionScreen> {
               }
             },
             style: TextButton.styleFrom(
-              foregroundColor: Colors.grey[600],
+              foregroundColor: Colors.grey[400],
             ),
             child: Text(
-              _currentPage == 0 ? 'Skip for now' : 'Back',
+              _currentPage == 0 ? 'Skip' : 'Back',
               style: const TextStyle(fontWeight: FontWeight.w600),
             ),
           ),
 
           CircularNavButton(
-            label: isLastPage ? 'Finish' : 'Next Step',
+            label: isLastPage ? 'Finish' : 'Next',
             isLoading: _isLoading,
             onPressed: _isLoading ? null : () {
               if (isLastPage) {
@@ -486,40 +507,6 @@ class _ProfileCompletionScreenState extends State<ProfileCompletionScreen> {
 
   // --- Helpers & Logic ---
 
-  Widget _buildTravelStylePicker() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey[200]!),
-      ),
-      child: DropdownButtonFormField<String>(
-        value: _selectedTravelStyle,
-        decoration: InputDecoration(
-          hintText: 'Travel Style',
-          hintStyle: TextStyle(color: Colors.grey[400], fontSize: 14),
-          prefixIcon: Icon(Icons.style_outlined, color: Colors.grey[500]),
-          filled: true,
-          fillColor: Colors.white,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-        ),
-        icon: Icon(Icons.keyboard_arrow_down_rounded, color: Colors.grey[400]),
-        items: const [
-          DropdownMenuItem(value: 'solo', child: Text('Solo Traveler')),
-          DropdownMenuItem(value: 'couple', child: Text('Couple')),
-          DropdownMenuItem(value: 'family', child: Text('Family')),
-          DropdownMenuItem(value: 'group', child: Text('Group')),
-          DropdownMenuItem(value: 'business', child: Text('Business')),
-          DropdownMenuItem(value: 'backpacker', child: Text('Backpacker')),
-        ],
-        onChanged: (value) => setState(() => _selectedTravelStyle = value),
-      ),
-    );
-  }
-
-  // Keep all your existing logic for _showDatePicker, _showCountryPicker, _showLanguagePicker,
-  // _validatePageOne, _handleSkip, _handleComplete, _showError unchanged.
 
   bool _validatePageOne() {
     if (_firstNameController.text.isEmpty || _lastNameController.text.isEmpty) {
@@ -596,6 +583,68 @@ class _ProfileCompletionScreenState extends State<ProfileCompletionScreen> {
           border: OutlineInputBorder(borderSide: BorderSide(color: Colors.grey[300]!)),
         ),
       ),
+    );
+  }
+
+  void _showTravelStylePicker() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return Container(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Optional: Header for the sheet
+              Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: Text(
+                  "Select Travel Style",
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey[800],
+                  ),
+                ),
+              ),
+              Divider(height: 1, color: Colors.grey[300]),
+
+              // List of Options
+              Flexible(
+                child: ListView(
+                  shrinkWrap: true,
+                  children: _travelStyleOptions.entries.map((entry) {
+                    final isSelected = _selectedTravelStyle == entry.key;
+                    return ListTile(
+                      leading: Icon(
+                        Icons.circle,
+                        size: 10,
+                        color: isSelected ? AppColors.primaryBlue : Colors.grey[300],
+                      ),
+                      title: Text(
+                        entry.value,
+                        style: TextStyle(
+                          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                          color: isSelected ? AppColors.primaryBlue : Colors.grey[800],
+                        ),
+                      ),
+                      onTap: () {
+                        setState(() {
+                          _selectedTravelStyle = entry.key;
+                        });
+                        Navigator.pop(context);
+                      },
+                    );
+                  }).toList(),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 

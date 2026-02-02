@@ -29,7 +29,7 @@ final List<Map<String, dynamic>> facilities = [
 final List<Map<String, dynamic>> activities = [
   {"icon": FontAwesomeIcons.bowlFood, "name": "Cooking Lession"},
   {"icon": FontAwesomeIcons.treeCity, "name": "Village Tour"},
-  {"icon": FontAwesomeIcons.hiking, "name": "Hiking Tour"},
+  {"icon": FontAwesomeIcons.personHiking, "name": "Hiking Tour"},
 
 ];
 // ---------------------------------
@@ -621,7 +621,7 @@ class TouristHostProfileScreen extends StatelessWidget {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+              color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 10,
             offset: Offset(0, -2),
           ),

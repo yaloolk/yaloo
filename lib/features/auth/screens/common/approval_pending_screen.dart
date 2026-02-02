@@ -1,5 +1,6 @@
 // lib/features/auth/screens/common/approval_pending_screen.dart
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -149,14 +150,18 @@ class _ApprovalPendingScreenState extends State<ApprovalPendingScreen> with Sing
     setState(() => _isChecking = true);
 
     try {
-      print('🔍 Checking approval status...');
+      if (kDebugMode) {
+        print('🔍 Checking approval status...');
+      }
 
       final user = await _apiService.getCurrentUser();
       final verificationStatus = user['verification_status'] as String?;
       final userRole = user['user_role'] as String?;
       final hasVerifiedStay = user['has_verified_stay'] as bool? ?? false;
 
-      print('📊 Status: $verificationStatus | Role: $userRole | Stay Verified: $hasVerifiedStay');
+      if (kDebugMode) {
+        print('📊 Status: $verificationStatus | Role: $userRole | Stay Verified: $hasVerifiedStay');
+      }
 
       // 1. Check for Rejection first
       if (verificationStatus == 'rejected') {
@@ -177,12 +182,16 @@ class _ApprovalPendingScreenState extends State<ApprovalPendingScreen> with Sing
         }
       } else {
         // Approved! Navigate away
-        print('✅ Approved! Navigating to $route...');
+        if (kDebugMode) {
+          print('✅ Approved! Navigating to $route...');
+        }
         if (mounted) Navigator.pushReplacementNamed(context, route);
       }
 
     } catch (e) {
-      print('❌ Error checking status: $e');
+      if (kDebugMode) {
+        print('❌ Error checking status: $e');
+      }
       _showMessage('Error checking status. Please try again.');
     } finally {
       if (mounted) setState(() => _isChecking = false);

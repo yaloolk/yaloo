@@ -6,7 +6,6 @@ import 'package:yaloo/core/constants/app_text_styles.dart';
 import 'package:yaloo/core/widgets/custom_app_bar.dart';
 import 'package:yaloo/core/widgets/floating_chat_button.dart';
 import 'package:yaloo/core/widgets/step_progress_indicator.dart';
-import 'package:yaloo/core/widgets/custom_text_area.dart';
 import 'package:yaloo/core/widgets/custom_primary_button.dart';
 
 class StayDetailsScreen extends StatefulWidget {
@@ -349,7 +348,7 @@ class _StayDetailsScreenState extends State<StayDetailsScreen> {
         border: Border.all(color: Colors.grey.shade100),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -57,7 +58,9 @@ class _LanguageScreenState extends State<LanguageScreen> {
   // --- Save Logic ---
   void _saveLanguage() {
     // TODO: Save the selected language to your app's settings/database
-    print("Saved Language: ${_selectedLanguage.name} (${_selectedLanguage.isoCode})");
+    if (kDebugMode) {
+      print("Saved Language: ${_selectedLanguage.name} (${_selectedLanguage.isoCode})");
+    }
 
     Navigator.pop(context); // Go back
 

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -7,8 +8,6 @@ import 'package:yaloo/core/widgets/custom_app_bar.dart';
 import 'package:yaloo/core/widgets/custom_primary_button.dart';
 import 'package:country_picker/country_picker.dart';
 import 'package:language_picker/languages.dart';
-import 'package:language_picker/language_picker.dart';
-
 class PersonalInformationScreen extends StatefulWidget {
   const PersonalInformationScreen({super.key});
 
@@ -177,14 +176,14 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(color: AppColors.secondaryGray.withOpacity(0.5)),
+        border: Border.all(color: AppColors.secondaryGray.withValues(alpha: 0.5)),
       ),
       child: TextField(
         controller: controller,
         style: AppTextStyles.textSmall.copyWith(color: Colors.black),
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle: TextStyle(color: AppColors.primaryGray.withOpacity(0.5)),
+          hintStyle: TextStyle(color: AppColors.primaryGray.withValues(alpha: 0.5)),
           prefixIcon: icon != null ? Icon(icon, color: AppColors.primaryGray, size: 18.w) : null,
           border: InputBorder.none,
           contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
@@ -201,7 +200,7 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(12.r),
-          border: Border.all(color: AppColors.secondaryGray.withOpacity(0.5)),
+          border: Border.all(color: AppColors.secondaryGray.withValues(alpha: 0.5)),
         ),
         child: Row(
           children: [
@@ -233,7 +232,7 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(color: AppColors.secondaryGray.withOpacity(0.5)),
+        border: Border.all(color: AppColors.secondaryGray.withValues(alpha: 0.5)),
       ),
       child: Row(
         children: [
@@ -349,7 +348,9 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
         'phone': _ecPhoneController.text,
       }
     };
-    print("Saving Data: $updatedData");
+    if (kDebugMode) {
+      print("Saving Data: $updatedData");
+    }
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: const Text('Profile Updated Successfully!')));
     Navigator.pop(context);
   }

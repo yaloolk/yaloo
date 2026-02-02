@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -20,7 +21,7 @@ class BookingDetailsScreen extends StatefulWidget {
 
 class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
   bool _canSubmit = false;
-  bool _isLoading = false;
+  final bool _isLoading = false;
 
   String _guideName = "Guide";
   String _guideImage = "assets/images/guide_1.jpg";
@@ -57,7 +58,9 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
         _bookingType = args['bookingType'] ?? 'guide';
       }
     } catch (e) {
-      print("Error getting arguments: $e");
+      if (kDebugMode) {
+        print("Error getting arguments: $e");
+      }
     }
     _validateForm();
   }

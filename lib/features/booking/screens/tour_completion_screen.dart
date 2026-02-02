@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -130,7 +129,7 @@ class _TourCompletionScreenState extends State<TourCompletionScreen> {
                 Text(guideRating, style: AppTextStyles.textSmall.copyWith(color: AppColors.primaryGray)),
               ],
             ),
-            Divider(height: 32.h, color: AppColors.secondaryGray.withOpacity(0.5)),
+            Divider(height: 32.h, color: AppColors.secondaryGray.withValues(alpha: 0.5)),
             _buildDetailRow("Tour", tourLocation),
             _buildDetailRow("Duration", duration),
             _buildDetailRow("Amount", amount),
@@ -234,7 +233,7 @@ class _TourCompletionScreenState extends State<TourCompletionScreen> {
                     fontWeight: FontWeight.bold,
                   ),
                   selectedColor: AppColors.thirdBlue,
-                  backgroundColor: AppColors.secondaryGray.withOpacity(0.5),
+                  backgroundColor: AppColors.secondaryGray.withValues(alpha: 0.5),
                   shape: StadiumBorder(),
                 );
               }).toList(),

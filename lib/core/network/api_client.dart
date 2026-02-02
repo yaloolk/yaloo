@@ -1,17 +1,27 @@
-// lib/core/network/api_client.dart
-
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:yaloo/core/storage/secure_storage.dart';
+import 'package:yaloo/core/config/env_config.dart';
 
 class ApiClient {
-  final String baseUrl;
+  // ── 1. Singleton Setup ──
+  // Private static instance
+  static final ApiClient _instance = ApiClient._internal();
+
+  // Factory constructor returns the same instance every time
+  factory ApiClient() {
+    return _instance;
+  }
+
   late final Dio _dio;
   final SecureStorage _secureStorage = SecureStorage();
 
-  ApiClient({required this.baseUrl}) {
+  // ── 2. Private Internal Constructor ──
+  ApiClient._internal() {
     _dio = Dio(
       BaseOptions(
-        baseUrl: baseUrl,
+        // Automatically fetch URL from your EnvConfig
+        baseUrl: EnvConfig.apiBaseUrl,
         connectTimeout: const Duration(seconds: 30),
         receiveTimeout: const Duration(seconds: 30),
         headers: {
@@ -21,7 +31,7 @@ class ApiClient {
       ),
     );
 
-    // Add interceptor to attach auth token to all requests
+    // ── 3. Interceptors (Auth & Logging) ──
     _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
@@ -29,40 +39,45 @@ class ApiClient {
           final token = await _secureStorage.getAccessToken();
 
           if (token != null && token.isNotEmpty) {
-            // Add Bearer token to headers
+            // This adds 'Bearer token' to EVERY request automatically
             options.headers['Authorization'] = 'Bearer $token';
           }
 
-          print('🔵 REQUEST: ${options.method} ${options.path}');
-          print('🔵 HEADERS: ${options.headers}');
+          if (kDebugMode) {
+            debugPrint('🔵 REQUEST: ${options.method} ${options.path}');
+            debugPrint('🔵 HEADERS: ${options.headers}');
+          }
 
           return handler.next(options);
         },
         onResponse: (response, handler) {
-          print('✅ RESPONSE: ${response.statusCode} ${response.requestOptions.path}');
+          if (kDebugMode) {
+            debugPrint('✅ RESPONSE: ${response.statusCode} ${response.requestOptions.path}');
+          }
           return handler.next(response);
         },
         onError: (error, handler) {
-          print('❌ ERROR: ${error.response?.statusCode} ${error.requestOptions.path}');
-          print('❌ ERROR MESSAGE: ${error.message}');
-          print('❌ ERROR DATA: ${error.response?.data}');
+          if (kDebugMode) {
+            debugPrint('❌ ERROR: ${error.response?.statusCode} ${error.requestOptions.path}');
+            debugPrint('❌ ERROR MESSAGE: ${error.message}');
+            debugPrint('❌ ERROR DATA: ${error.response?.data}');
+          }
           return handler.next(error);
         },
       ),
     );
   }
 
-  // GET request
+  // ── 4. Standardized Methods ──
+
   Future<Response> get(String path, {Map<String, dynamic>? queryParameters}) async {
     try {
-      final response = await _dio.get(path, queryParameters: queryParameters);
-      return response;
+      return await _dio.get(path, queryParameters: queryParameters);
     } catch (e) {
       rethrow;
     }
   }
 
-  // POST request
   Future<Response> post(
       String path, {
         dynamic data,
@@ -70,34 +85,19 @@ class ApiClient {
         Options? options,
       }) async {
     try {
-      // For multipart requests, ensure Content-Type is set correctly
-      if (options?.headers?['Content-Type'] == 'multipart/form-data') {
-        // Get the auth token
-        final token = await _secureStorage.getAccessToken();
-
-        // Merge headers - keep multipart content type but add auth
-        options = Options(
-          headers: {
-            'Content-Type': 'multipart/form-data',
-            if (token != null && token.isNotEmpty) 'Authorization': 'Bearer $token',
-            ...?options?.headers,
-          },
-        );
-      }
-
-      final response = await _dio.post(
+      // Note: We removed the manual Auth check here because the
+      // interceptor (onRequest) handles it automatically for Multipart too!
+      return await _dio.post(
         path,
         data: data,
         queryParameters: queryParameters,
         options: options,
       );
-      return response;
     } catch (e) {
       rethrow;
     }
   }
 
-  // PUT request
   Future<Response> put(
       String path, {
         dynamic data,
@@ -105,49 +105,44 @@ class ApiClient {
         Options? options,
       }) async {
     try {
-      final response = await _dio.put(
+      return await _dio.put(
         path,
         data: data,
         queryParameters: queryParameters,
         options: options,
       );
-      return response;
     } catch (e) {
       rethrow;
     }
   }
 
-  // DELETE request
   Future<Response> delete(
       String path, {
         dynamic data,
         Map<String, dynamic>? queryParameters,
       }) async {
     try {
-      final response = await _dio.delete(
+      return await _dio.delete(
         path,
         data: data,
         queryParameters: queryParameters,
       );
-      return response;
     } catch (e) {
       rethrow;
     }
   }
 
-  // PATCH request
   Future<Response> patch(
       String path, {
         dynamic data,
         Map<String, dynamic>? queryParameters,
       }) async {
     try {
-      final response = await _dio.patch(
+      return await _dio.patch(
         path,
         data: data,
         queryParameters: queryParameters,
       );
-      return response;
     } catch (e) {
       rethrow;
     }

@@ -1,20 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:yaloo/core/constants/colors.dart';
 import 'package:yaloo/core/constants/app_text_styles.dart';
-
-// --- IMPORT THE REUSABLE CHAT BUTTON ---
 import 'package:yaloo/core/widgets/floating_chat_button.dart';
 import 'package:yaloo/features/host/screens/host_stay_cancellation_screen.dart';
 import 'package:yaloo/features/host/screens/host_stay_request_details.dart';
-
-
 import '../../tourist/screens/tourist_public_profile_screen.dart';
 import 'host_home_screen.dart';
-// TODO: Create these other screens later, reusing guide/tourist ones for now if needed
-
 import 'host_profile_screen.dart';
 import 'host_chat_screen.dart';
 import 'host_bookings_screen.dart';

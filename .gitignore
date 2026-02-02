@@ -13,6 +13,7 @@
 migrate_working_dir/
 
 assets/.env
+assets/.env.production
 
 # IntelliJ related
 *.iml

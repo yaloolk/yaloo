@@ -225,7 +225,7 @@ class StayRequestCard extends StatelessWidget {
           child: ElevatedButton(
             onPressed: onReject,
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.secondaryGray.withOpacity(0.4),
+              backgroundColor: AppColors.secondaryGray.withValues(alpha: 0.4),
               elevation: 0,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10.r),

@@ -588,7 +588,7 @@ class TouristHomeScreen extends StatelessWidget {
                 Text(
                   location,
                   style: AppTextStyles.textSmall.copyWith(
-                    color: Colors.white.withOpacity(0.8),
+                    color: Colors.white.withValues(alpha: 0.8),
                     fontSize: 12.sp,
                   ),
                   overflow: TextOverflow.ellipsis,

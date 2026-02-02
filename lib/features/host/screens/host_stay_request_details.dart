@@ -211,7 +211,7 @@ class _HostStayRequestDetailsScreenState
             _buildPaymentRow('Platform Fee:', '-\$${fee.abs().toStringAsFixed(2)}'),
             Divider(
                 height: 24.h,
-                color: AppColors.secondaryGray.withOpacity(0.5)),
+                color: AppColors.secondaryGray.withValues(alpha: 0.5)),
             _buildPaymentRow('Total Payout:', '\$${total.toStringAsFixed(2)}',
                 isTotal: true),
           ],
@@ -256,7 +256,7 @@ class _HostStayRequestDetailsScreenState
     return Container(
       padding: EdgeInsets.fromLTRB(24.w, 16.h, 24.w, 32.h),
       decoration: BoxDecoration(
-        color: AppColors.primaryBlack.withOpacity(0.92),
+        color: AppColors.primaryBlack.withValues(alpha: 0.92),
         borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
       ),
       child: Column(
@@ -301,7 +301,7 @@ class _HostStayRequestDetailsScreenState
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor:
-                    AppColors.primaryGray.withOpacity(0.3),
+                    AppColors.primaryGray.withValues(alpha: 0.3),
                     foregroundColor: Colors.white,
                     elevation: 0,
                     padding: EdgeInsets.symmetric(vertical: 14.h),

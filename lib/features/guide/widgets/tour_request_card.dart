@@ -117,7 +117,7 @@ class TourRequestCard extends StatelessWidget {
         Container(
           padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 3.h),
           decoration: BoxDecoration(
-            color: AppColors.secondaryGray.withOpacity(0.4),
+            color: AppColors.secondaryGray.withValues(alpha: 0.4),
             borderRadius: BorderRadius.circular(6.r),
           ),
           child: Text(
@@ -209,7 +209,7 @@ class TourRequestCard extends StatelessWidget {
           child: ElevatedButton(
             onPressed: onReject,
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.secondaryGray.withOpacity(0.4),
+              backgroundColor: AppColors.secondaryGray.withValues(alpha: 0.4),
               elevation: 0,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10.r),
