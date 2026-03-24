@@ -58,7 +58,6 @@ class _GuideProfileCompletionScreenState
     super.initState();
     _debugToken();
     final dio = Dio(BaseOptions(
-      baseUrl: 'http://192.168.10.23:8000/api',
       connectTimeout: const Duration(seconds: 10),
       receiveTimeout: const Duration(seconds: 10),
       headers: {

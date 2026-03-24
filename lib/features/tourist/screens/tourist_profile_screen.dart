@@ -1,640 +1,654 @@
-import 'dart:io'; // Required for File handling
-import 'package:flutter/cupertino.dart';
+// lib/features/tourist/screens/tourist_profile_screen.dart
+
+import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:image_picker/image_picker.dart'; // Required for picking images
-import 'package:yaloo/core/constants/colors.dart';
-import 'package:yaloo/core/constants/app_text_styles.dart';
-import 'package:yaloo/core/widgets/custom_app_bar.dart';
-import 'package:yaloo/core/widgets/custom_icon_button.dart';
+import 'package:flutter/services.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
+import 'package:yaloo/core/storage/secure_storage.dart';
+import '../models/tourist_models.dart';
+import '../providers/tourist_provider.dart';
 
-class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({super.key});
-
+class TouristProfileScreen extends StatefulWidget {
+  const TouristProfileScreen({super.key});
   @override
-  State<ProfileScreen> createState() => _ProfileScreenState();
+  State<TouristProfileScreen> createState() => _TouristProfileScreenState();
 }
 
-class _ProfileScreenState extends State<ProfileScreen> {
-  // --- Profile Image State ---
-  File? _profileImageFile;
-  final ImagePicker _picker = ImagePicker();
-
-  // --- Gallery State ---
-  final List<File> _galleryImages = [];
-
-  // --- About Me State ---
-  bool _isEditingAbout = false;
-  late TextEditingController _aboutController;
-  final FocusNode _aboutFocusNode = FocusNode();
-
-  // --- Travel Preferences State ---
-  bool _isEditingPreferences = false;
-  final List<String> _selectedPreferences = [
-    "Adventure",
-    "Relaxation",
-    "Culture",
-    "Family Friendly"
-  ];
-  late TextEditingController _preferenceController;
-
+class _TouristProfileScreenState extends State<TouristProfileScreen> {
+  @override
   @override
   void initState() {
     super.initState();
-    _aboutController = TextEditingController(
-      text:
-      "Passionate explorer with a love for hidden gems and local cuisine. Always on the lookout for the next adventure, whether it's hiking a mountain or wandering through a historic city. Let's share stories!",
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      // ✅ FIX: Small delay so home screen loads first.
+      // Django's dev server is single-threaded — simultaneous requests
+      // queue up and the second one can timeout waiting for the first.
+      await Future.delayed(const Duration(milliseconds: 500));
+      if (mounted) _loadData();
+    });
+  }
+
+  Future<void> _loadData({bool force = false}) async {
+    if (!mounted) return;
+    final p = context.read<TouristProvider>();
+    await Future.wait([
+      p.loadProfile(forceRefresh: force),
+      p.loadInterests(),
+      p.loadStats(),
+    ]);
+  }
+
+  // PHOTO UPLOAD
+  Future<void> _pickAndUploadPhoto() async {
+    final source = await showModalBottomSheet<ImageSource>(
+      context: context, backgroundColor: Colors.transparent,
+      builder: (_) => const _PhotoSourceSheet(),
     );
-    _preferenceController = TextEditingController();
-  }
-
-  @override
-  void dispose() {
-    _aboutController.dispose();
-    _aboutFocusNode.dispose();
-    _preferenceController.dispose();
-    super.dispose();
-  }
-
-  // --- Image Picker Logic ---
-
-  Future<void> _pickProfileImage(ImageSource source) async {
+    if (source == null || !mounted) return;
+    final xfile = await ImagePicker().pickImage(source: source, imageQuality: 80);
+    if (xfile == null || !mounted) return;
     try {
-      final XFile? pickedFile = await _picker.pickImage(source: source);
-      if (pickedFile != null) {
-        setState(() {
-          _profileImageFile = File(pickedFile.path);
-        });
-      }
+      await context.read<TouristProvider>().uploadProfilePicture(xfile);
+      if (mounted) _snack('Profile picture updated!', Colors.green);
     } catch (e) {
-      debugPrint("Error picking profile image: $e");
+      if (mounted) _snack('Upload failed: $e', Colors.red);
     }
   }
 
-  Future<void> _pickGalleryImage() async {
-    try {
-      final XFile? pickedFile =
-      await _picker.pickImage(source: ImageSource.gallery);
-      if (pickedFile != null) {
-        setState(() {
-          _galleryImages.add(File(pickedFile.path));
-        });
+  // BIO EDIT
+  Future<void> _openEditBio(TouristProfile profile) async {
+    final ctrl = TextEditingController(text: profile.profileBio);
+    final result = await showModalBottomSheet<String>(
+      context: context, isScrollControlled: true, backgroundColor: Colors.transparent,
+      builder: (_) => _EditBioSheet(controller: ctrl),
+    );
+    if (result != null && mounted) {
+      try {
+        await context.read<TouristProvider>().updateBio(result);
+        if (mounted) _snack('Bio updated!', Colors.green);
+      } catch (e) {
+        if (mounted) _snack('Failed to update bio', Colors.red);
       }
-    } catch (e) {
-      debugPrint("Error picking gallery image: $e");
     }
   }
 
-  void _showProfilePhotoOptions() {
-    showModalBottomSheet(
-      context: context,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
+  // INTERESTS EDIT
+  Future<void> _openEditInterests() async {
+    final provider = context.read<TouristProvider>();
+    await provider.loadMasterInterests();
+    if (!mounted) return;
+    await showModalBottomSheet(
+      context: context, isScrollControlled: true, backgroundColor: Colors.transparent,
+      builder: (_) => ChangeNotifierProvider.value(
+        value: provider, child: const _EditInterestsSheet(),
       ),
-      builder: (BuildContext context) {
-        return SafeArea(
-          child: Wrap(
-            children: <Widget>[
-              Padding(
-                padding: EdgeInsets.symmetric(vertical: 10.h),
-                child: Center(
-                  child: Container(
-                    width: 40.w,
-                    height: 4.h,
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade300,
-                      borderRadius: BorderRadius.circular(2.r),
-                    ),
-                  ),
-                ),
-              ),
-              ListTile(
-                leading: const Icon(Icons.photo_library),
-                title: const Text('Photo Library'),
-                onTap: () {
-                  Navigator.of(context).pop();
-                  _pickProfileImage(ImageSource.gallery);
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.photo_camera),
-                title: const Text('Camera'),
-                onTap: () {
-                  Navigator.of(context).pop();
-                  _pickProfileImage(ImageSource.camera);
-                },
-              ),
-            ],
-          ),
-        );
-      },
     );
   }
 
-  // --- Edit Toggles ---
-
-  void _toggleAboutEdit() {
-    setState(() {
-      _isEditingAbout = !_isEditingAbout;
-    });
-    if (_isEditingAbout) {
-      Future.delayed(const Duration(milliseconds: 100), () {
-        _aboutFocusNode.requestFocus();
-      });
-    }
+  void _goToPersonalInfo() {
+    Navigator.pushNamed(context, '/personalInformation').then((_) => _loadData(force: true));
   }
 
-  void _togglePreferencesEdit() {
-    setState(() {
-      _isEditingPreferences = !_isEditingPreferences;
-    });
+  Future<void> _handleLogout() async {
+    HapticFeedback.mediumImpact();
+    final confirm = await showModalBottomSheet<bool>(
+      context: context, backgroundColor: Colors.transparent,
+      builder: (_) => const _LogoutSheet(),
+    );
+    if (confirm != true || !mounted) return;
+    try {
+      await SecureStorage().deleteAccessToken();
+      if (mounted) { context.read<TouristProvider>().clear(); Navigator.pushReplacementNamed(context, '/login'); }
+    } catch (e) { if (mounted) _snack('Logout failed: $e', Colors.red); }
   }
 
-  void _addPreference() {
-    if (_preferenceController.text.trim().isNotEmpty) {
-      setState(() {
-        _selectedPreferences.add(_preferenceController.text.trim());
-        _preferenceController.clear();
-      });
-    }
-  }
-
-  void _removePreference(String pref) {
-    setState(() {
-      _selectedPreferences.remove(pref);
-    });
+  void _snack(String msg, Color color) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(msg), backgroundColor: color, behavior: SnackBarBehavior.floating,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    ));
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: CustomAppBar(
-        title: 'My Profile',
-        actions: [
-          CustomIconButton(
-            onPressed: () {
-              Navigator.pushNamed(context, '/settings');
-            },
-            icon: Icon(CupertinoIcons.gear,
-                color: AppColors.primaryBlack, size: 24.w),
-          ),
-          SizedBox(width: 12.w),
-        ],
-      ),
-      body: SingleChildScrollView(
-        padding: EdgeInsets.symmetric(horizontal: 24.w),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            SizedBox(height: 20.h),
-
-            // --- 1. Profile Header ---
-            _buildProfileHeader(),
-            SizedBox(height: 24.h),
-
-            // --- 2. Stats Grid ---
-            _buildStatsGrid(),
-            SizedBox(height: 32.h),
-
-            // --- 3. About Me (Editable) ---
-            _buildSectionHeader(
-              'About Me',
-              onEdit: _toggleAboutEdit,
-              icon: _isEditingAbout
-                  ? FontAwesomeIcons.check
-                  : FontAwesomeIcons.pen,
-              iconColor: _isEditingAbout
-                  ? AppColors.primaryGreen
-                  : AppColors.primaryBlue,
-            ),
-            SizedBox(height: 12.h),
-            Container(
-              padding: EdgeInsets.all(16.w),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF9FAFB),
-                borderRadius: BorderRadius.circular(16.r),
-                border: _isEditingAbout
-                    ? Border.all(color: AppColors.primaryBlue, width: 1.5)
-                    : null,
-              ),
-              child: _isEditingAbout
-                  ? TextField(
-                controller: _aboutController,
-                focusNode: _aboutFocusNode,
-                maxLines: null,
-                style: AppTextStyles.textSmall.copyWith(
-                  color: AppColors.primaryBlack,
-                  height: 1.5,
-                  fontSize: 14.sp,
-                ),
-                decoration: const InputDecoration(
-                  border: InputBorder.none,
-                  isDense: true,
-                  contentPadding: EdgeInsets.zero,
-                ),
-              )
-                  : Text(
-                _aboutController.text,
-                style: AppTextStyles.textSmall.copyWith(
-                    color: AppColors.primaryGray,
-                    height: 1.5,
-                    fontSize: 14.sp),
-              ),
-            ),
-            SizedBox(height: 32.h),
-
-            // --- 4. Gallery ---
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                'Gallery',
-                style: AppTextStyles.headlineLargeBlack
-                    .copyWith(fontSize: 18.sp, fontWeight: FontWeight.bold),
-              ),
-            ),
-            SizedBox(height: 16.h),
-            _buildGalleryGrid(),
-            SizedBox(height: 16.h),
-            _buildUploadButton(),
-            SizedBox(height: 32.h),
-
-            // --- 5. Personal Information ---
-            _buildSectionHeader('Personal Information', onEdit: () {
-              Navigator.pushNamed(context, '/personalInformation');
-            }),
-            SizedBox(height: 12.h),
-            _buildPersonalInfoList(),
-            SizedBox(height: 32.h),
-
-            // --- 6. Travel Preferences ---
-            _buildSectionHeader(
-              'Travel Preferences',
-              onEdit: _togglePreferencesEdit,
-              icon: _isEditingPreferences
-                  ? FontAwesomeIcons.check
-                  : FontAwesomeIcons.pen,
-              iconColor: _isEditingPreferences
-                  ? AppColors.primaryGreen
-                  : AppColors.primaryBlue,
-            ),
-            SizedBox(height: 12.h),
-            _buildPreferencesWrap(),
-            SizedBox(height: 32.h),
-
-            // --- 7. Menu Items ---
-            _buildMenuItem(CupertinoIcons.heart, "Saved", () {}),
-            SizedBox(height: 12.h),
-            _buildMenuItem(
-                CupertinoIcons.question_circle, "Help & Support", () {
-              Navigator.pushNamed(context, '/helpSupport');
-            }),
-
-            SizedBox(height: 100.h),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // --- WIDGETS ---
-
-  Widget _buildProfileHeader() {
-    return Column(
-      children: [
-        Center(
-          child: Stack(
-            children: [
-              Container(
-                padding: EdgeInsets.all(4.w),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Colors.grey.shade200, width: 1),
-                ),
-                child: CircleAvatar(
-                  radius: 50.r,
-                  backgroundColor: Colors.grey.shade200,
-                  // Use FileImage if available, otherwise NetworkImage
-                  backgroundImage: _profileImageFile != null
-                      ? FileImage(_profileImageFile!)
-                      : const NetworkImage(
-                      'https://placehold.co/200x200/png?text=Cora')
-                  as ImageProvider,
-                ),
-              ),
-              Positioned(
-                bottom: 0,
-                right: 0,
-                child: GestureDetector(
-                  onTap: _showProfilePhotoOptions,
-                  child: Container(
-                    padding: EdgeInsets.all(6.w),
-                    decoration: BoxDecoration(
-                      color: AppColors.primaryBlue,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white, width: 2),
-                    ),
-                    child: Icon(
-                      Icons.camera_alt,
-                      size: 16.w,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        SizedBox(height: 16.h),
-        Text(
-          'Cora Hayes',
-          style: AppTextStyles.headlineLargeBlack
-              .copyWith(fontSize: 24.sp, fontWeight: FontWeight.bold),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildStatsGrid() {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 8.w),
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              _buildStatItem("United States", "assets/icons/flag_us.png",
-                  isIcon: false),
-              _buildStatItem("Member since 2022", FontAwesomeIcons.calendar),
-            ],
-          ),
-          SizedBox(height: 12.h),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              _buildStatItem("12 Trips Completed", FontAwesomeIcons.suitcase),
-              _buildStatItem("English, Spanish", FontAwesomeIcons.language),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatItem(String text, dynamic iconOrAsset,
-      {bool isIcon = true}) {
-    return Expanded(
-      child: Row(
-        children: [
-          isIcon
-              ? Icon(iconOrAsset as IconData,
-              size: 16.w, color: AppColors.primaryGray)
-              : Icon(FontAwesomeIcons.flag,
-              size: 16.w, color: AppColors.primaryGray),
-          SizedBox(width: 8.w),
-          Flexible(
-            child: Text(
-              text,
-              style: AppTextStyles.textSmall
-                  .copyWith(color: AppColors.primaryGray, fontSize: 13.sp),
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSectionHeader(String title,
-      {required VoidCallback onEdit,
-        IconData icon = FontAwesomeIcons.pen,
-        Color? iconColor}) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          title,
-          style: AppTextStyles.headlineLargeBlack
-              .copyWith(fontSize: 18.sp, fontWeight: FontWeight.bold),
-        ),
-        IconButton(
-          onPressed: onEdit,
-          icon: Icon(icon,
-              size: 16.w, color: iconColor ?? AppColors.primaryBlue),
-          padding: EdgeInsets.zero,
-          constraints: const BoxConstraints(),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildGalleryGrid() {
-    // If no images are uploaded, show placeholders to maintain design layout
-    final bool hasImages = _galleryImages.isNotEmpty;
-    final int itemCount = hasImages ? _galleryImages.length : 6;
-
-    return GridView.builder(
-      padding: EdgeInsets.zero,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
-        crossAxisSpacing: 12.w,
-        mainAxisSpacing: 12.h,
-        childAspectRatio: 1,
-      ),
-      itemCount: itemCount,
-      itemBuilder: (context, index) {
-        if (hasImages) {
-          return ClipRRect(
-            borderRadius: BorderRadius.circular(16.r),
-            child: Image.file(
-              _galleryImages[index],
-              fit: BoxFit.cover,
-            ),
-          );
-        } else {
-          // Placeholder styling
-          return Container(
-            decoration: BoxDecoration(
-              color: const Color(0xFFF3F4F6),
-              borderRadius: BorderRadius.circular(16.r),
-            ),
-            child: Center(
-              child: Icon(CupertinoIcons.photo,
-                  color: Colors.grey.shade300, size: 24.w),
-            ),
-          );
-        }
-      },
-    );
-  }
-
-  Widget _buildUploadButton() {
-    return ElevatedButton(
-      onPressed: _pickGalleryImage, // Calls the picker
-      style: ElevatedButton.styleFrom(
-        backgroundColor: const Color(0xFFF3F8FF),
-        foregroundColor: const Color(0xFF1F2937),
-        elevation: 0,
-        minimumSize: Size(double.infinity, 52.h),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12.r),
-        ),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(CupertinoIcons.photo_camera,
-              size: 20.w, color: const Color(0xFF1F2937)),
-          SizedBox(width: 8.w),
-          Text(
-            'Upload Photo',
-            style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w600),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPersonalInfoList() {
-    return Container(
-      padding: EdgeInsets.all(20.w),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF9FAFB),
-        borderRadius: BorderRadius.circular(16.r),
-      ),
-      child: Column(
-        children: [
-          _buildInfoRow(CupertinoIcons.mail, "cora***@email.com"),
-          SizedBox(height: 16.h),
-          _buildInfoRow(CupertinoIcons.phone, "+1 (***) ***-1234"),
-          SizedBox(height: 16.h),
-          _buildInfoRow(CupertinoIcons.globe, "United States"),
-          SizedBox(height: 16.h),
-          _buildInfoRow(CupertinoIcons.calendar, "October 26"),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildInfoRow(IconData icon, String text) {
-    return Row(
-      children: [
-        Icon(icon, color: const Color(0xFF6B7280), size: 20.w),
-        SizedBox(width: 16.w),
-        Text(
-          text,
-          style: TextStyle(
-            color: const Color(0xFF374151),
-            fontSize: 14.sp,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildPreferencesWrap() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Wrap(
-          spacing: 12.w,
-          runSpacing: 12.h,
-          children: List.generate(_selectedPreferences.length, (index) {
-            final pref = _selectedPreferences[index];
-            return Container(
-              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-              decoration: BoxDecoration(
-                color: const Color(0xFFE0F2FE),
-                borderRadius: BorderRadius.circular(20.r),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    pref,
-                    style: TextStyle(
-                      color: const Color(0xFF0284C7),
-                      fontWeight: FontWeight.w600,
-                      fontSize: 12.sp,
-                    ),
-                  ),
-                  if (_isEditingPreferences) ...[
-                    SizedBox(width: 8.w),
-                    GestureDetector(
-                      onTap: () => _removePreference(pref),
-                      child: Icon(Icons.close,
-                          size: 14.w, color: const Color(0xFF0284C7)),
-                    )
-                  ]
-                ],
-              ),
+      backgroundColor: const Color(0xFFF8FAFC),
+      body: Consumer<TouristProvider>(
+        builder: (context, provider, _) {
+          if (provider.profile != null) {
+            return RefreshIndicator(
+              onRefresh: () => _loadData(force: true),
+              color: const Color(0xFF2563EB),
+              child: _buildBody(provider),
             );
-          }),
-        ),
-        if (_isEditingPreferences) ...[
-          SizedBox(height: 12.h),
-          Row(
-            children: [
-              Expanded(
-                child: Container(
-                  padding: EdgeInsets.symmetric(horizontal: 16.w),
-                  height: 40.h,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF9FAFB),
-                    borderRadius: BorderRadius.circular(20.r),
-                    border: Border.all(color: Colors.grey.shade300),
-                  ),
-                  child: TextField(
-                    controller: _preferenceController,
-                    decoration: InputDecoration(
-                      hintText: "Add new...",
-                      border: InputBorder.none,
-                      hintStyle:
-                      TextStyle(fontSize: 12.sp, color: Colors.grey),
-                      contentPadding: EdgeInsets.only(bottom: 8.h),
-                    ),
-                    style: TextStyle(fontSize: 12.sp),
-                    onSubmitted: (_) => _addPreference(),
-                    textInputAction: TextInputAction.done,
-                  ),
-                ),
-              ),
-              SizedBox(width: 8.w),
-              IconButton(
-                onPressed: _addPreference,
-                icon: Icon(Icons.add_circle,
-                    color: AppColors.primaryBlue, size: 30.w),
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
-              ),
-            ],
-          ),
-        ]
+          }
+          if (provider.profileLoading) return const Center(child: CircularProgressIndicator(color: Color(0xFF2563EB)));
+          return Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+            Icon(Icons.error_outline_rounded, size: 64, color: Colors.grey.shade300),
+            const SizedBox(height: 16),
+            Text('Failed to load profile', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Colors.grey.shade600)),
+            const SizedBox(height: 8),
+            TextButton(onPressed: _loadData, child: const Text('Retry')),
+          ]));
+        },
+      ),
+    );
+  }
+
+  Widget _buildBody(TouristProvider provider) {
+    final profile = provider.profile!;
+    return CustomScrollView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      slivers: [
+        _buildHeader(provider, profile), _g(20),
+        _buildStats(provider), _g(20),
+        _buildQuickActions(profile), _g(20),
+        _buildAbout(profile), _g(16),
+        _buildInterests(provider), _g(16),
+        _buildLanguages(provider), _g(16),
+        _buildContactInfo(profile), _g(16),
+        _buildTravelPrefs(profile),
+        if (profile.emergencyContactName.isNotEmpty) ...[_g(16), _buildEmergency(profile)],
+        _g(24), _buildLogoutBtn(), _g(48),
       ],
     );
   }
 
-  Widget _buildMenuItem(IconData icon, String title, VoidCallback onTap) {
-    return Container(
-      decoration: BoxDecoration(
-        color: const Color(0xFFF9FAFB),
-        borderRadius: BorderRadius.circular(16.r),
-      ),
-      child: ListTile(
-        onTap: onTap,
-        leading: Icon(icon, color: const Color(0xFF4B5563), size: 22.w),
-        title: Text(title,
-            style: TextStyle(
-                fontSize: 16.sp,
-                fontWeight: FontWeight.w500,
-                color: const Color(0xFF1F2937))),
-        trailing: Icon(Icons.arrow_forward_ios,
-            size: 16.w, color: const Color(0xFF9CA3AF)),
+  SliverToBoxAdapter _g(double h) => SliverToBoxAdapter(child: SizedBox(height: h));
+
+  Widget _buildHeader(TouristProvider provider, TouristProfile profile) {
+    return SliverToBoxAdapter(
+      child: Container(
+        margin: const EdgeInsets.fromLTRB(16, 0, 16, 0),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight,
+              colors: [Color(0xFF2563EB), Color(0xFF1D4ED8), Color(0xFF1E40AF)]),
+          borderRadius: BorderRadius.circular(32),
+          boxShadow: [BoxShadow(color: const Color(0xFF2563EB).withOpacity(0.38), blurRadius: 32, offset: const Offset(0, 14), spreadRadius: -6)],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(32),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 0, sigmaY: 0),
+            child: Container(
+              padding: const EdgeInsets.fromLTRB(24, 52, 24, 32),
+              decoration: BoxDecoration(gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight,
+                  colors: [Colors.white.withOpacity(0.14), Colors.white.withOpacity(0.04)])),
+              child: Column(children: [
+                Stack(alignment: Alignment.bottomRight, children: [
+                  Container(
+                    decoration: BoxDecoration(shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white.withOpacity(0.45), width: 4),
+                        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.22), blurRadius: 24, offset: const Offset(0, 8))]),
+                    child: CircleAvatar(
+                      radius: 64,
+                      backgroundColor: Colors.white.withOpacity(0.2),
+                      backgroundImage: profile.profilePic.isNotEmpty ? NetworkImage(profile.profilePic) : null,
+                      child: profile.profilePic.isEmpty
+                          ? Text(profile.fullName.isNotEmpty ? profile.fullName[0].toUpperCase() : 'T',
+                          style: const TextStyle(fontSize: 50, fontWeight: FontWeight.w800, color: Colors.white))
+                          : null,
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: provider.isUploadingPhoto ? null : _pickAndUploadPhoto,
+                    child: Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(color: Colors.white, shape: BoxShape.circle,
+                          border: Border.all(color: const Color(0xFF2563EB), width: 2.5),
+                          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.12), blurRadius: 10, offset: const Offset(0, 3))]),
+                      child: provider.isUploadingPhoto
+                          ? const SizedBox(width: 18, height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2.5, color: Color(0xFF2563EB)))
+                          : const Icon(Icons.camera_alt_rounded, color: Color(0xFF2563EB), size: 18),
+                    ),
+                  ),
+                ]),
+                const SizedBox(height: 18),
+                Text(profile.fullName.isEmpty ? 'Traveler' : profile.fullName,
+                    style: const TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.w800, letterSpacing: -0.6),
+                    textAlign: TextAlign.center),
+                const SizedBox(height: 10),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 9),
+                  decoration: BoxDecoration(color: Colors.white.withOpacity(0.18), borderRadius: BorderRadius.circular(30),
+                      border: Border.all(color: Colors.white.withOpacity(0.3))),
+                  child: Row(mainAxisSize: MainAxisSize.min, children: [
+                    const Icon(Icons.travel_explore, color: Colors.amber, size: 20), const SizedBox(width: 7),
+                    Text('Traveler', style: TextStyle(color: Colors.white.withOpacity(0.92), fontSize: 14, fontWeight: FontWeight.w600)),
+                  ]),
+                ),
+              ]),
+            ),
+          ),
+        ),
       ),
     );
+  }
+
+  Widget _buildStats(TouristProvider provider) {
+    final s = provider.stats ?? {};
+    return SliverPadding(padding: const EdgeInsets.symmetric(horizontal: 20),
+        sliver: SliverToBoxAdapter(child: Row(children: [
+          Expanded(child: _sc('${s['total_trips'] ?? 0}', 'Trips', Icons.flight_takeoff, const Color(0xFF8B5CF6))),
+          const SizedBox(width: 12),
+          Expanded(child: _sc('${s['languages_count'] ?? 0}', 'Languages', Icons.language, const Color(0xFF10B981))),
+          const SizedBox(width: 12),
+          Expanded(child: _sc('${provider.interests.length}', 'Interests', Icons.favorite, const Color(0xFFF59E0B))),
+        ])));
+  }
+
+  Widget _sc(String v, String label, IconData icon, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20),
+          boxShadow: [BoxShadow(color: color.withOpacity(0.15), blurRadius: 16, offset: const Offset(0, 6), spreadRadius: -4)]),
+      child: Column(children: [
+        Container(padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
+            child: Icon(icon, color: color, size: 22)),
+        const SizedBox(height: 8),
+        Text(v, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Color(0xFF1F2937))),
+        Text(label, style: TextStyle(fontSize: 12, color: Colors.grey.shade600, fontWeight: FontWeight.w500)),
+      ]),
+    );
+  }
+
+  Widget _buildQuickActions(TouristProfile profile) {
+    return SliverPadding(padding: const EdgeInsets.symmetric(horizontal: 20),
+        sliver: SliverToBoxAdapter(child: Container(
+          padding: const EdgeInsets.all(16), decoration: _card(),
+          child: Row(mainAxisAlignment: MainAxisAlignment.spaceAround, children: [
+            _qb(Icons.edit_note_rounded, 'Edit Info', const Color(0xFF2563EB), _goToPersonalInfo),
+            _qb(Icons.favorite_border_rounded, 'Interests', const Color(0xFFEC4899), _openEditInterests),
+            _qb(Icons.notes_rounded, 'About Me', const Color(0xFF8B5CF6), () => _openEditBio(profile)),
+            _qb(Icons.settings_rounded, 'Settings', const Color(0xFF6B7280), () => Navigator.pushNamed(context, '/settings')),
+          ]),
+        )));
+  }
+
+  Widget _qb(IconData icon, String label, Color color, VoidCallback onTap) {
+    return GestureDetector(onTap: onTap, child: Column(children: [
+      Container(padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(16)),
+          child: Icon(icon, color: color, size: 24)),
+      const SizedBox(height: 6),
+      Text(label, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Colors.grey.shade700)),
+    ]));
+  }
+
+  Widget _buildAbout(TouristProfile profile) {
+    return SliverPadding(padding: const EdgeInsets.symmetric(horizontal: 20),
+        sliver: SliverToBoxAdapter(child: _sec(
+          icon: Icons.person_outline_rounded, iconColor: const Color(0xFF2563EB),
+          title: 'About Me', onEdit: () => _openEditBio(profile),
+          child: Text(
+            profile.profileBio.isEmpty ? 'Tap the edit button to write about yourself and your travel style.' : profile.profileBio,
+            style: TextStyle(fontSize: 15, height: 1.7,
+                color: profile.profileBio.isEmpty ? Colors.grey.shade400 : const Color(0xFF374151),
+                fontStyle: profile.profileBio.isEmpty ? FontStyle.italic : FontStyle.normal),
+          ),
+        )));
+  }
+
+  Widget _buildInterests(TouristProvider provider) {
+    final interests = provider.interests;
+    return SliverPadding(padding: const EdgeInsets.symmetric(horizontal: 20),
+        sliver: SliverToBoxAdapter(child: _sec(
+          icon: Icons.favorite_rounded, iconColor: const Color(0xFFEC4899),
+          title: 'Interests', onEdit: _openEditInterests,
+          child: provider.interestsLoading
+              ? const Center(child: Padding(padding: EdgeInsets.all(8), child: CircularProgressIndicator(strokeWidth: 2)))
+              : interests.isEmpty
+              ? Text('No interests yet. Tap the edit button to add some!',
+              style: TextStyle(color: Colors.grey.shade400, fontStyle: FontStyle.italic))
+              : Wrap(spacing: 8, runSpacing: 8,
+              children: interests.map((i) => _chip(i!.name, const Color(0xFFEC4899))).toList()),
+        )));
+  }
+
+  Widget _buildLanguages(TouristProvider provider) {
+    final langs = (provider.stats ?? {})['languages'] as List<dynamic>? ?? [];
+    return SliverPadding(padding: const EdgeInsets.symmetric(horizontal: 20),
+        sliver: SliverToBoxAdapter(child: _sec(
+          icon: Icons.language_rounded, iconColor: const Color(0xFF06B6D4),
+          title: 'Languages', onEdit: _goToPersonalInfo,
+          child: langs.isEmpty
+              ? Text('No languages added. Tap the edit button.', style: TextStyle(color: Colors.grey.shade400, fontStyle: FontStyle.italic))
+              : Wrap(spacing: 8, runSpacing: 8,
+              children: langs.map<Widget>((l) {
+                final name = l['name'] as String? ?? '';
+                final isNative = l['is_native'] as bool? ?? false;
+                return Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  decoration: BoxDecoration(color: const Color(0xFF06B6D4).withOpacity(0.1), borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: const Color(0xFF06B6D4).withOpacity(0.25))),
+                  child: Row(mainAxisSize: MainAxisSize.min, children: [
+                    const Icon(Icons.language_rounded, size: 13, color: Color(0xFF06B6D4)), const SizedBox(width: 5),
+                    Text(name, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF06B6D4))),
+                    if (isNative) ...[
+                      const SizedBox(width: 6),
+                      Container(padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                          decoration: BoxDecoration(color: const Color(0xFF10B981), borderRadius: BorderRadius.circular(4)),
+                          child: const Text('Native', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w700))),
+                    ],
+                  ]),
+                );
+              }).toList()),
+        )));
+  }
+
+  Widget _buildContactInfo(TouristProfile profile) {
+    return SliverPadding(padding: const EdgeInsets.symmetric(horizontal: 20),
+        sliver: SliverToBoxAdapter(child: _sec(
+          icon: Icons.contact_mail_rounded, iconColor: const Color(0xFF8B5CF6),
+          title: 'Contact Information', onEdit: _goToPersonalInfo,
+          child: Column(children: [
+            _ir(Icons.phone_rounded, 'Phone', profile.phoneNumber.isEmpty ? 'Not added' : profile.phoneNumber, Colors.green),
+            const Divider(height: 22),
+            _ir(Icons.public_rounded, 'Country', profile.country.isEmpty ? 'Not specified' : profile.country, Colors.orange),
+            const Divider(height: 22),
+            _ir(Icons.cake_rounded, 'Date of Birth', profile.dateOfBirth.isEmpty ? 'Not added' : profile.dateOfBirth, Colors.pink),
+            const Divider(height: 22),
+            _ir(Icons.wc_rounded, 'Gender', profile.gender.isEmpty ? 'Not specified' : profile.gender, Colors.purple),
+          ]),
+        )));
+  }
+
+  Widget _ir(IconData icon, String label, String value, Color color) {
+    final empty = value.startsWith('Not');
+    return Row(children: [
+      Container(padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
+          child: Icon(icon, size: 20, color: color)),
+      const SizedBox(width: 16),
+      Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text(label, style: TextStyle(fontSize: 12, color: Colors.grey.shade600, fontWeight: FontWeight.w500)),
+        const SizedBox(height: 2),
+        Text(value, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600,
+            color: empty ? Colors.grey.shade400 : const Color(0xFF1F2937))),
+      ])),
+    ]);
+  }
+
+  Widget _buildTravelPrefs(TouristProfile profile) {
+    return SliverPadding(padding: const EdgeInsets.symmetric(horizontal: 20),
+        sliver: SliverToBoxAdapter(child: _sec(
+          icon: Icons.airplanemode_active_rounded, iconColor: const Color(0xFFF59E0B),
+          title: 'Travel Preferences',
+          child: Column(children: [
+            _pr('Travel Style', profile.travelStyle.isEmpty ? 'Not set' : profile.travelStyle),
+            if (profile.passportNumber.isNotEmpty) ...[
+              const Divider(height: 16),
+              _pr('Passport', profile.passportNumber.length >= 4
+                  ? '${String.fromCharCodes(List.filled(6, 0x2022))}${profile.passportNumber.substring(profile.passportNumber.length - 4)}'
+                  : '${String.fromCharCodes(List.filled(6, 0x2022))}'),
+            ],
+          ]),
+        )));
+  }
+
+  Widget _buildEmergency(TouristProfile profile) {
+    return SliverPadding(padding: const EdgeInsets.symmetric(horizontal: 20),
+        sliver: SliverToBoxAdapter(child: _sec(
+          icon: Icons.emergency_rounded, iconColor: const Color(0xFFEF4444),
+          title: 'Emergency Contact', onEdit: _goToPersonalInfo,
+          child: Column(children: [
+            _pr('Name', profile.emergencyContactName),
+            if (profile.emergencyContactRelation.isNotEmpty) ...[const Divider(height: 16), _pr('Relation', profile.emergencyContactRelation)],
+            if (profile.emergencyContactNumber.isNotEmpty) ...[const Divider(height: 16), _pr('Phone', profile.emergencyContactNumber)],
+          ]),
+        )));
+  }
+
+  Widget _pr(String label, String value) => Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+        Text(label, style: TextStyle(fontSize: 14, color: Colors.grey.shade600)),
+        Text(value, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFF1F2937))),
+      ]));
+
+  Widget _buildLogoutBtn() {
+    return SliverPadding(padding: const EdgeInsets.symmetric(horizontal: 20),
+        sliver: SliverToBoxAdapter(child: GestureDetector(
+          onTap: _handleLogout,
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 18),
+            decoration: BoxDecoration(color: const Color(0xFFEF4444).withOpacity(0.08), borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: const Color(0xFFEF4444).withOpacity(0.25))),
+            child: const Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+              Icon(Icons.logout_rounded, color: Color(0xFFEF4444), size: 20), SizedBox(width: 10),
+              Text('Logout', style: TextStyle(color: Color(0xFFEF4444), fontSize: 16, fontWeight: FontWeight.w700)),
+            ]),
+          ),
+        )));
+  }
+
+  Widget _sec({required IconData icon, required Color iconColor, required String title, required Widget child, VoidCallback? onEdit}) {
+    return Container(padding: const EdgeInsets.all(20), decoration: _card(),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Row(children: [
+            Container(padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(color: iconColor.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
+                child: Icon(icon, color: iconColor, size: 22)),
+            const SizedBox(width: 12),
+            Expanded(child: Text(title, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: Color(0xFF1F2937)))),
+            if (onEdit != null)
+              GestureDetector(onTap: onEdit, child: Container(
+                  padding: const EdgeInsets.all(9),
+                  decoration: BoxDecoration(color: const Color(0xFF2563EB).withOpacity(0.08), borderRadius: BorderRadius.circular(10)),
+                  child: const Icon(Icons.edit_rounded, color: Color(0xFF2563EB), size: 17))),
+          ]),
+          const SizedBox(height: 16),
+          child,
+        ]));
+  }
+
+  Widget _chip(String name, Color color) => Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: color.withOpacity(0.25))),
+      child: Row(mainAxisSize: MainAxisSize.min, children: [
+        Icon(Icons.favorite_rounded, size: 13, color: color), const SizedBox(width: 5),
+        Text(name, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: color)),
+      ]));
+
+  BoxDecoration _card() => BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(24),
+      boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.045), blurRadius: 16, offset: const Offset(0, 4))]);
+}
+
+// PHOTO SOURCE SHEET
+class _PhotoSourceSheet extends StatelessWidget {
+  const _PhotoSourceSheet();
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(color: Colors.white, borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
+      child: SafeArea(child: Padding(padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+          child: Column(mainAxisSize: MainAxisSize.min, children: [
+            Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(2))),
+            const SizedBox(height: 20),
+            const Text('Change Profile Photo', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Color(0xFF1F2937))),
+            const SizedBox(height: 20),
+            _t(context, Icons.photo_library_rounded, 'Choose from Gallery', const Color(0xFF2563EB), ImageSource.gallery),
+            const SizedBox(height: 12),
+            _t(context, Icons.camera_alt_rounded, 'Take a Photo', const Color(0xFF10B981), ImageSource.camera),
+            const SizedBox(height: 8),
+          ]))),
+    );
+  }
+  Widget _t(BuildContext ctx, IconData icon, String label, Color color, ImageSource src) {
+    return GestureDetector(onTap: () => Navigator.pop(ctx, src),
+        child: Container(padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(color: color.withOpacity(0.08), borderRadius: BorderRadius.circular(16)),
+            child: Row(children: [
+              Container(padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(color: color.withOpacity(0.15), borderRadius: BorderRadius.circular(12)),
+                  child: Icon(icon, color: color, size: 24)),
+              const SizedBox(width: 16),
+              Text(label, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: color)),
+            ])));
+  }
+}
+
+// EDIT BIO SHEET
+class _EditBioSheet extends StatelessWidget {
+  final TextEditingController controller;
+  const _EditBioSheet({required this.controller});
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+        padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+        child: Container(
+            decoration: const BoxDecoration(color: Colors.white, borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
+            child: SafeArea(child: Padding(padding: const EdgeInsets.all(24),
+                child: Column(mainAxisSize: MainAxisSize.min, children: [
+                  Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(2))),
+                  const SizedBox(height: 20),
+                  Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                    const Text('Edit About Me', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Color(0xFF1F2937))),
+                    IconButton(onPressed: () => Navigator.pop(context), icon: Icon(Icons.close_rounded, color: Colors.grey.shade500)),
+                  ]),
+                  const SizedBox(height: 16),
+                  Container(padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(color: const Color(0xFFF9FAFB), borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: const Color(0xFF2563EB).withOpacity(0.3))),
+                      child: TextField(controller: controller, maxLines: 5, autofocus: true,
+                          decoration: InputDecoration(hintText: 'Tell other travelers about yourself and your travel style...',
+                              border: InputBorder.none, hintStyle: TextStyle(color: Colors.grey.shade400, height: 1.6)),
+                          style: const TextStyle(fontSize: 15, height: 1.6, color: Color(0xFF1F2937)))),
+                  const SizedBox(height: 20),
+                  SizedBox(width: double.infinity, child: ElevatedButton(
+                    onPressed: () => Navigator.pop(context, controller.text.trim()),
+                    style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF2563EB),
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)), elevation: 0),
+                    child: const Text('Save', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Colors.white)),
+                  )),
+                ])))));
+  }
+}
+
+// EDIT INTERESTS SHEET
+class _EditInterestsSheet extends StatefulWidget {
+  const _EditInterestsSheet();
+  @override
+  State<_EditInterestsSheet> createState() => _EditInterestsSheetState();
+}
+class _EditInterestsSheetState extends State<_EditInterestsSheet> {
+  final _sc = TextEditingController();
+  String _q = '';
+  @override
+  void dispose() { _sc.dispose(); super.dispose(); }
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<TouristProvider>(
+        builder: (context, provider, _) {
+          final master = provider.masterInterests;
+          final selIds = provider.interests.map((i) => i.id).toSet();
+          final filtered = _q.isEmpty ? master : master.where((i) => i.name.toLowerCase().contains(_q.toLowerCase())).toList();
+          return DraggableScrollableSheet(initialChildSize: 0.87, minChildSize: 0.5, maxChildSize: 0.95, expand: false,
+              builder: (_, sc2) => Container(
+                  decoration: const BoxDecoration(color: Colors.white, borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
+                  child: Column(children: [
+                    const SizedBox(height: 12),
+                    Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(2))),
+                    const SizedBox(height: 16),
+                    Padding(padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                          const Text('Edit Interests', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Color(0xFF1F2937))),
+                          Container(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                              decoration: BoxDecoration(color: const Color(0xFFEC4899).withOpacity(0.1), borderRadius: BorderRadius.circular(20)),
+                              child: Text('${provider.interests.length} selected',
+                                  style: const TextStyle(color: Color(0xFFEC4899), fontWeight: FontWeight.w700, fontSize: 13))),
+                        ])),
+                    const SizedBox(height: 14),
+                    Padding(padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: TextField(controller: _sc, onChanged: (v) => setState(() => _q = v),
+                            decoration: InputDecoration(hintText: 'Search interests...',
+                                prefixIcon: const Icon(Icons.search_rounded, color: Colors.grey),
+                                filled: true, fillColor: const Color(0xFFF3F4F6),
+                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
+                                contentPadding: const EdgeInsets.symmetric(vertical: 12)))),
+                    const SizedBox(height: 12),
+                    Expanded(child: master.isEmpty
+                        ? const Center(child: CircularProgressIndicator(color: Color(0xFF2563EB)))
+                        : filtered.isEmpty
+                        ? Center(child: Text('No results for "$_q"', style: TextStyle(color: Colors.grey.shade500)))
+                        : ListView.builder(controller: sc2, padding: const EdgeInsets.symmetric(horizontal: 16),
+                        itemCount: filtered.length,
+                        itemBuilder: (_, i) {
+                          final item = filtered[i];
+                          final isSel = selIds.contains(item.id);
+                          return Container(margin: const EdgeInsets.only(bottom: 8),
+                              decoration: BoxDecoration(
+                                  color: isSel ? const Color(0xFFEC4899).withOpacity(0.07) : const Color(0xFFF9FAFB),
+                                  borderRadius: BorderRadius.circular(14),
+                                  border: Border.all(color: isSel ? const Color(0xFFEC4899).withOpacity(0.35) : Colors.transparent, width: 1.5)),
+                              child: ListTile(
+                                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                                  title: Text(item.name, style: TextStyle(fontWeight: FontWeight.w600,
+                                      color: isSel ? const Color(0xFFEC4899) : const Color(0xFF1F2937))),
+                                  subtitle: Text(item.category, style: TextStyle(color: Colors.grey.shade500, fontSize: 12)),
+                                  trailing: AnimatedSwitcher(duration: const Duration(milliseconds: 200),
+                                      child: isSel
+                                          ? const Icon(Icons.check_circle_rounded, color: Color(0xFFEC4899), key: ValueKey('on'))
+                                          : Icon(Icons.add_circle_outline_rounded, color: Colors.grey.shade400, key: const ValueKey('off'))),
+                                  onTap: () async {
+                                    try {
+                                      if (isSel) { await provider.removeInterest(item); } else { await provider.addInterest(item); }
+                                    } catch (_) {
+                                      if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(
+                                          const SnackBar(content: Text('Failed to update interest'), backgroundColor: Colors.red));
+                                    }
+                                  }));
+                        })),
+                    SafeArea(child: Padding(padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+                        child: SizedBox(width: double.infinity, child: ElevatedButton(
+                            onPressed: () => Navigator.pop(context),
+                            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF2563EB),
+                                padding: const EdgeInsets.symmetric(vertical: 16),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)), elevation: 0),
+                            child: const Text('Done', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Colors.white)))))),
+                  ])));
+        });
+  }
+}
+
+// LOGOUT SHEET
+class _LogoutSheet extends StatelessWidget {
+  const _LogoutSheet();
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+        decoration: const BoxDecoration(color: Colors.white, borderRadius: BorderRadius.vertical(top: Radius.circular(32))),
+        child: SafeArea(child: Padding(padding: const EdgeInsets.all(24),
+            child: Column(mainAxisSize: MainAxisSize.min, children: [
+              Container(width: 48, height: 5, decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(3))),
+              const SizedBox(height: 24),
+              Container(padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(color: const Color(0xFFEF4444).withOpacity(0.1), shape: BoxShape.circle),
+                  child: const Icon(Icons.logout_rounded, color: Color(0xFFEF4444), size: 40)),
+              const SizedBox(height: 20),
+              const Text('Logout', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: Color(0xFF1F2937))),
+              const SizedBox(height: 8),
+              Text('Are you sure you want to logout?', style: TextStyle(fontSize: 15, color: Colors.grey.shade600), textAlign: TextAlign.center),
+              const SizedBox(height: 24),
+              Row(children: [
+                Expanded(child: GestureDetector(onTap: () => Navigator.pop(context, false),
+                    child: Container(padding: const EdgeInsets.symmetric(vertical: 16),
+                        decoration: BoxDecoration(color: Colors.grey.shade100, borderRadius: BorderRadius.circular(14)),
+                        child: Center(child: Text('Cancel', style: TextStyle(color: Colors.grey.shade700, fontSize: 16, fontWeight: FontWeight.w700)))))),
+                const SizedBox(width: 12),
+                Expanded(child: GestureDetector(onTap: () => Navigator.pop(context, true),
+                    child: Container(padding: const EdgeInsets.symmetric(vertical: 16),
+                        decoration: BoxDecoration(color: const Color(0xFFEF4444), borderRadius: BorderRadius.circular(14),
+                            boxShadow: [BoxShadow(color: const Color(0xFFEF4444).withOpacity(0.35), blurRadius: 12, offset: const Offset(0, 4))]),
+                        child: const Center(child: Text('Logout', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w700)))))),
+              ]),
+              const SizedBox(height: 8),
+            ]))));
   }
 }

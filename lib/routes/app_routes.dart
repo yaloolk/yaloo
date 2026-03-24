@@ -6,6 +6,7 @@ import '../features/common/screens/help_support/help_support_screen.dart';
 import '../features/common/screens/settings/change_password_screen.dart';
 import '../features/common/screens/settings/language_screen.dart';
 import '../features/onboarding/screens/onboarding.dart';
+import '../features/onboarding/screens/splash_screen.dart';
 import '../features/onboarding/screens/user_selection_screen.dart';
 import '../features/auth/screens/common/login_screen.dart';
 import '../features/auth/screens/common/signup_screen.dart';
@@ -17,6 +18,7 @@ import '../features/auth/screens/guide/guide_profile_completion_screen.dart';
 import '../features/auth/screens/common/profile_submitted_screen.dart';
 import '../features/auth/screens/host/host_signup_screen.dart.';
 import '../features/auth/screens/host/host_profile_completion_screen.dart';
+import '../features/tourist/screens/guide/my_bookings_screen.dart';
 import '../features/tourist/screens/personal_information_screen.dart';
 import '../features/tourist/screens/tourist_dashboard_screen.dart';
 import '../features/tourist/screens/guide/find_guide_screen.dart';
@@ -52,6 +54,7 @@ import 'package:yaloo/features/auth/screens/common/approval_pending_screen.dart'
 
 class AppRoutes {
   static Map<String, WidgetBuilder> routes = {
+    '/splash': (context) => const SplashScreen(),
     '/onboarding': (_) => const OnboardingScreen(),
     '/userSelection': (_) => const UserSelectionScreen(),
     '/login': (_) => const LoginScreen(),
@@ -87,8 +90,8 @@ class AppRoutes {
     '/hostStayRequestDetails': (_) => const HostStayRequestDetailsScreen(),
     '/touristPublicProfile': (_) => const TouristPublicProfileScreen(),
     '/hostStayCancellation': (_) => const HostStayCancellationScreen(),
-    '/personalInformation' : (_) => const PersonalInformationScreen(),
-    '/settings' : (_) => const SettingsScreen(),
+    '/personalInformation': (_) => const PersonalInformationScreen(),
+    '/settings': (_) => const SettingsScreen(),
     '/changePassword': (_) => const ChangePasswordScreen(),
     '/language': (_) => const LanguageScreen(),
     '/helpSupport': (_) => const HelpSupportScreen(),
@@ -99,11 +102,7 @@ class AppRoutes {
     '/approvalRejected': (context) => const ApprovalRejectedScreen(),
     '/guideWelcome': (context) => const GuideWelcomeScreen(),
     '/hostStayDetails': (context) => const HostStayDetailsScreen(),
-
-
-
-
-
+    '/myBookings': (context) => const MyBookingsScreen(),
 
 
   };

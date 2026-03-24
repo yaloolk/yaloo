@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:yaloo/core/storage/secure_storage.dart';
 import 'package:yaloo/core/config/env_config.dart';
 
+
 class ApiClient {
   // ── 1. Singleton Setup ──
   // Private static instance
@@ -72,8 +73,18 @@ class ApiClient {
 
   Future<Response> get(String path, {Map<String, dynamic>? queryParameters}) async {
     try {
-      return await _dio.get(path, queryParameters: queryParameters);
+      debugPrint('🌐 Making GET request to: ${_dio.options.baseUrl}$path');
+      final response = await _dio.get(path, queryParameters: queryParameters);
+      debugPrint('✅ Response received: ${response.statusCode}');
+      return response;
+    } on DioException catch (e) {
+      debugPrint('❌ DioException: ${e.type}');
+      debugPrint('❌ Status Code: ${e.response?.statusCode}');
+      debugPrint('❌ Response Data: ${e.response?.data}');
+      debugPrint('❌ Request URL: ${e.requestOptions.uri}');
+      rethrow;
     } catch (e) {
+      debugPrint('❌ Unknown error: $e');
       rethrow;
     }
   }
@@ -147,4 +158,6 @@ class ApiClient {
       rethrow;
     }
   }
+
+
 }

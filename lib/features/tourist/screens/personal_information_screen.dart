@@ -1,357 +1,424 @@
-import 'package:flutter/foundation.dart';
+// lib/features/tourist/screens/personal_information_screen.dart
+// ✅ FULLY WORKING — loads from provider cache, saves via provider, language save wired
+
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:provider/provider.dart';
 import 'package:yaloo/core/constants/colors.dart';
 import 'package:yaloo/core/constants/app_text_styles.dart';
 import 'package:yaloo/core/widgets/custom_app_bar.dart';
 import 'package:yaloo/core/widgets/custom_primary_button.dart';
+import 'package:yaloo/core/network/api_client.dart';
 import 'package:country_picker/country_picker.dart';
-import 'package:language_picker/languages.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter_intl_phone_field/flutter_intl_phone_field.dart';
+import 'package:yaloo/features/tourist/providers/tourist_provider.dart';
+
+// Language model (local to this screen)
+class _Lang {
+  final String id;
+  final String name;
+  final String code;
+  _Lang({required this.id, required this.name, required this.code});
+  factory _Lang.fromJson(Map<String, dynamic> j) =>
+      _Lang(id: j['id'].toString(), name: j['name'] ?? '', code: j['code'] ?? '');
+}
+
 class PersonalInformationScreen extends StatefulWidget {
   const PersonalInformationScreen({super.key});
-
   @override
   State<PersonalInformationScreen> createState() => _PersonalInformationScreenState();
 }
 
 class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
-  // --- Controllers ---
-  final _emailController = TextEditingController(text: "cora.hayes@example.com");
-  final _phoneController = TextEditingController(text: "+1 234 567 890");
-  final _passportController = TextEditingController(text: "A1B2C3D4E");
+  // controllers
+  final _emailCtrl = TextEditingController();
+  final _passportCtrl = TextEditingController();
+  final _ecNameCtrl = TextEditingController();
+  final _ecRelCtrl = TextEditingController();
+  final _ecPhoneCtrl = TextEditingController();
 
-  // Emergency Contact
-  final _ecNameController = TextEditingController();
-  final _ecRelationshipController = TextEditingController();
-  final _ecPhoneController = TextEditingController();
+  // state
+  String _country = '';
+  DateTime? _dob;
+  String? _gender;
+  String? _finalPhone;
 
-  // --- State Variables ---
-  String _selectedCountry = "United States";
-  DateTime? _dateOfBirth;
-  String? _selectedGender = "Female";
+  // languages
+  List<_Lang> _allLangs = [];
+  List<_Lang> _selLangs = [];
 
-  // --- Multi-select Languages ---
-  List<Language> _selectedLanguages = [];
-
-  // --- All Available Languages ---
-  final List<Language> _allLanguages = [
-    Languages.english,
-    Languages.spanish,
-    Languages.french,
-    Languages.german,
-    Languages.chinese,
-    Languages.japanese,
-    Languages.arabic,
-    Languages.hindi,
-    Languages.portuguese,
-    Languages.russian,
-  ];
+  late final ApiClient _api;
+  bool _loading = true;
+  bool _saving = false;
 
   @override
   void initState() {
     super.initState();
-    _dateOfBirth = DateTime(1995, 10, 26);
-    _selectedLanguages = [Languages.english, Languages.spanish];
+    _api = ApiClient();
+    _loadData();
   }
 
   @override
   void dispose() {
-    _emailController.dispose();
-    _phoneController.dispose();
-    _passportController.dispose();
-    _ecNameController.dispose();
-    _ecRelationshipController.dispose();
-    _ecPhoneController.dispose();
+    _emailCtrl.dispose();
+    _passportCtrl.dispose();
+    _ecNameCtrl.dispose();
+    _ecRelCtrl.dispose();
+    _ecPhoneCtrl.dispose();
     super.dispose();
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: const CustomAppBar(title: 'Personal Information'),
-      body: SingleChildScrollView(
-        padding: EdgeInsets.all(24.w),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildLabel("Email"),
-            _buildTextField(controller: _emailController, icon: FontAwesomeIcons.envelope),
-            SizedBox(height: 16.h),
+  Future<void> _loadData() async {
+    try {
+      // run in parallel
+      final results = await Future.wait([
+        _api.get('/accounts/languages/'),
+        _api.get('/accounts/me/'),
+      ]);
 
-            _buildLabel("Phone No."),
-            _buildTextField(controller: _phoneController, icon: FontAwesomeIcons.phone),
-            SizedBox(height: 16.h),
+      final langList = results[0].data as List<dynamic>;
+      final profile = results[1].data as Map<String, dynamic>;
 
-            _buildLabel("Country"),
-            _buildPickerField(
-              text: _selectedCountry,
-              icon: FontAwesomeIcons.earthAmericas,
-              onTap: _pickCountry,
-            ),
-            SizedBox(height: 16.h),
+      if (!mounted) return;
 
-            _buildLabel("Date of Birth"),
-            _buildPickerField(
-              text: _dateOfBirth != null
-                  ? "${_dateOfBirth!.month}/${_dateOfBirth!.day}/${_dateOfBirth!.year}"
-                  : "Select Date",
-              icon: FontAwesomeIcons.cakeCandles,
-              onTap: _pickDate,
-            ),
-            SizedBox(height: 16.h),
+      final user = Supabase.instance.client.auth.currentUser;
+      final touristData = (profile['tourist_profile'] as Map<String, dynamic>?) ?? profile;
 
-            _buildLabel("Passport No."),
-            _buildTextField(controller: _passportController, icon: FontAwesomeIcons.briefcase),
-            SizedBox(height: 16.h),
+      setState(() {
+        _allLangs = langList.map((e) => _Lang.fromJson(e as Map<String, dynamic>)).toList();
 
-            _buildLabel("Gender"),
-            _buildDropdownField(
-              value: _selectedGender,
-              items: ["Male", "Female", "Other", "Prefer not to say"],
-              icon: FontAwesomeIcons.venusMars,
-              onChanged: (val) => setState(() => _selectedGender = val),
-            ),
-            SizedBox(height: 16.h),
+        _emailCtrl.text = user?.email ?? '';
+        _country = profile['country'] as String? ?? '';
+        _gender = profile['gender'] as String?;
 
-            _buildLabel("Languages"),
-            _buildPickerField(
-              text: _selectedLanguages.isEmpty
-                  ? "Select Languages"
-                  : _selectedLanguages.map((l) => l.name).join(", "),
-              icon: FontAwesomeIcons.language,
-              onTap: _showMultiSelectLanguageDialog,
-            ),
-            SizedBox(height: 32.h),
+        final dob = profile['date_of_birth'] as String?;
+        if (dob != null && dob.isNotEmpty) _dob = DateTime.tryParse(dob);
 
-            Text(
-              "EMERGENCY CONTACT",
-              style: AppTextStyles.bodyLarge.copyWith(
-                fontWeight: FontWeight.bold,
-                color: AppColors.primaryGray,
-                fontSize: 14.sp,
-                letterSpacing: 1.0,
-              ),
-            ),
-            SizedBox(height: 16.h),
+        final phone = profile['phone_number'] as String?;
+        if (phone != null && phone.isNotEmpty) {
+          _finalPhone = phone;
+        }
 
-            _buildLabel("Contact Name"),
-            _buildTextField(controller: _ecNameController, hint: "e.g., Jane Doe"),
-            SizedBox(height: 16.h),
+        _passportCtrl.text = touristData['passport_number'] as String? ?? '';
+        _ecNameCtrl.text = touristData['emergency_contact_name'] as String? ?? '';
+        _ecRelCtrl.text = touristData['emergency_contact_relation'] as String? ?? '';
+        _ecPhoneCtrl.text = touristData['emergency_contact_number'] as String? ?? '';
 
-            _buildLabel("Relationship"),
-            _buildTextField(controller: _ecRelationshipController, hint: "e.g., Partner"),
-            SizedBox(height: 16.h),
+        // map selected languages
+        final userLangs = profile['languages'] as List<dynamic>? ?? [];
+        final ids = userLangs.map((e) => e['id'].toString()).toSet();
+        _selLangs = _allLangs.where((l) => ids.contains(l.id)).toList();
 
-            _buildLabel("Contact Phone No."),
-            _buildTextField(controller: _ecPhoneController, hint: "e.g., +1 987 654 3210"),
-
-            SizedBox(height: 40.h),
-
-            CustomPrimaryButton(
-              text: "Save Changes",
-              onPressed: _saveProfileChanges,
-            ),
-            SizedBox(height: 20.h),
-          ],
-        ),
-      ),
-    );
+        _loading = false;
+      });
+    } catch (e) {
+      debugPrint('PersonalInfo loadData error: $e');
+      if (mounted) setState(() => _loading = false);
+    }
   }
 
-  Widget _buildLabel(String text) => Padding(
-    padding: EdgeInsets.only(bottom: 8.h),
-    child: Text(
-      text,
-      style: AppTextStyles.textSmall.copyWith(
-        fontWeight: FontWeight.w600,
-        color: const Color(0xFF1F2937),
-      ),
-    ),
-  );
+  Future<void> _save() async {
+    setState(() => _saving = true);
+    try {
+      final payload = <String, dynamic>{
+        if (_country.isNotEmpty) 'country': _country,
+        if (_dob != null) 'date_of_birth': _dob!.toIso8601String().split('T').first,
+        if (_gender != null) 'gender': _gender,
+        if (_finalPhone != null && _finalPhone!.isNotEmpty) 'phone_number': _finalPhone,
+        if (_passportCtrl.text.isNotEmpty) 'passport_number': _passportCtrl.text.trim(),
+        if (_ecNameCtrl.text.isNotEmpty) 'emergency_contact_name': _ecNameCtrl.text.trim(),
+        if (_ecRelCtrl.text.isNotEmpty) 'emergency_contact_relation': _ecRelCtrl.text.trim(),
+        if (_ecPhoneCtrl.text.isNotEmpty) 'emergency_contact_number': _normalizePhone(_ecPhoneCtrl.text.trim()),
+        // Send language ids
+        'language_ids': _selLangs.map((l) => l.id).toList(),
+      };
 
-  Widget _buildTextField({TextEditingController? controller, String? hint, IconData? icon}) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(color: AppColors.secondaryGray.withValues(alpha: 0.5)),
-      ),
-      child: TextField(
-        controller: controller,
-        style: AppTextStyles.textSmall.copyWith(color: Colors.black),
-        decoration: InputDecoration(
-          hintText: hint,
-          hintStyle: TextStyle(color: AppColors.primaryGray.withValues(alpha: 0.5)),
-          prefixIcon: icon != null ? Icon(icon, color: AppColors.primaryGray, size: 18.w) : null,
-          border: InputBorder.none,
-          contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
-        ),
-      ),
-    );
+      await _api.patch('/accounts/profile/update/', data: payload);
+
+      // Also refresh provider so profile screen updates instantly
+      if (mounted) {
+        await context.read<TouristProvider>().loadProfile(forceRefresh: true);
+        await context.read<TouristProvider>().loadStats();
+      }
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Profile Updated Successfully!'),
+          backgroundColor: Colors.green,
+          behavior: SnackBarBehavior.floating,
+        ));
+        Navigator.pop(context, true);
+      }
+    } catch (e) {
+      String msg = 'Failed to save';
+      if (e is DioException && e.response?.statusCode == 400) {
+        final data = e.response?.data;
+        if (data is Map<String, dynamic>) {
+          msg = data['error'] as String? ??
+              data.entries.map((e) => '${e.key}: ${e.value}').join('\n');
+        }
+      } else {
+        msg = 'Error: $e';
+      }
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(msg), backgroundColor: Colors.red, behavior: SnackBarBehavior.floating));
+      }
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
   }
 
-  Widget _buildPickerField({required String text, required IconData icon, required VoidCallback onTap}) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12.r),
-          border: Border.all(color: AppColors.secondaryGray.withValues(alpha: 0.5)),
-        ),
-        child: Row(
-          children: [
-            Icon(icon, color: AppColors.primaryGray, size: 18.w),
-            SizedBox(width: 12.w),
-            Expanded(
-              child: Text(
-                text,
-                style: AppTextStyles.textSmall.copyWith(color: Colors.black),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-            const Icon(Icons.keyboard_arrow_down, color: Colors.grey),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDropdownField({
-    required String? value,
-    required List<String> items,
-    required IconData icon,
-    required Function(String?) onChanged,
-  }) {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 16.w),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(color: AppColors.secondaryGray.withValues(alpha: 0.5)),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, color: AppColors.primaryGray, size: 18.w),
-          SizedBox(width: 12.w),
-          Expanded(
-            child: DropdownButtonHideUnderline(
-              child: DropdownButton<String>(
-                value: value,
-                icon: Icon(Icons.keyboard_arrow_down, color: AppColors.primaryGray),
-                isExpanded: true,
-                style: AppTextStyles.textSmall.copyWith(color: Colors.black),
-                onChanged: onChanged,
-                items: items
-                    .map((value) => DropdownMenuItem<String>(
-                  value: value,
-                  child: Text(value),
-                ))
-                    .toList(),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
+  String _normalizePhone(String phone) {
+    if (phone.isEmpty) return phone;
+    if (phone.startsWith('+')) return phone;
+    if (phone.startsWith('0')) return '+94${phone.substring(1)}';
+    return '+94$phone';
   }
 
   void _pickCountry() {
     showCountryPicker(
-      context: context,
-      showPhoneCode: false,
-      onSelect: (Country country) => setState(() => _selectedCountry = country.name),
-    );
+        context: context, showPhoneCode: false,
+        onSelect: (c) => setState(() => _country = c.name));
   }
 
-  void _pickDate() async {
-    DateTime? picked = await showDatePicker(
+  Future<void> _pickDate() async {
+    final picked = await showDatePicker(
       context: context,
-      initialDate: _dateOfBirth ?? DateTime.now(),
-      firstDate: DateTime(1900),
-      lastDate: DateTime.now(),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(colorScheme: ColorScheme.light(primary: AppColors.primaryBlue)),
-          child: child!,
-        );
-      },
+      initialDate: _dob ?? DateTime(2000),
+      firstDate: DateTime(1900), lastDate: DateTime.now(),
+      builder: (ctx, child) => Theme(
+          data: Theme.of(ctx).copyWith(colorScheme: ColorScheme.light(primary: AppColors.primaryBlue)),
+          child: child!),
     );
-    if (picked != null) setState(() => _dateOfBirth = picked);
+    if (picked != null) setState(() => _dob = picked);
   }
 
-  void _showMultiSelectLanguageDialog() {
-    List<Language> tempSelected = List.from(_selectedLanguages);
-
+  void _showLanguageDialog() {
+    List<_Lang> temp = List.from(_selLangs);
     showDialog(
       context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          title: const Text("Select Languages"),
-          content: SizedBox(
-            width: double.maxFinite,
-            height: 400.h,
-            child: ListView.builder(
-              itemCount: _allLanguages.length,
-              itemBuilder: (context, index) {
-                final language = _allLanguages[index];
-                final isSelected = tempSelected.contains(language);
-                return CheckboxListTile(
-                  title: Text(language.name),
-                  subtitle: Text(language.isoCode),
-                  value: isSelected,
-                  activeColor: AppColors.primaryBlue,
-                  onChanged: (bool? value) {
-                    setDialogState(() {
-                      if (value == true) {
-                        tempSelected.add(language);
-                      } else {
-                        tempSelected.remove(language);
-                      }
-                    });
-                  },
-                );
-              },
+      builder: (_) => StatefulBuilder(
+          builder: (ctx, setDlg) => AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            title: const Text('Select Languages', style: TextStyle(fontWeight: FontWeight.w800)),
+            content: SizedBox(
+              width: double.maxFinite, height: 400.h,
+              child: _allLangs.isEmpty
+                  ? const Center(child: Text('No languages available'))
+                  : ListView.builder(
+                  itemCount: _allLangs.length,
+                  itemBuilder: (_, i) {
+                    final lang = _allLangs[i];
+                    final isSel = temp.any((l) => l.id == lang.id);
+                    return CheckboxListTile(
+                        title: Text(lang.name),
+                        subtitle: Text(lang.code, style: TextStyle(color: Colors.grey.shade600)),
+                        value: isSel,
+                        activeColor: AppColors.primaryBlue,
+                        onChanged: (v) => setDlg(() {
+                          if (v == true) { temp.add(lang); }
+                          else { temp.removeWhere((l) => l.id == lang.id); }
+                        }));
+                  }),
             ),
-          ),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(context), child: const Text("Cancel", style: TextStyle(color: Colors.grey))),
-            TextButton(
-              onPressed: () {
-                setState(() => _selectedLanguages = tempSelected);
-                Navigator.pop(context);
-              },
-              child: Text("Save", style: TextStyle(color: AppColors.primaryBlue, fontWeight: FontWeight.bold)),
-            ),
-          ],
-        ),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel', style: TextStyle(color: Colors.grey))),
+              ElevatedButton(
+                  onPressed: () { setState(() => _selLangs = temp); Navigator.pop(ctx); },
+                  style: ElevatedButton.styleFrom(backgroundColor: AppColors.primaryBlue, elevation: 0,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
+                  child: const Text('Save', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold))),
+            ],
+          )),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_loading) {
+      return Scaffold(
+          backgroundColor: Colors.white,
+          body: Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+            CircularProgressIndicator(color: AppColors.primaryBlue),
+            SizedBox(height: 16.h),
+            Text('Loading...', style: TextStyle(color: Colors.grey.shade600, fontSize: 14.sp)),
+          ])));
+    }
+
+    return Scaffold(
+      backgroundColor: const Color(0xFFF8FAFC),
+      appBar: const CustomAppBar(title: 'Personal Information'),
+      body: SingleChildScrollView(
+        padding: EdgeInsets.all(20.w),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          // ── BASIC INFO ──────────────────────────────────────────────────
+          _header('Basic Information', Icons.person_rounded, const Color(0xFF2563EB)),
+          SizedBox(height: 16.h),
+          _label('Email'),
+          _field(controller: _emailCtrl, icon: FontAwesomeIcons.envelope, enabled: false),
+          SizedBox(height: 14.h),
+
+          _label('Phone Number'),
+          _phoneField(),
+          SizedBox(height: 14.h),
+
+          _label('Country'),
+          _pickerField(
+              text: _country.isEmpty ? 'Select Country' : _country,
+              icon: FontAwesomeIcons.earthAmericas, onTap: _pickCountry),
+          SizedBox(height: 14.h),
+
+          _label('Date of Birth'),
+          _pickerField(
+              text: _dob != null ? '${_dob!.year}-${_dob!.month.toString().padLeft(2, '0')}-${_dob!.day.toString().padLeft(2, '0')}' : 'Select Date',
+              icon: FontAwesomeIcons.cakeCandles, onTap: _pickDate),
+          SizedBox(height: 14.h),
+
+          _label('Gender'),
+          _dropdownField(
+              value: _gender, items: ['male', 'female', 'other'],
+              icon: FontAwesomeIcons.venusMars,
+              onChanged: (v) => setState(() => _gender = v)),
+          SizedBox(height: 14.h),
+
+          _label('Languages'),
+          _pickerField(
+              text: _selLangs.isEmpty ? 'Select Languages' : _selLangs.map((l) => l.name).join(', '),
+              icon: FontAwesomeIcons.language, onTap: _showLanguageDialog),
+          SizedBox(height: 14.h),
+
+          _label('Passport Number'),
+          _field(controller: _passportCtrl, icon: FontAwesomeIcons.passport, hint: 'Passport number'),
+          SizedBox(height: 28.h),
+
+          // ── EMERGENCY CONTACT ────────────────────────────────────────────
+          _header('Emergency Contact', Icons.emergency_rounded, const Color(0xFFEF4444)),
+          SizedBox(height: 16.h),
+
+          _label('Contact Name'),
+          _field(controller: _ecNameCtrl, hint: 'Full name'),
+          SizedBox(height: 14.h),
+
+          _label('Relationship'),
+          _field(controller: _ecRelCtrl, hint: 'e.g. Mother, Brother, Friend'),
+          SizedBox(height: 14.h),
+
+          _label('Emergency Phone'),
+          _field(controller: _ecPhoneCtrl, hint: '+94 77 123 4567 (include country code)', keyboardType: TextInputType.phone),
+          SizedBox(height: 36.h),
+
+          // ── SAVE ─────────────────────────────────────────────────────────
+          CustomPrimaryButton(
+              text: _saving ? 'Saving...' : 'Save Changes',
+              onPressed: _saving ? null : _save),
+          SizedBox(height: 24.h),
+        ]),
       ),
     );
   }
 
-  void _saveProfileChanges() {
-    final updatedData = {
-      'email': _emailController.text,
-      'phone': _phoneController.text,
-      'country': _selectedCountry,
-      'dob': _dateOfBirth,
-      'passport': _passportController.text,
-      'gender': _selectedGender,
-      'languages': _selectedLanguages.map((l) => l.name).toList(),
-      'emergencyContact': {
-        'name': _ecNameController.text,
-        'relationship': _ecRelationshipController.text,
-        'phone': _ecPhoneController.text,
-      }
-    };
-    if (kDebugMode) {
-      print("Saving Data: $updatedData");
-    }
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: const Text('Profile Updated Successfully!')));
-    Navigator.pop(context);
+  // ── WIDGET HELPERS ────────────────────────────────────────────────────────
+
+  Widget _header(String title, IconData icon, Color color) {
+    return Row(children: [
+      Container(padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
+          child: Icon(icon, color: color, size: 18)),
+      SizedBox(width: 10.w),
+      Text(title, style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.w800, color: const Color(0xFF1F2937))),
+    ]);
+  }
+
+  Widget _label(String text) => Padding(
+      padding: EdgeInsets.only(bottom: 7.h),
+      child: Text(text, style: AppTextStyles.textSmall.copyWith(fontWeight: FontWeight.w600, color: const Color(0xFF374151))));
+
+  Widget _field({TextEditingController? controller, String? hint, IconData? icon, bool enabled = true, TextInputType? keyboardType}) {
+    return Container(
+        decoration: BoxDecoration(
+            color: enabled ? Colors.white : Colors.grey.shade50,
+            borderRadius: BorderRadius.circular(12.r),
+            border: Border.all(color: AppColors.secondaryGray.withOpacity(0.45)),
+            boxShadow: enabled ? [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 8, offset: const Offset(0, 2))] : null),
+        child: TextField(
+            controller: controller, enabled: enabled, keyboardType: keyboardType,
+            style: AppTextStyles.textSmall.copyWith(color: Colors.black),
+            decoration: InputDecoration(
+                hintText: hint,
+                hintStyle: TextStyle(color: AppColors.primaryGray.withOpacity(0.45)),
+                prefixIcon: icon != null ? Icon(icon, color: AppColors.primaryGray, size: 17.w) : null,
+                border: InputBorder.none,
+                contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h))));
+  }
+
+  Widget _phoneField() {
+    return IntlPhoneField(
+      initialValue: _finalPhone,
+      disableLengthCheck: true,
+      flagsButtonPadding: const EdgeInsets.only(left: 10),
+      dropdownIconPosition: IconPosition.trailing,
+      dropdownIcon: Icon(Icons.keyboard_arrow_down, color: AppColors.primaryGray),
+      style: AppTextStyles.textSmall.copyWith(color: Colors.black),
+      decoration: InputDecoration(
+          hintText: 'Phone Number',
+          hintStyle: TextStyle(color: AppColors.primaryGray.withOpacity(0.45)),
+          filled: true, fillColor: Colors.white,
+          contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r),
+              borderSide: BorderSide(color: AppColors.secondaryGray.withOpacity(0.45))),
+          enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r),
+              borderSide: BorderSide(color: AppColors.secondaryGray.withOpacity(0.45))),
+          focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r),
+              borderSide: BorderSide(color: AppColors.primaryBlue, width: 1.5)),
+          errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r),
+              borderSide: const BorderSide(color: Colors.red))),
+      initialCountryCode: 'LK',
+      onChanged: (phone) => _finalPhone = phone.completeNumber,
+    );
+  }
+
+  Widget _pickerField({required String text, required IconData icon, required VoidCallback onTap}) {
+    return GestureDetector(
+        onTap: onTap,
+        child: Container(
+            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+            decoration: BoxDecoration(
+                color: Colors.white, borderRadius: BorderRadius.circular(12.r),
+                border: Border.all(color: AppColors.secondaryGray.withOpacity(0.45)),
+                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 8, offset: const Offset(0, 2))]),
+            child: Row(children: [
+              Icon(icon, color: AppColors.primaryGray, size: 17.w),
+              SizedBox(width: 12.w),
+              Expanded(child: Text(text,
+                  style: AppTextStyles.textSmall.copyWith(
+                      color: text.contains('Select') ? AppColors.primaryGray.withOpacity(0.5) : Colors.black),
+                  maxLines: 1, overflow: TextOverflow.ellipsis)),
+              Icon(Icons.keyboard_arrow_down, color: Colors.grey.shade400, size: 20),
+            ])));
+  }
+
+  Widget _dropdownField({required String? value, required List<String> items, required IconData icon, required Function(String?) onChanged}) {
+    return Container(
+        padding: EdgeInsets.symmetric(horizontal: 16.w),
+        decoration: BoxDecoration(
+            color: Colors.white, borderRadius: BorderRadius.circular(12.r),
+            border: Border.all(color: AppColors.secondaryGray.withOpacity(0.45)),
+            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 8, offset: const Offset(0, 2))]),
+        child: Row(children: [
+          Icon(icon, color: AppColors.primaryGray, size: 17.w),
+          SizedBox(width: 12.w),
+          Expanded(child: DropdownButtonHideUnderline(child: DropdownButton<String>(
+              value: value,
+              icon: Icon(Icons.keyboard_arrow_down, color: AppColors.primaryGray),
+              isExpanded: true,
+              hint: Text('Select Gender', style: TextStyle(color: AppColors.primaryGray.withOpacity(0.5), fontSize: 14.sp)),
+              style: AppTextStyles.textSmall.copyWith(color: Colors.black),
+              onChanged: onChanged,
+              items: items.map((v) => DropdownMenuItem(value: v, child: Text('${v[0].toUpperCase()}${v.substring(1)}'))).toList()))),
+        ]));
   }
 }

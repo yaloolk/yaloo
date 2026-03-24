@@ -1,3 +1,5 @@
+//lib/core/config/env_config.dart
+
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class EnvConfig {

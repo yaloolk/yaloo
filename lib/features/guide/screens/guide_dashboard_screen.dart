@@ -4,6 +4,7 @@ import 'package:yaloo/core/constants/colors.dart';
 import 'package:yaloo/core/constants/app_text_styles.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:yaloo/features/guide/screens/guide_tour_request_details.dart';
+import '../../common/screens/settings/settings_screen.dart';
 import '../../tourist/screens/tourist_public_profile_screen.dart';
 import 'guide_booking_cancellation_screen.dart';
 import 'guide_home_screen.dart';
@@ -24,10 +25,10 @@ class GuideDashboardScreen extends StatefulWidget {
 class _GuideDashboardScreenState extends State<GuideDashboardScreen> {
   int _selectedIndex = 0;
 
-  // This is the key: A global key for our nested Navigator
+  // Global key for our nested Navigator
   final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
 
-  // This list holds the *route names* for our tabs
+  // Route names for tabs
   final List<String> _tabRoutes = [
     '/guideHome',
     '/guideChat',
@@ -53,7 +54,7 @@ class _GuideDashboardScreenState extends State<GuideDashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Ensure ScreenUtil is initialized (if this is the first screen loaded)
+    // Ensure ScreenUtil is initialized
     ScreenUtil.init(context, designSize: const Size(375, 812), minTextAdapt: true, splitScreenMode: true);
 
     return Scaffold(
@@ -62,7 +63,7 @@ class _GuideDashboardScreenState extends State<GuideDashboardScreen> {
       // The body is now a Navigator, which hosts all other screens
       body: Navigator(
         key: _navigatorKey,
-        initialRoute: '/guideHome', // Start on the home tab
+        initialRoute: '/guideHome',
         onGenerateRoute: (settings) {
           Widget page;
           switch (settings.name) {
@@ -94,26 +95,22 @@ class _GuideDashboardScreenState extends State<GuideDashboardScreen> {
             case '/touristPublicProfile':
               page = const TouristPublicProfileScreen();
               break;
-
-          // --- NESTED PAGES (Add detail pages here later) ---
-          // Example:
-          // case '/tourRequestDetails':
-          //   page = TourRequestDetailsScreen();
-          //   break;
+            case '/settings':
+              page = const SettingsScreen();
+              break;
 
             default:
               page = const GuideHomeScreen();
           }
           return MaterialPageRoute(
             builder: (context) => page,
-            settings: settings, // Passes arguments if any
+            settings: settings,
           );
         },
       ),
 
       // The persistent chat button
       floatingActionButton: const FloatingChatButton(),
-      // floatingActionButtonLocation: FloatingActionButtonLocation.endFloat, // Default
 
       // 5-Tab Bottom Navigation Bar
       bottomNavigationBar: BottomNavigationBar(

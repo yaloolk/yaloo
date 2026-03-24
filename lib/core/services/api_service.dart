@@ -3,17 +3,21 @@
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:convert';
+import '../network/api_client.dart';
+import '../storage/secure_storage.dart';
+import '../config/env_config.dart';
 
 class DjangoApiService {
-  static const String baseUrl = 'http://192.168.10.23:8000/api';
+  final ApiClient _apiClient = ApiClient();
 
-  /// Get current Supabase auth token
+  // Use EnvConfig for base URL
+  static String get baseUrl => EnvConfig.apiBaseUrl;
+
   Future<String?> _getAuthToken() async {
     try {
-      final session = Supabase.instance.client.auth.currentSession;
-      final token = session?.accessToken;
+      // Get token from SecureStorage
+      final token = await SecureStorage().getAccessToken();
 
       if (token != null) {
         if (kDebugMode) {
@@ -21,7 +25,7 @@ class DjangoApiService {
         }
       } else {
         if (kDebugMode) {
-          debugPrint('❌ No auth token found');
+          debugPrint('❌ No auth token found in SecureStorage');
         }
       }
 
@@ -166,8 +170,6 @@ class DjangoApiService {
     final url = '$baseUrl/$endpoint';
     if (kDebugMode) {
       debugPrint('🌐 POST Request: $url');
-    }
-    if (kDebugMode) {
       debugPrint('📦 Data: ${json.encode(data)}');
     }
 
@@ -204,18 +206,29 @@ class DjangoApiService {
     }
   }
 
-  /// Get all available interests
-  Future<List<Map<String, dynamic>>> getAllInterests() async {
-    final response = await http.get(
-      Uri.parse('$baseUrl/accounts/interests/'),
-      headers: {'Accept': 'application/json'},
-    ).timeout(const Duration(seconds: 10));
+  // ============================================================================
+  // SPECIFIC API ENDPOINTS - ALL UPDATED WITH /accounts/ PREFIX
+  // ============================================================================
 
-    if (response.statusCode == 200) {
-      final List<dynamic> data = json.decode(response.body);
-      return data.cast<Map<String, dynamic>>();
-    } else {
-      throw Exception('Failed to load interests');
+  /// Get all available interests (public endpoint, no auth required)
+  Future<List<Map<String, dynamic>>> getAllInterests() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/accounts/interests/'),
+        headers: {'Accept': 'application/json'},
+      ).timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        return data.cast<Map<String, dynamic>>();
+      } else {
+        throw Exception('Failed to load interests');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('❌ Error getting all interests: $e');
+      }
+      rethrow;
     }
   }
 
@@ -269,10 +282,14 @@ class DjangoApiService {
     }
   }
 
-
-
+  /// Get all languages
   Future<List<Map<String, dynamic>>> getLanguages() async {
     return await getList('accounts/languages/');
+  }
+
+  /// Get all cities
+  Future<List<Map<String, dynamic>>> getCities() async {
+    return await getList('accounts/cities/');
   }
 
   /// Test authentication with Django
@@ -305,11 +322,16 @@ class DjangoApiService {
     return await post('accounts/profile/skip/', {});
   }
 
+  /// Get verification status for guide/host
+  Future<Map<String, dynamic>> getVerificationStatus() async {
+    return await get('accounts/verification/status/');
+  }
 
+  /// Create a new stay (for hosts)
   Future<Map<String, dynamic>> createStay(
       Map<String, dynamic> fields,
       List<XFile> photos,
-      XFile? sltdaDoc
+      XFile? sltdaDoc,
       ) async {
     final token = await _getAuthToken();
     if (token == null) throw Exception('Not authenticated');
@@ -332,14 +354,14 @@ class DjangoApiService {
       if (kIsWeb) {
         var bytes = await sltdaDoc.readAsBytes();
         request.files.add(http.MultipartFile.fromBytes(
-            'sltda_document',
-            bytes,
-            filename: sltdaDoc.name
+          'sltda_document',
+          bytes,
+          filename: sltdaDoc.name,
         ));
       } else {
         request.files.add(await http.MultipartFile.fromPath(
-            'sltda_document',
-            sltdaDoc.path
+          'sltda_document',
+          sltdaDoc.path,
         ));
       }
     }
@@ -349,26 +371,112 @@ class DjangoApiService {
       if (kIsWeb) {
         var bytes = await photo.readAsBytes();
         request.files.add(http.MultipartFile.fromBytes(
-            'photos',
-            bytes,
-            filename: photo.name
+          'photos',
+          bytes,
+          filename: photo.name,
         ));
       } else {
         request.files.add(await http.MultipartFile.fromPath(
-            'photos',
-            photo.path
+          'photos',
+          photo.path,
         ));
       }
     }
 
     // 4. Send
+    if (kDebugMode) {
+      debugPrint('🌐 Creating stay with ${photos.length} photos');
+    }
+
     var streamedResponse = await request.send();
     var response = await http.Response.fromStream(streamedResponse);
+
+    if (kDebugMode) {
+      debugPrint('📡 Create Stay Response Status: ${response.statusCode}');
+    }
 
     if (response.statusCode == 201) {
       return json.decode(response.body);
     } else {
+      if (kDebugMode) {
+        debugPrint('❌ Error creating stay: ${response.body}');
+      }
       throw Exception('Failed to create stay: ${response.body}');
     }
   }
+
+  // ============================================================================
+  // FUTURE ENDPOINTS (Add as needed)
+  // ============================================================================
+
+  /// Get list of stays (for browse/search)
+  Future<List<Map<String, dynamic>>> getStays({
+    String? city,
+    int? minPrice,
+    int? maxPrice,
+  }) async {
+    var endpoint = 'accounts/stays/';
+    final queryParams = <String>[];
+
+    if (city != null) queryParams.add('city=$city');
+    if (minPrice != null) queryParams.add('min_price=$minPrice');
+    if (maxPrice != null) queryParams.add('max_price=$maxPrice');
+
+    if (queryParams.isNotEmpty) {
+      endpoint += '?${queryParams.join('&')}';
+    }
+
+    return await getList(endpoint);
+  }
+
+  /// Get list of guides (for browse/search)
+  Future<List<Map<String, dynamic>>> getGuides({
+    String? city,
+    List<String>? languages,
+  }) async {
+    var endpoint = 'accounts/guides/';
+    final queryParams = <String>[];
+
+    if (city != null) queryParams.add('city=$city');
+    if (languages != null && languages.isNotEmpty) {
+      queryParams.add('languages=${languages.join(',')}');
+    }
+
+    if (queryParams.isNotEmpty) {
+      endpoint += '?${queryParams.join('&')}';
+    }
+
+    return await getList(endpoint);
+  }
+
+  /// Update user profile
+  Future<Map<String, dynamic>> updateProfile(Map<String, dynamic> data) async {
+    return await post('accounts/me/update/', data);
+  }
+
+  /// Update profile bio
+  Future<Map<String, dynamic>> updateProfileBio(String bio) async {
+    return await post('accounts/me/update/', {'profile_bio': bio});
+  }
+
+  /// Force server to invalidate Redis cache for current user
+  Future<void> invalidateCache() async {
+    try {
+      // Hit the endpoint with a cache-bust header
+      final token = await _getAuthToken();
+      if (token == null) return;
+
+      await http.get(
+        Uri.parse('$baseUrl/accounts/me/').replace(
+            queryParameters: {'nocache': DateTime.now().millisecondsSinceEpoch.toString()}
+        ),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Cache-Control': 'no-cache',
+          'X-No-Cache': 'true',
+        },
+      ).timeout(const Duration(seconds: 10));
+    } catch (_) {}
+  }
+
 }

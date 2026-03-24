@@ -154,6 +154,7 @@ class _ApprovalPendingScreenState extends State<ApprovalPendingScreen> with Sing
         print('🔍 Checking approval status...');
       }
 
+      await _apiService.invalidateCache();
       final user = await _apiService.getCurrentUser();
       final verificationStatus = user['verification_status'] as String?;
       final userRole = user['user_role'] as String?;

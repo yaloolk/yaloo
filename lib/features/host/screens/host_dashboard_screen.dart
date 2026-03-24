@@ -1,9 +1,14 @@
+// lib/features/host/screens/host_dashboard_screen.dart
+
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:provider/provider.dart';
 import 'package:yaloo/core/constants/colors.dart';
 import 'package:yaloo/core/constants/app_text_styles.dart';
 import 'package:yaloo/core/widgets/floating_chat_button.dart';
+import 'package:yaloo/features/common/screens/help_support/help_support_screen.dart';
+import 'package:yaloo/features/host/providers/host_provider.dart';
 import 'package:yaloo/features/host/screens/host_stay_cancellation_screen.dart';
 import 'package:yaloo/features/host/screens/host_stay_request_details.dart';
 import '../../tourist/screens/tourist_public_profile_screen.dart';
@@ -14,7 +19,6 @@ import 'host_bookings_screen.dart';
 import 'host_wallet_screen.dart';
 import 'host_stay_requests_screen.dart';
 
-
 class HostDashboardScreen extends StatefulWidget {
   const HostDashboardScreen({super.key});
 
@@ -24,11 +28,8 @@ class HostDashboardScreen extends StatefulWidget {
 
 class _HostDashboardScreenState extends State<HostDashboardScreen> {
   int _selectedIndex = 0;
-
-  // This is the key: A global key for our nested Navigator
   final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
 
-  // This list holds the *route names* for our tabs
   final List<String> _tabRoutes = [
     '/hostHome',
     '/hostChat',
@@ -37,34 +38,44 @@ class _HostDashboardScreenState extends State<HostDashboardScreen> {
     '/hostProfile',
   ];
 
+  @override
+  void initState() {
+    super.initState();
+    // Load profile and dashboard data on startup
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final provider = context.read<HostProvider>();
+      provider.loadProfile();
+      provider.loadDashboard();
+    });
+  }
+
   void _onItemTapped(int index) {
     if (_selectedIndex == index) {
       _navigatorKey.currentState?.popUntil((route) => route.isFirst);
       return;
     }
-
-    setState(() {
-      _selectedIndex = index;
-    });
+    setState(() => _selectedIndex = index);
     _navigatorKey.currentState?.popUntil((route) => route.isFirst);
     _navigatorKey.currentState?.pushReplacementNamed(_tabRoutes[index]);
   }
 
   @override
   Widget build(BuildContext context) {
-    ScreenUtil.init(context, designSize: const Size(375, 812), minTextAdapt: true, splitScreenMode: true);
+    ScreenUtil.init(
+      context,
+      designSize: const Size(375, 812),
+      minTextAdapt: true,
+      splitScreenMode: true,
+    );
 
     return Scaffold(
       backgroundColor: Colors.white,
-
-      // The body is now a Navigator, which hosts all other screens
       body: Navigator(
         key: _navigatorKey,
-        initialRoute: '/hostHome', // Start on the home tab
+        initialRoute: '/hostHome',
         onGenerateRoute: (settings) {
           Widget page;
           switch (settings.name) {
-          // --- TAB SCREENS ---
             case '/hostHome':
               page = const HostHomeScreen();
               break;
@@ -92,59 +103,57 @@ class _HostDashboardScreenState extends State<HostDashboardScreen> {
             case '/hostStayCancellation':
               page = const HostStayCancellationScreen();
               break;
-
-          // --- NESTED PAGES (Add detail pages here later) ---
-
+            case '/helpSupport':
+              page = const HelpSupportScreen();
+              break;
             default:
               page = const HostHomeScreen();
           }
           return MaterialPageRoute(
-            builder: (context) => page,
+            builder: (_) => page,
             settings: settings,
           );
         },
       ),
-
-      // The persistent chat button
       floatingActionButton: const FloatingChatButton(),
+      bottomNavigationBar: _buildBottomNav(),
+    );
+  }
 
-      // 5-Tab Bottom Navigation Bar
-      bottomNavigationBar: BottomNavigationBar(
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: Icon(LucideIcons.house),
-            label: 'Home',
+  Widget _buildBottomNav() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 16,
+            offset: const Offset(0, -4),
           ),
-          BottomNavigationBarItem(
-            icon: Icon(LucideIcons.messagesSquare),
-            label: 'Chat',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(LucideIcons.calendarCheck2),
-            label: 'Bookings',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(LucideIcons.dollarSign),
-            label: 'Wallet',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(LucideIcons.user),
-            label: 'Profile',
-          ),
+        ],
+      ),
+      child: BottomNavigationBar(
+        items: const [
+          BottomNavigationBarItem(icon: Icon(LucideIcons.house),        label: 'Home'),
+          BottomNavigationBarItem(icon: Icon(LucideIcons.messagesSquare), label: 'Chat'),
+          BottomNavigationBarItem(icon: Icon(LucideIcons.calendarCheck2), label: 'Bookings'),
+          BottomNavigationBarItem(icon: Icon(LucideIcons.dollarSign),    label: 'Wallet'),
+          BottomNavigationBarItem(icon: Icon(LucideIcons.user),          label: 'Profile'),
         ],
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
-
-        // Styling
         type: BottomNavigationBarType.fixed,
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.transparent,
         selectedItemColor: AppColors.primaryBlue,
-        unselectedItemColor: AppColors.primaryBlack,
+        unselectedItemColor: AppColors.primaryBlack.withOpacity(0.45),
         showSelectedLabels: true,
         showUnselectedLabels: true,
-        selectedLabelStyle: AppTextStyles.textSmall.copyWith(fontSize: 12.sp),
-        unselectedLabelStyle: AppTextStyles.textSmall.copyWith(fontSize: 12.sp),
-        elevation: 8.0,
+        selectedLabelStyle: AppTextStyles.textSmall.copyWith(
+          fontSize: 11.sp,
+          fontWeight: FontWeight.w600,
+        ),
+        unselectedLabelStyle: AppTextStyles.textSmall.copyWith(fontSize: 11.sp),
+        elevation: 0,
       ),
     );
   }

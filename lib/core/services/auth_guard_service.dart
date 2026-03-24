@@ -1,15 +1,17 @@
 // lib/core/services/auth_guard_service.dart
 
 import 'package:flutter/foundation.dart';
-import 'package:yaloo/core/services/api_service.dart';
+import 'package:yaloo/core/network/api_client.dart';
 
 class AuthGuardService {
-  final DjangoApiService _apiService = DjangoApiService();
+  final ApiClient _apiClient = ApiClient();
 
   /// Determine where user should be routed
-  Future<String> getInitialRoute() async {
+  Future<String> getInitialRoute({bool forceRefresh = false}) async {
     try {
-      final user = await _apiService.getCurrentUser();
+      final response = await _apiClient.get('/accounts/me/');  // ✅ Changed
+      final user = response.data;
+
       final userRole = user['user_role'] as String;
       final isComplete = user['is_complete'] as bool? ?? false;
       final verificationStatus = user['verification_status'] as String? ?? 'not_required';
@@ -17,17 +19,9 @@ class AuthGuardService {
 
       if (kDebugMode) {
         debugPrint('🔐 Auth Guard Check:');
-      }
-      if (kDebugMode) {
         debugPrint('  Role: $userRole');
-      }
-      if (kDebugMode) {
         debugPrint('  Profile Complete: $isComplete');
-      }
-      if (kDebugMode) {
         debugPrint('  Verification Status: $verificationStatus');
-      }
-      if (kDebugMode) {
         debugPrint('  Has Verified Stay: $hasVerifiedStay');
       }
 
@@ -63,7 +57,6 @@ class AuthGuardService {
   String _getHomeRoute(String role, String verificationStatus, bool hasVerifiedStay) {
     switch (role.toLowerCase()) {
       case 'tourist':
-      // Tourists don't need verification
         return '/touristDashboard';
 
       case 'guide':
@@ -77,17 +70,11 @@ class AuthGuardService {
         return '/approvalPending';
 
       case 'host':
-      // NEW LOGIC:
-      // Host must be verified AND have at least one verified stay
         if (verificationStatus == 'verified' && hasVerifiedStay) {
           return '/hostDashboard';
-        }
-        // If host is verified but NO stay is verified, show pending
-        // Or if host is pending, show pending
-        else if (verificationStatus == 'rejected') {
+        } else if (verificationStatus == 'rejected') {
           return '/approvalRejected';
         }
-        // Default catch-all for pending profile OR pending stay
         return '/approvalPending';
 
       default:
@@ -98,7 +85,9 @@ class AuthGuardService {
   /// Check if user can access a route (for route guards)
   Future<bool> canAccessRoute(String route) async {
     try {
-      final user = await _apiService.getCurrentUser();
+      final response = await _apiClient.get('/accounts/me/');  // ✅ Changed
+      final user = response.data;
+
       final userRole = user['user_role'] as String;
       final isComplete = user['is_complete'] as bool? ?? false;
       final verificationStatus = user['verification_status'] as String? ?? 'not_required';

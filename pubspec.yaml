@@ -42,7 +42,7 @@ dependencies:
   image_picker: ^1.1.2
 
   pinput: ^4.0.0
-
+  table_calendar: ^3.0.9
   supabase_flutter: ^1.0.0
   lucide_icons_flutter: ^3.1.5
   smooth_page_indicator: ^1.1.0
@@ -58,6 +58,9 @@ dependencies:
   http_parser: ^4.1.2
   flutter_secure_storage: ^10.0.0
   http: ^1.6.0
+  flutter_intl_phone_field: ^0.0.7
+  provider: ^6.1.5+1
+  cached_network_image: ^3.4.1
 
 dev_dependencies:
   flutter_test:
