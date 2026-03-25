@@ -1,204 +1,142 @@
 // lib/core/storage/secure_storage.dart
+//
+// IMPORTANT NOTE:
+//   The access_token stored here is NO LONGER used by ApiClient to
+//   authenticate requests. ApiClient now reads the token directly from
+//   Supabase.instance.client.auth.currentSession (always fresh).
+//
+//   SecureStorage is still used for:
+//     • user_id, user_role, is_profile_complete  (fast local reads)
+//     • refresh_token  (if needed for non-Supabase flows)
+//
+//   setAccessToken() is called at login for compatibility with any
+//   code that still reads it, but it is NOT the source of truth for auth.
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class SecureStorage {
-  // Create a singleton instance
   static final SecureStorage _instance = SecureStorage._internal();
   factory SecureStorage() => _instance;
   SecureStorage._internal();
 
-  // Initialize flutter_secure_storage
   final FlutterSecureStorage _storage = const FlutterSecureStorage(
-    aOptions: AndroidOptions(
-    ),
+    aOptions: AndroidOptions(),
     iOptions: IOSOptions(
       accessibility: KeychainAccessibility.first_unlock,
     ),
   );
 
-  // Storage keys
-  static const String _accessTokenKey = 'access_token';
-  static const String _refreshTokenKey = 'refresh_token';
-  static const String _userIdKey = 'user_id';
-  static const String _userRoleKey = 'user_role';
+  static const String _accessTokenKey       = 'access_token';
+  static const String _refreshTokenKey      = 'refresh_token';
+  static const String _userIdKey            = 'user_id';
+  static const String _userRoleKey          = 'user_role';
   static const String _isProfileCompleteKey = 'is_profile_complete';
 
-  // ==================== ACCESS TOKEN ====================
+  // ── ACCESS TOKEN ──────────────────────────────────────────────────────────
+  // Stored for reference only; ApiClient reads from Supabase directly.
 
-  /// Save the JWT access token
   Future<void> setAccessToken(String token) async {
     try {
       await _storage.write(key: _accessTokenKey, value: token);
-      if (kDebugMode) {
-        debugPrint('✅ Access token saved to SecureStorage');
-      }
+      if (kDebugMode) debugPrint('✅ Access token saved (reference copy)');
     } catch (e) {
-      if (kDebugMode) {
-        debugPrint('❌ Error saving access token: $e');
-      }
-      rethrow;
+      if (kDebugMode) debugPrint('❌ Error saving access token: $e');
     }
   }
 
-  /// Get the JWT access token
   Future<String?> getAccessToken() async {
     try {
-      final token = await _storage.read(key: _accessTokenKey);
-      if (token != null) {
-        if (kDebugMode) {
-          debugPrint('✅ Access token retrieved from SecureStorage');
-        }
-      } else {
-        if (kDebugMode) {
-          debugPrint('⚠️ No access token found in SecureStorage');
-        }
-      }
-      return token;
+      return await _storage.read(key: _accessTokenKey);
     } catch (e) {
-      if (kDebugMode) {
-        debugPrint('❌ Error reading access token: $e');
-      }
+      if (kDebugMode) debugPrint('❌ Error reading access token: $e');
       return null;
     }
   }
 
-  /// Delete the access token
   Future<void> deleteAccessToken() async {
     try {
       await _storage.delete(key: _accessTokenKey);
-      if (kDebugMode) {
-        debugPrint('✅ Access token deleted from SecureStorage');
-      }
     } catch (e) {
-      if (kDebugMode) {
-        debugPrint('❌ Error deleting access token: $e');
-      }
+      if (kDebugMode) debugPrint('❌ Error deleting access token: $e');
     }
   }
 
-  // ==================== REFRESH TOKEN ====================
+  // ── REFRESH TOKEN ─────────────────────────────────────────────────────────
 
-  /// Save the refresh token
   Future<void> setRefreshToken(String token) async {
     try {
       await _storage.write(key: _refreshTokenKey, value: token);
-      if (kDebugMode) {
-        debugPrint('✅ Refresh token saved to SecureStorage');
-      }
     } catch (e) {
-      if (kDebugMode) {
-        debugPrint('❌ Error saving refresh token: $e');
-      }
-      rethrow;
+      if (kDebugMode) debugPrint('❌ Error saving refresh token: $e');
     }
   }
 
-  /// Get the refresh token
   Future<String?> getRefreshToken() async {
     try {
       return await _storage.read(key: _refreshTokenKey);
     } catch (e) {
-      if (kDebugMode) {
-        debugPrint('❌ Error reading refresh token: $e');
-      }
+      if (kDebugMode) debugPrint('❌ Error reading refresh token: $e');
       return null;
     }
   }
 
-  /// Delete the refresh token
   Future<void> deleteRefreshToken() async {
     try {
       await _storage.delete(key: _refreshTokenKey);
-      if (kDebugMode) {
-        debugPrint('✅ Refresh token deleted from SecureStorage');
-      }
     } catch (e) {
-      if (kDebugMode) {
-        debugPrint('❌ Error deleting refresh token: $e');
-      }
+      if (kDebugMode) debugPrint('❌ Error deleting refresh token: $e');
     }
   }
 
-  // ==================== USER DATA ====================
+  // ── USER DATA ─────────────────────────────────────────────────────────────
 
-  /// Save user ID
   Future<void> setUserId(String userId) async {
     try {
       await _storage.write(key: _userIdKey, value: userId);
-    } catch (e) {
-      if (kDebugMode) {
-        debugPrint('❌ Error saving user ID: $e');
-      }
-    }
+    } catch (_) {}
   }
 
-  /// Get user ID
   Future<String?> getUserId() async {
     try {
       return await _storage.read(key: _userIdKey);
-    } catch (e) {
-      if (kDebugMode) {
-        debugPrint('❌ Error reading user ID: $e');
-      }
+    } catch (_) {
       return null;
     }
   }
 
-  /// Save user role
   Future<void> setUserRole(String role) async {
     try {
       await _storage.write(key: _userRoleKey, value: role);
-    } catch (e) {
-      if (kDebugMode) {
-        debugPrint('❌ Error saving user role: $e');
-      }
-    }
+    } catch (_) {}
   }
 
-  /// Get user role
   Future<String?> getUserRole() async {
     try {
       return await _storage.read(key: _userRoleKey);
-    } catch (e) {
-      if (kDebugMode) {
-        debugPrint('❌ Error reading user role: $e');
-      }
+    } catch (_) {
       return null;
     }
   }
 
-  /// Save profile completion status
   Future<void> setProfileComplete(bool isComplete) async {
     try {
       await _storage.write(
-        key: _isProfileCompleteKey,
-        value: isComplete.toString(),
-      );
-    } catch (e) {
-      if (kDebugMode) {
-        debugPrint('❌ Error saving profile completion status: $e');
-      }
-    }
+          key: _isProfileCompleteKey, value: isComplete.toString());
+    } catch (_) {}
   }
 
-  /// Get profile completion status
   Future<bool> isProfileComplete() async {
     try {
-      final value = await _storage.read(key: _isProfileCompleteKey);
-      return value == 'true';
-    } catch (e) {
-      if (kDebugMode) {
-        debugPrint('❌ Error reading profile completion status: $e');
-      }
+      final v = await _storage.read(key: _isProfileCompleteKey);
+      return v == 'true';
+    } catch (_) {
       return false;
     }
   }
 
-  // ==================== SESSION MANAGEMENT ====================
+  // ── SESSION ───────────────────────────────────────────────────────────────
 
-  /// Save complete session data
   Future<void> saveSession({
     required String accessToken,
     String? refreshToken,
@@ -207,76 +145,49 @@ class SecureStorage {
     bool? isProfileComplete,
   }) async {
     await setAccessToken(accessToken);
-    if (refreshToken != null) await setRefreshToken(refreshToken);
-    if (userId != null) await setUserId(userId);
-    if (userRole != null) await setUserRole(userRole);
+    if (refreshToken     != null) await setRefreshToken(refreshToken);
+    if (userId           != null) await setUserId(userId);
+    if (userRole         != null) await setUserRole(userRole);
     if (isProfileComplete != null) await setProfileComplete(isProfileComplete);
-    if (kDebugMode) {
-      debugPrint('✅ Complete session saved to SecureStorage');
-    }
+    if (kDebugMode) debugPrint('✅ Session saved to SecureStorage');
   }
 
-  /// Clear all session data (logout)
   Future<void> clearSession() async {
     try {
       await _storage.deleteAll();
-      if (kDebugMode) {
-        debugPrint('✅ All session data cleared from SecureStorage');
-      }
+      if (kDebugMode) debugPrint('✅ Session cleared');
     } catch (e) {
-      if (kDebugMode) {
-        debugPrint('❌ Error clearing session: $e');
-      }
+      if (kDebugMode) debugPrint('❌ Error clearing session: $e');
     }
   }
 
-  /// Check if user is logged in (has valid access token)
   Future<bool> isLoggedIn() async {
     final token = await getAccessToken();
     return token != null && token.isNotEmpty;
   }
 
-  // ==================== DEBUG METHODS ====================
+  // ── DEBUG ─────────────────────────────────────────────────────────────────
 
-  /// Print all stored values (for debugging only)
   Future<void> debugPrintAll() async {
-    if (kDebugMode) {
-      debugPrint('=== SECURE STORAGE DEBUG ===');
-    }
-    final accessToken = await getAccessToken();
-    final refreshToken = await getRefreshToken();
-    final userId = await getUserId();
-    final userRole = await getUserRole();
-    final profileComplete = await isProfileComplete();
-
-    if (kDebugMode) {
-      debugPrint('Access Token: ${accessToken?.substring(0, 50)}...');
-    }
-    if (kDebugMode) {
-      debugPrint('Refresh Token: ${refreshToken?.substring(0, 50) ?? 'null'}...');
-    }
-    if (kDebugMode) {
-      debugPrint('User ID: $userId');
-    }
-    if (kDebugMode) {
-      debugPrint('User Role: $userRole');
-    }
-    if (kDebugMode) {
-      debugPrint('Profile Complete: $profileComplete');
-    }
-    if (kDebugMode) {
-      debugPrint('=== END DEBUG ===');
-    }
+    if (!kDebugMode) return;
+    debugPrint('=== SECURE STORAGE DEBUG ===');
+    final at = await getAccessToken();
+    final rt = await getRefreshToken();
+    final uid = await getUserId();
+    final role = await getUserRole();
+    final pc = await isProfileComplete();
+    debugPrint('Access Token (first 40): ${at?.substring(0, at.length.clamp(0, 40))}…');
+    debugPrint('Refresh Token: ${rt != null ? '${rt.substring(0, rt.length.clamp(0, 20))}…' : 'null'}');
+    debugPrint('User ID: $uid');
+    debugPrint('User Role: $role');
+    debugPrint('Profile Complete: $pc');
+    debugPrint('=== END DEBUG ===');
   }
 
-  /// Read all keys and values (for debugging)
   Future<Map<String, String>> readAll() async {
     try {
       return await _storage.readAll();
-    } catch (e) {
-      if (kDebugMode) {
-        debugPrint('❌ Error reading all values: $e');
-      }
+    } catch (_) {
       return {};
     }
   }

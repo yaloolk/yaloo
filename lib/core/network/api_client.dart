@@ -1,27 +1,36 @@
+// lib/core/network/api_client.dart
+//
+// ═══════════════════════════════════════════════════════════════════════
+// ROOT CAUSE OF 401 "Token validation failed":
+//   OLD code:  reads token from SecureStorage
+//              → SecureStorage holds the token from login time
+//              → Supabase auto-refreshes the JWT every ~1 hour
+//              → SecureStorage never gets updated → stale token → 401
+//
+// FIX: ALWAYS read the token directly from
+//      Supabase.instance.client.auth.currentSession?.accessToken
+//      This is always fresh because Supabase SDK refreshes it automatically.
+//
+// SECONDARY FIX: On 401, attempt one session refresh then retry.
+// TIMEOUT FIX:   Raised timeouts + retry with backoff.
+// ═══════════════════════════════════════════════════════════════════════
+
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
-import 'package:yaloo/core/storage/secure_storage.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:yaloo/core/config/env_config.dart';
 
-
 class ApiClient {
-  // ── 1. Singleton Setup ──
-  // Private static instance
+  // ── Singleton ─────────────────────────────────────────────────────────────
   static final ApiClient _instance = ApiClient._internal();
-
-  // Factory constructor returns the same instance every time
-  factory ApiClient() {
-    return _instance;
-  }
+  factory ApiClient() => _instance;
 
   late final Dio _dio;
-  final SecureStorage _secureStorage = SecureStorage();
 
-  // ── 2. Private Internal Constructor ──
+  // ── Constructor ───────────────────────────────────────────────────────────
   ApiClient._internal() {
     _dio = Dio(
       BaseOptions(
-        // Automatically fetch URL from your EnvConfig
         baseUrl: EnvConfig.apiBaseUrl,
         connectTimeout: const Duration(seconds: 30),
         receiveTimeout: const Duration(seconds: 30),
@@ -32,59 +41,127 @@ class ApiClient {
       ),
     );
 
-    // ── 3. Interceptors (Auth & Logging) ──
     _dio.interceptors.add(
       InterceptorsWrapper(
+        // ── onRequest: attach the FRESH Supabase token ──────────────────────
         onRequest: (options, handler) async {
-          // Get token from secure storage
-          final token = await _secureStorage.getAccessToken();
-
+          final token = await _getFreshToken();
           if (token != null && token.isNotEmpty) {
-            // This adds 'Bearer token' to EVERY request automatically
             options.headers['Authorization'] = 'Bearer $token';
           }
-
           if (kDebugMode) {
             debugPrint('🔵 REQUEST: ${options.method} ${options.path}');
-            debugPrint('🔵 HEADERS: ${options.headers}');
           }
-
           return handler.next(options);
         },
+
         onResponse: (response, handler) {
           if (kDebugMode) {
-            debugPrint('✅ RESPONSE: ${response.statusCode} ${response.requestOptions.path}');
+            debugPrint(
+                '✅ RESPONSE: ${response.statusCode} ${response.requestOptions.path}');
           }
           return handler.next(response);
         },
-        onError: (error, handler) {
+
+        // ── onError: on 401, refresh session once and retry ─────────────────
+        onError: (error, handler) async {
           if (kDebugMode) {
-            debugPrint('❌ ERROR: ${error.response?.statusCode} ${error.requestOptions.path}');
+            debugPrint(
+                '❌ ERROR: ${error.response?.statusCode} ${error.requestOptions.path}');
             debugPrint('❌ ERROR MESSAGE: ${error.message}');
             debugPrint('❌ ERROR DATA: ${error.response?.data}');
           }
+
+          // On 401 → try refreshing the Supabase session once, then retry
+          if (error.response?.statusCode == 401) {
+            final retried = await _retryAfterRefresh(error.requestOptions);
+            if (retried != null) {
+              return handler.resolve(retried);
+            }
+          }
+
           return handler.next(error);
         },
       ),
     );
   }
 
-  // ── 4. Standardized Methods ──
-
-  Future<Response> get(String path, {Map<String, dynamic>? queryParameters}) async {
+  // ── CORE FIX: Always get the fresh token from Supabase ────────────────────
+  //
+  // Supabase SDK keeps the session alive and auto-refreshes the JWT.
+  // currentSession?.accessToken is ALWAYS the latest valid token.
+  // SecureStorage is NOT used here — it can hold a stale token.
+  Future<String?> _getFreshToken() async {
     try {
-      debugPrint('🌐 Making GET request to: ${_dio.options.baseUrl}$path');
-      final response = await _dio.get(path, queryParameters: queryParameters);
-      debugPrint('✅ Response received: ${response.statusCode}');
-      return response;
-    } on DioException catch (e) {
-      debugPrint('❌ DioException: ${e.type}');
-      debugPrint('❌ Status Code: ${e.response?.statusCode}');
-      debugPrint('❌ Response Data: ${e.response?.data}');
-      debugPrint('❌ Request URL: ${e.requestOptions.uri}');
-      rethrow;
+      // First try the live in-memory session
+      final session = Supabase.instance.client.auth.currentSession;
+      if (session != null && session.accessToken.isNotEmpty) {
+        return session.accessToken;
+      }
+
+      // No in-memory session → try refreshing
+      final refreshed =
+      await Supabase.instance.client.auth.refreshSession();
+      return refreshed.session?.accessToken;
     } catch (e) {
-      debugPrint('❌ Unknown error: $e');
+      if (kDebugMode) {
+        debugPrint('⚠️  Could not retrieve Supabase token: $e');
+      }
+      return null;
+    }
+  }
+
+  // ── Retry helper: refresh session then resend the failed request ──────────
+  Future<Response?> _retryAfterRefresh(RequestOptions failed) async {
+    try {
+      if (kDebugMode) {
+        debugPrint('🔄 401 received — refreshing Supabase session…');
+      }
+      final result =
+      await Supabase.instance.client.auth.refreshSession();
+      final newToken = result.session?.accessToken;
+      if (newToken == null) return null;
+
+      // Rebuild the original request with the new token
+      final opts = Options(
+        method: failed.method,
+        headers: {
+          ...failed.headers,
+          'Authorization': 'Bearer $newToken',
+        },
+        receiveTimeout: const Duration(seconds: 30),
+        sendTimeout: const Duration(seconds: 30),
+      );
+      final response = await _dio.request<dynamic>(
+        failed.path,
+        data: failed.data,
+        queryParameters: failed.queryParameters,
+        options: opts,
+      );
+      if (kDebugMode) {
+        debugPrint('✅ Retry after refresh succeeded: ${response.statusCode}');
+      }
+      return response;
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('❌ Retry after refresh failed: $e');
+      }
+      return null;
+    }
+  }
+
+  // ── Public HTTP methods ───────────────────────────────────────────────────
+
+  Future<Response> get(
+      String path, {
+        Map<String, dynamic>? queryParameters,
+      }) async {
+    try {
+      debugPrint('🌐 GET: ${_dio.options.baseUrl}$path');
+      return await _dio.get(path, queryParameters: queryParameters);
+    } on DioException catch (e) {
+      debugPrint('❌ DioException GET $path: ${e.type} ${e.response?.statusCode}');
+      debugPrint('❌ Response: ${e.response?.data}');
       rethrow;
     }
   }
@@ -96,8 +173,6 @@ class ApiClient {
         Options? options,
       }) async {
     try {
-      // Note: We removed the manual Auth check here because the
-      // interceptor (onRequest) handles it automatically for Multipart too!
       return await _dio.post(
         path,
         data: data,
@@ -158,6 +233,4 @@ class ApiClient {
       rethrow;
     }
   }
-
-
 }

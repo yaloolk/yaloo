@@ -1,4 +1,10 @@
 // lib/features/guide/screens/guide_home_screen.dart
+//
+// KEY FIX: Removed all direct _api.get('/accounts/me/') calls.
+//          Profile data now comes from GuideProvider (context.watch).
+//          Booking lists (requests / upcoming) also come from GuideProvider.
+//          Screen calls provider.loadRequests() / loadUpcoming() only on
+//          explicit user action (accept/reject/refresh) — NOT on initState.
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
@@ -6,9 +12,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
-import 'package:yaloo/core/network/api_client.dart';
+import 'package:provider/provider.dart';
+import 'package:yaloo/features/guide/providers/guide_provider.dart';
 import 'package:yaloo/features/tourist/models/guide_booking_model.dart';
-import 'package:yaloo/features/tourist/services/guide_booking_service.dart';
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
 const _blue       = Color(0xFF2563EB);
@@ -22,82 +28,40 @@ const _green      = Color(0xFF22C55E);
 const _purple     = Color(0xFF8B5CF6);
 const _red        = Color(0xFFEF4444);
 
-class GuideHomeScreen extends StatefulWidget {
+class GuideHomeScreen extends StatelessWidget {
   const GuideHomeScreen({super.key});
+
   @override
-  State<GuideHomeScreen> createState() => _GuideHomeScreenState();
+  Widget build(BuildContext context) {
+    // Watch provider — rebuilds automatically when data changes
+    final provider = context.watch<GuideProvider>();
+    return _GuideHomeView(provider: provider);
+  }
 }
 
-class _GuideHomeScreenState extends State<GuideHomeScreen> {
-  final _api     = ApiClient();
-  final _service = GuideBookingService();
-
-  // Profile
-  String  _name    = '';
-  String? _picUrl;
-  bool    _profLoad = true;
-
-  // Pending requests
-  List<GuideBookingModel> _reqs    = [];
-  bool   _reqLoad  = true;
-  String _reqErr   = '';
-
-  // Upcoming confirmed
-  List<GuideBookingModel> _upcoming = [];
-  bool   _upLoad   = true;
-  String _upErr    = '';
+class _GuideHomeView extends StatefulWidget {
+  final GuideProvider provider;
+  const _GuideHomeView({required this.provider});
 
   @override
-  void initState() {
-    super.initState();
-    _loadAll();
-  }
+  State<_GuideHomeView> createState() => _GuideHomeViewState();
+}
 
-  Future<void> _loadAll() => Future.wait([
-    _loadProfile(),
-    _loadRequests(),
-    _loadUpcoming(),
-  ]);
+class _GuideHomeViewState extends State<_GuideHomeView> {
+  GuideProvider get _p => widget.provider;
 
-  Future<void> _loadProfile() async {
-    try {
-      final r = await _api.get('/accounts/me/');
-      if (!mounted) return;
-      setState(() {
-        _name     = r.data['full_name'] ?? 'Guide';
-        _picUrl   = r.data['profile_pic'];
-        _profLoad = false;
-      });
-    } catch (_) {
-      if (mounted) setState(() => _profLoad = false);
-    }
-  }
+  // ── Convenience getters from provider ────────────────────────────────────
+  String get _name    => _p.profile?.fullName ?? '';
+  String? get _picUrl => _p.profile?.profilePic.isNotEmpty == true
+      ? _p.profile!.profilePic : null;
+  bool get _isAvailable => _p.profile?.isAvailable ?? true;
+  double get _avgRating  => _p.profile?.avgRating ?? 0;
 
-  Future<void> _loadRequests() async {
-    if (mounted) setState(() { _reqLoad = true; _reqErr = ''; });
-    try {
-      final list = await _service.getGuideRequests();
-      if (mounted) setState(() { _reqs = list; _reqLoad = false; });
-    } catch (e) {
-      if (mounted) setState(() { _reqErr = e.toString(); _reqLoad = false; });
-    }
-  }
-
-  Future<void> _loadUpcoming() async {
-    if (mounted) setState(() { _upLoad = true; _upErr = ''; });
-    try {
-      final list = await _service.getGuideUpcoming();
-      if (mounted) setState(() { _upcoming = list; _upLoad = false; });
-    } catch (e) {
-      if (mounted) setState(() { _upErr = e.toString(); _upLoad = false; });
-    }
-  }
+  // ── Accept / reject ───────────────────────────────────────────────────────
 
   Future<void> _accept(GuideBookingModel b) async {
     try {
-      await _service.respondToBooking(bookingId: b.id, action: 'accept');
-      _loadRequests();
-      _loadUpcoming();
+      await _p.respondToBooking(bookingId: b.id, action: 'accept');
       _snack('Booking accepted ✓', _green);
     } catch (e) {
       _snack(e.toString(), _red);
@@ -106,8 +70,7 @@ class _GuideHomeScreenState extends State<GuideHomeScreen> {
 
   Future<void> _reject(GuideBookingModel b) async {
     try {
-      await _service.respondToBooking(bookingId: b.id, action: 'reject');
-      _loadRequests();
+      await _p.respondToBooking(bookingId: b.id, action: 'reject');
       _snack('Booking declined', _gray);
     } catch (e) {
       _snack(e.toString(), _red);
@@ -124,13 +87,16 @@ class _GuideHomeScreenState extends State<GuideHomeScreen> {
     ));
   }
 
+  // ── Pull-to-refresh: resets guards so a full re-fetch happens ─────────────
+  Future<void> _onRefresh() => _p.refreshAll();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: _bg,
       body: SafeArea(
         child: RefreshIndicator(
-          onRefresh: _loadAll,
+          onRefresh: _onRefresh,
           color: _blue,
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
@@ -164,6 +130,7 @@ class _GuideHomeScreenState extends State<GuideHomeScreen> {
   // ── HERO HEADER ───────────────────────────────────────────────────────────
   Widget _heroHeader() {
     final first = _name.trim().split(' ').first;
+    final loading = _p.profileLoading;
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 16.w),
       decoration: BoxDecoration(
@@ -200,7 +167,7 @@ class _GuideHomeScreenState extends State<GuideHomeScreen> {
               ),
             ),
             SizedBox(width: 12.w),
-            Expanded(child: _profLoad
+            Expanded(child: loading
                 ? Container(height: 14.h, width: 90.w,
                 decoration: BoxDecoration(
                     color: Colors.white.withOpacity(0.25),
@@ -210,7 +177,7 @@ class _GuideHomeScreenState extends State<GuideHomeScreen> {
                   color: Colors.white.withOpacity(0.75),
                   fontSize: 12.sp, fontWeight: FontWeight.w500)),
               SizedBox(height: 2.h),
-              Text(first, style: TextStyle(
+              Text(first.isEmpty ? 'Guide' : first, style: TextStyle(
                   color: Colors.white, fontSize: 18.sp,
                   fontWeight: FontWeight.w800, letterSpacing: -0.4),
                   overflow: TextOverflow.ellipsis),
@@ -245,12 +212,14 @@ class _GuideHomeScreenState extends State<GuideHomeScreen> {
                 border: Border.all(color: Colors.white.withOpacity(0.3))),
             child: Row(mainAxisSize: MainAxisSize.min, children: [
               Container(width: 8.w, height: 8.h,
-                  decoration: const BoxDecoration(
-                      color: _green, shape: BoxShape.circle)),
+                  decoration: BoxDecoration(
+                      color: _isAvailable ? _green : _red,
+                      shape: BoxShape.circle)),
               SizedBox(width: 7.w),
-              Text('Available for tours', style: TextStyle(
-                  color: Colors.white.withOpacity(0.92),
-                  fontSize: 12.sp, fontWeight: FontWeight.w600)),
+              Text(_isAvailable ? 'Available for tours' : 'Not available',
+                  style: TextStyle(
+                      color: Colors.white.withOpacity(0.92),
+                      fontSize: 12.sp, fontWeight: FontWeight.w600)),
             ]),
           ),
         ]),
@@ -304,12 +273,14 @@ class _GuideHomeScreenState extends State<GuideHomeScreen> {
     padding: EdgeInsets.symmetric(horizontal: 16.w),
     child: Row(children: [
       Expanded(child: _statCard(Icons.assignment_outlined,
-          _reqLoad ? '…' : '${_reqs.length}', 'Requests', _blue)),
+          _p.requestsLoading ? '…' : '${_p.requests.length}', 'Requests', _blue)),
       SizedBox(width: 12.w),
       Expanded(child: _statCard(Icons.event_available_outlined,
-          _upLoad ? '…' : '${_upcoming.length}', 'Upcoming', _purple)),
+          _p.upcomingLoading ? '…' : '${_p.upcoming.length}', 'Upcoming', _purple)),
       SizedBox(width: 12.w),
-      Expanded(child: _statCard(Icons.star_rounded, '4.8', 'Rating', _amber)),
+      Expanded(child: _statCard(Icons.star_rounded,
+          _p.profileLoading ? '…' : _avgRating.toStringAsFixed(1),
+          'Rating', _amber)),
     ]),
   );
 
@@ -360,19 +331,26 @@ class _GuideHomeScreenState extends State<GuideHomeScreen> {
 
   // ── TOUR REQUESTS LIST ────────────────────────────────────────────────────
   Widget _requestsList() {
-    if (_reqLoad) return SizedBox(height: 170.h,
-        child: const Center(child: CircularProgressIndicator()));
-    if (_reqErr.isNotEmpty) return _errBanner(_reqErr, _loadRequests);
-    if (_reqs.isEmpty) return _emptyBanner('No pending requests',
-        CupertinoIcons.tray);
+    if (_p.requestsLoading) {
+      return SizedBox(height: 170.h,
+          child: const Center(child: CircularProgressIndicator()));
+    }
+    if (_p.requestsError.isNotEmpty) {
+      return _errBanner(_p.requestsError, () {
+        _p.loadRequests();
+      });
+    }
+    if (_p.requests.isEmpty) {
+      return _emptyBanner('No pending requests', CupertinoIcons.tray);
+    }
     return SizedBox(
       height: 200.h,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         physics: const BouncingScrollPhysics(),
         padding: EdgeInsets.symmetric(horizontal: 16.w),
-        itemCount: _reqs.length,
-        itemBuilder: (_, i) => _reqCard(_reqs[i]),
+        itemCount: _p.requests.length,
+        itemBuilder: (_, i) => _reqCard(_p.requests[i]),
       ),
     );
   }
@@ -399,7 +377,6 @@ class _GuideHomeScreenState extends State<GuideHomeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Tourist row
                 Row(children: [
                   _avatar(b.touristPhoto, 16.r, _blue),
                   SizedBox(width: 8.w),
@@ -440,19 +417,26 @@ class _GuideHomeScreenState extends State<GuideHomeScreen> {
 
   // ── UPCOMING BOOKINGS LIST ────────────────────────────────────────────────
   Widget _upcomingList() {
-    if (_upLoad) return SizedBox(height: 170.h,
-        child: const Center(child: CircularProgressIndicator()));
-    if (_upErr.isNotEmpty) return _errBanner(_upErr, _loadUpcoming);
-    if (_upcoming.isEmpty) return _emptyBanner('No upcoming bookings',
-        CupertinoIcons.calendar);
+    if (_p.upcomingLoading) {
+      return SizedBox(height: 170.h,
+          child: const Center(child: CircularProgressIndicator()));
+    }
+    if (_p.upcomingError.isNotEmpty) {
+      return _errBanner(_p.upcomingError, () {
+        _p.loadUpcoming();
+      });
+    }
+    if (_p.upcoming.isEmpty) {
+      return _emptyBanner('No upcoming bookings', CupertinoIcons.calendar);
+    }
     return SizedBox(
       height: 200.h,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         physics: const BouncingScrollPhysics(),
         padding: EdgeInsets.symmetric(horizontal: 16.w),
-        itemCount: _upcoming.length,
-        itemBuilder: (_, i) => _upCard(_upcoming[i]),
+        itemCount: _p.upcoming.length,
+        itemBuilder: (_, i) => _upCard(_p.upcoming[i]),
       ),
     );
   }

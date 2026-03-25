@@ -95,14 +95,22 @@ class GuideBookingModel {
     'id': id,
     'tourist_profile_id': touristProfileId,
     'guide_profile_id': guideProfileId,
+    'guide_name': guideName,
+    'guide_photo': guidePhoto,
+    'guide_phone': guidePhone,
+    'city_name': cityName,
     'booking_date': bookingDate,
     'start_time': startTime,
     'end_time': endTime,
     'total_hours': totalHours,
+    'rate_per_hour': ratePerHour,
     'total_amount': totalAmount,
     'booking_status': bookingStatus,
     'payment_status': paymentStatus,
     'guest_count': guestCount,
+    'pickup_latitude': pickupLatitude,
+    'pickup_longitude': pickupLongitude,
+    'pickup_address': pickupAddress,
   };
 
   /// Human-readable status label

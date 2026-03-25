@@ -18,8 +18,10 @@ import '../features/auth/screens/guide/guide_profile_completion_screen.dart';
 import '../features/auth/screens/common/profile_submitted_screen.dart';
 import '../features/auth/screens/host/host_signup_screen.dart.';
 import '../features/auth/screens/host/host_profile_completion_screen.dart';
-import '../features/tourist/screens/guide/my_bookings_screen.dart';
+import '../features/tourist/screens/my_bookings_screen.dart';
+import '../features/tourist/screens/tourist_tour_completion_screen.dart';
 import '../features/tourist/screens/personal_information_screen.dart';
+import '../features/tourist/screens/tourist_booking_status_screen.dart';
 import '../features/tourist/screens/tourist_dashboard_screen.dart';
 import '../features/tourist/screens/guide/find_guide_screen.dart';
 import '../features/tourist/screens/guide/guide_list_screen.dart';
@@ -75,8 +77,6 @@ class AppRoutes {
     '/tourInformation': (_) => const TourInformationScreen(),
     '/payment': (_) => const PaymentScreen(),
     '/bookingRequestSent': (_) => const BookingRequestSentScreen(),
-    '/bookingStatus': (_) => const BookingStatusScreen(),
-    '/tourCompletion': (_) => const TourCompletionScreen(),
     '/findHost': (_) => const FindHostScreen(),
     '/hostList': (_) => const HostListScreen(),
     '/touristHostProfile': (_) => const TouristHostProfileScreen(),
@@ -103,6 +103,8 @@ class AppRoutes {
     '/guideWelcome': (context) => const GuideWelcomeScreen(),
     '/hostStayDetails': (context) => const HostStayDetailsScreen(),
     '/myBookings': (context) => const MyBookingsScreen(),
+    '/bookingStatus':   (_) => const TouristBookingStatusScreen(),
+    '/tourCompletion':  (_) => const TouristTourCompletionScreen(),
 
 
   };

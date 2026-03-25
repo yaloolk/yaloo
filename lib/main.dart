@@ -5,6 +5,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'core/constants/colors.dart';
+import 'features/guide/providers/guide_provider.dart';
+import 'features/guide/screens/guide_dashboard_screen.dart';
 import 'features/host/providers/host_provider.dart';
 import 'features/tourist/providers/guide_booking_provider.dart';
 import 'features/tourist/providers/tourist_provider.dart';
@@ -55,6 +57,7 @@ class YalooApp extends StatelessWidget {
               service: GuideBookingService(),
             ),
           ),
+          ChangeNotifierProvider(create: (_) => GuideProvider()..init()),
         ],
         child: ScreenUtilInit(
       designSize: const Size(390, 844),

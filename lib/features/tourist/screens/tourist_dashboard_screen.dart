@@ -8,6 +8,8 @@ import 'package:yaloo/core/constants/app_text_styles.dart';
 import 'package:yaloo/features/tourist/screens/guide/tourist_guide_profile.dart';
 import 'package:yaloo/features/tourist/screens/host/host_list_screen.dart';
 import 'package:yaloo/features/tourist/screens/personal_information_screen.dart';
+import 'package:yaloo/features/tourist/screens/tourist_booking_status_screen.dart';
+import 'package:yaloo/features/tourist/screens/tourist_tour_completion_screen.dart';
 import '../../auth/screens/common/login_screen.dart';
 import '../../booking/screens/booking_details_screen.dart';
 import '../../booking/screens/booking_request_sent_screen.dart';
@@ -37,7 +39,7 @@ import 'package:yaloo/features/tourist/screens/guide/guide_list_screen.dart';
 import 'package:yaloo/features/tourist/screens/guide/guide_detail_screen.dart';
 import 'package:yaloo/features/tourist/screens/guide/tour_information_screen.dart';
 import 'package:yaloo/features/tourist/screens/guide/booking_confirmation_screen.dart';
-import 'package:yaloo/features/tourist/screens/guide/my_bookings_screen.dart';
+import 'package:yaloo/features/tourist/screens/my_bookings_screen.dart';
 
 class TouristDashboardScreen extends StatefulWidget {
   const TouristDashboardScreen({super.key});
@@ -96,8 +98,6 @@ class _TouristDashboardScreenState extends State<TouristDashboardScreen> {
             case '/bookingDetails':    page = const BookingDetailsScreen();   break;
             case '/payment':           page = const PaymentScreen();          break;
             case '/bookingRequestSent':page = const BookingRequestSentScreen(); break;
-            case '/bookingStatus':     page = const BookingStatusScreen();    break;
-            case '/tourCompletion':    page = const TourCompletionScreen();   break;
 
           // ── Host flow ──────────────────────────────────────────────────
             case '/findHost':         page = const FindHostScreen();          break;
@@ -121,6 +121,9 @@ class _TouristDashboardScreenState extends State<TouristDashboardScreen> {
             case '/messageScreen':     page = const MessageScreen();          break;
 
             case '/login':     page = const LoginScreen();
+
+            case '/bookingStatus':     page = const TouristBookingStatusScreen();
+            case '/tourCompletion':     page = const TouristTourCompletionScreen();
 
             default:                   page = const TouristHomeScreen();
           }

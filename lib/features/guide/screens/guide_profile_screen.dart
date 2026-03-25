@@ -6,8 +6,10 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:yaloo/core/constants/colors.dart';
+import 'package:provider/provider.dart';
 import 'package:yaloo/core/network/api_client.dart';
 import 'package:yaloo/core/storage/secure_storage.dart';
+import 'package:yaloo/features/guide/providers/guide_provider.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:intl/intl.dart';
@@ -99,19 +101,24 @@ class Language {
 }
 
 class UserLanguage {
+  /// The UserLanguage bridge-table PK — sent to DELETE/PATCH endpoints.
+  final String bridgeId;
+  /// The Language master-table PK — used for duplicate checks.
   final String languageId;
   final String name;
-  String proficiency; // native, fluent, intermediate, basic
+  String proficiency;
 
   UserLanguage({
+    required this.bridgeId,
     required this.languageId,
     required this.name,
     required this.proficiency,
   });
 
   factory UserLanguage.fromJson(Map<String, dynamic> j) => UserLanguage(
-    languageId: j['id'] ?? '',
-    name: j['name'] ?? '',
+    bridgeId:   j['id'] ?? '',
+    languageId: j['language_id'] ?? j['id'] ?? '',
+    name:       j['name'] ?? '',
     proficiency: j['proficiency'] ?? 'native',
   );
 
@@ -217,74 +224,88 @@ class _GuideProfileScreenState extends State<GuideProfileScreen> {
 
   Future<void> _loadAll() async {
     setState(() {
-      _isLoadingProfile = _isLoadingAvailability = _isLoadingGallery = true;
+      _isLoadingAvailability = _isLoadingGallery = true;
     });
-    await _loadProfile();
+    // Profile comes from GuideProvider — no direct API call needed.
+    // Populate local fields from provider data immediately.
+    _syncProfileFromProvider();
     _loadAvailability();
     _loadGallery();
-    _loadMasterData(); // NEW
+    _loadMasterData();
   }
 
-  Future<void> _loadProfile() async {
-    try {
-      final r = await _apiClient.get('/accounts/me/');
-      final d = r.data as Map<String, dynamic>;
-      if (!mounted) return;
+  /// Reads the already-loaded GuideModel from GuideProvider and populates
+  /// this screen's local state fields. No network call is made here.
+  void _syncProfileFromProvider() {
+    final provider = context.read<GuideProvider>();
+    final p = provider.profile;
+    if (p == null) {
+      // Profile not loaded yet — wait; didChangeDependencies will re-sync.
+      setState(() => _isLoadingProfile = true);
+      return;
+    }
 
-      final names = (d['full_name'] ?? '').toString().split(' ');
+    final names = p.fullName.split(' ');
+    setState(() {
+      _guideId         = p.guideProfileId;
+      _fullName        = p.fullName;
+      _profilePicUrl   = p.profilePic.isNotEmpty ? p.profilePic : null;
+      _bio             = p.profileBio;
+      _phone           = p.phoneNumber;
+      _dateOfBirth     = p.memberSince; // memberSince used for display only
+      _gender          = p.gender;
+      _country         = p.country;
+      _cityId          = p.city?.id ?? '';
+      _city            = p.city?.name ?? '';
+      _experienceYears = p.experienceYears ?? 0;
+      _education       = p.education;
+      _ratePerHour     = p.ratePerHour;
+      _avgRating       = p.avgRating;
+      _reviewCount     = p.stats.reviewCount;
+      _isAvailable     = p.isAvailable;
+      _isVerified      = p.verificationStatus == 'verified';
+      _isSLTDAVerified = p.isSLTDAVerified;
+      _memberSince     = p.memberSince;
 
-      setState(() {
-        _guideId         = d['id'] ?? '';
-        _fullName        = d['full_name'] ?? '';
-        _profilePicUrl   = d['profile_pic'];
-        _bio             = d['profile_bio'] ?? '';
-        _phone           = d['phone_number'] ?? '';
-        _dateOfBirth     = d['date_of_birth'] ?? '';
-        _gender          = d['gender'] ?? '';
-        _country         = d['country'] ?? '';
-        _cityId          = d['city_id'] ?? '';
-        _city            = (d['city'] as Map?)?.entries.map((e) {
-          if (e.key == 'name') return e.value.toString();
-          return null;
-        }).firstWhere((v) => v != null, orElse: () => '') ?? '';
-        _experienceYears = d['experience_years'] ?? 0;
-        _education       = d['education'] ?? '';
-        _ratePerHour     = (d['rate_per_hour'] ?? 0).toDouble();
-        _avgRating       = (d['avg_rating'] ?? 0).toDouble();
-        _reviewCount     = (d['stats']?['review_count'] ?? 0);
-        _isAvailable     = d['is_available'] ?? true;
-        _isVerified      = d['verification_status'] == 'verified';
-        _isSLTDAVerified = d['is_SLTDA_verified'] ?? false;
-        _memberSince     = d['member_since'] ?? '';
+      _userLanguages = p.languages
+          .map((l) => UserLanguage(
+          bridgeId: l.id, languageId: l.languageId, name: l.name, proficiency: l.proficiency))
+          .toList();
 
-        // NEW: Load languages with proficiency
-        _userLanguages = (d['languages'] as List<dynamic>? ?? [])
-            .map((l) => UserLanguage.fromJson(l))
-            .toList();
+      _interests = p.interests
+          .map((i) => {'id': i.id, 'name': i.name, 'category': i.category})
+          .toList();
 
-        _interests       = (d['interests'] as List<dynamic>? ?? [])
-            .cast<Map<String, dynamic>>();
-        _reviews         = (d['reviews'] as List<dynamic>? ?? [])
-            .map((r) => GuideReview.fromJson(r)).toList();
+      _reviews = p.reviews
+          .map((r) => GuideReview(
+        id:          r.id,
+        rating:      r.rating,
+        review:      r.review,
+        touristName: r.touristName,
+        touristPhoto:r.touristPhoto.isNotEmpty ? r.touristPhoto : null,
+        createdAt:   DateTime.tryParse(r.createdAt) ?? DateTime.now(),
+      ))
+          .toList();
 
-        _bioCtrl.text    = _bio;
+      _bioCtrl.text       = _bio;
+      _firstNameCtrl.text = names.isNotEmpty ? names[0] : '';
+      _lastNameCtrl.text  = names.length > 1 ? names.sublist(1).join(' ') : '';
+      _phoneCtrl.text     = _phone;
+      _educationCtrl.text = _education;
+      _selectedGender     = _gender.isNotEmpty ? _gender : null;
+      _selectedCityId     = _cityId.isNotEmpty ? _cityId : null;
 
-        // NEW: Populate edit controllers
-        _firstNameCtrl.text = names.isNotEmpty ? names[0] : '';
-        _lastNameCtrl.text = names.length > 1 ? names.sublist(1).join(' ') : '';
-        _phoneCtrl.text = _phone;
-        _educationCtrl.text = _education;
-        if (_dateOfBirth.isNotEmpty) {
-          _selectedDob = DateTime.tryParse(_dateOfBirth);
-        }
-        _selectedGender = _gender.isNotEmpty ? _gender : null;
-        _selectedCityId = _cityId.isNotEmpty ? _cityId : null;
+      _isLoadingProfile = false;
+    });
+  }
 
-        _isLoadingProfile = false;
-      });
-    } catch (e) {
-      debugPrint('Profile load error: $e');
-      if (mounted) setState(() => _isLoadingProfile = false);
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Re-sync whenever provider notifies (e.g. profile finishes loading)
+    final provider = context.watch<GuideProvider>();
+    if (!provider.profileLoading && provider.profile != null && _isLoadingProfile) {
+      _syncProfileFromProvider();
     }
   }
 
@@ -374,7 +395,10 @@ class _GuideProfileScreenState extends State<GuideProfileScreen> {
             backgroundColor: Color(0xFF22C55E),
           ),
         );
-        await _loadProfile();
+        // Refresh provider so all screens get updated data
+        final provider = context.read<GuideProvider>();
+        await provider.forceReloadProfile();
+        if (mounted) _syncProfileFromProvider();
       }
     } catch (e) {
       debugPrint('Save error: $e');
@@ -439,8 +463,9 @@ class _GuideProfileScreenState extends State<GuideProfileScreen> {
 
   Future<void> _toggleAvailable() async {
     try {
-      final r = await _apiClient.post('/accounts/guide/availability/toggle/');
-      setState(() => _isAvailable = r.data['is_available'] ?? _isAvailable);
+      final provider = context.read<GuideProvider>();
+      final isNow = await provider.toggleAvailability();
+      if (mounted) setState(() => _isAvailable = isNow);
     } catch (e) {
       debugPrint('Toggle error: $e');
     }
@@ -766,7 +791,8 @@ class _GuideProfileScreenState extends State<GuideProfileScreen> {
 
       if (mounted) {
         // Reload profile to get updated languages with proper IDs
-        await _loadProfile();
+        await context.read<GuideProvider>().forceReloadProfile();
+        _syncProfileFromProvider();
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -826,12 +852,13 @@ class _GuideProfileScreenState extends State<GuideProfileScreen> {
   Future<void> _updateLanguageProficiency(UserLanguage ul, String newProficiency) async {
     try {
       await _apiClient.patch(
-        '/accounts/guide/languages/${ul.languageId}/update/',
+        '/accounts/guide/languages/${ul.bridgeId}/update/',
         data: {'proficiency': newProficiency},
       );
 
       if (mounted) {
-        await _loadProfile();
+        await context.read<GuideProvider>().forceReloadProfile();
+        _syncProfileFromProvider();
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -875,10 +902,11 @@ class _GuideProfileScreenState extends State<GuideProfileScreen> {
 
     if (confirm == true) {
       try {
-        await _apiClient.delete('/accounts/guide/languages/${ul.languageId}/delete/');
+        await _apiClient.delete('/accounts/guide/languages/${ul.bridgeId}/delete/');
 
         if (mounted) {
-          await _loadProfile();
+          await context.read<GuideProvider>().forceReloadProfile();
+          _syncProfileFromProvider();
 
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(

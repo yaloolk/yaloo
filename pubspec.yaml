@@ -61,6 +61,7 @@ dependencies:
   flutter_intl_phone_field: ^0.0.7
   provider: ^6.1.5+1
   cached_network_image: ^3.4.1
+  geocoding: ^4.0.0
 
 dev_dependencies:
   flutter_test:
