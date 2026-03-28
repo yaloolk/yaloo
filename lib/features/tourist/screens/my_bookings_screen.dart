@@ -33,7 +33,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen>
   @override
   void initState() {
     super.initState();
-    _tabCtrl = TabController(length: 5, vsync: this);
+    _tabCtrl = TabController(length: 6, vsync: this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<GuideBookingProvider>().loadMyBookings();
     });
@@ -63,6 +63,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen>
             bottom: false,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Padding(
                   padding: EdgeInsets.fromLTRB(20.w, 12.h, 20.w, 0),
@@ -108,11 +109,12 @@ class _MyBookingsScreenState extends State<MyBookingsScreen>
           return TabBarView(
             controller: _tabCtrl,
             children: [
-              _BookingList(bookings: prov.myBookings,                onCancel: _cancel),
-              _BookingList(bookings: _filter(prov, 'pending'),        onCancel: _cancel),
-              _BookingList(bookings: _filter(prov, 'confirmed'),      onCancel: _cancel),
-              _BookingList(bookings: _filter(prov, 'completed'),      onCancel: null),
-              _BookingList(bookings: _filter(prov, 'cancelled'),      onCancel: null),
+              _BookingList(bookings: prov.myBookings,                                            onCancel: _cancel),
+              _BookingList(bookings: _filterActive(prov),                                        onCancel: _cancel, isActive: true),
+              _BookingList(bookings: _filter(prov, 'pending'),                                   onCancel: _cancel),
+              _BookingList(bookings: _filter(prov, 'confirmed'),                                 onCancel: _cancel),
+              _BookingList(bookings: _filter(prov, 'completed'),                                 onCancel: null),
+              _BookingList(bookings: [..._filter(prov, 'cancelled'), ..._filter(prov, 'rejected')], onCancel: null),
             ],
           );
         },
@@ -123,6 +125,22 @@ class _MyBookingsScreenState extends State<MyBookingsScreen>
   List<GuideBookingModel> _filter(GuideBookingProvider p, String status) =>
       p.myBookings.where((b) => b.bookingStatus == status).toList();
 
+  // Active = confirmed booking whose time window is NOW
+  List<GuideBookingModel> _filterActive(GuideBookingProvider p) {
+    final now = DateTime.now();
+    return p.myBookings.where((b) {
+      if (b.bookingStatus != 'confirmed') return false;
+      try {
+        final sp = b.startTime.split(':');
+        final ep = b.endTime.split(':');
+        final d  = DateTime.parse(b.bookingDate);
+        final start = DateTime(d.year, d.month, d.day, int.parse(sp[0]), int.parse(sp[1]));
+        final end   = DateTime(d.year, d.month, d.day, int.parse(ep[0]), int.parse(ep[1]));
+        return now.isAfter(start) && now.isBefore(end);
+      } catch (_) { return false; }
+    }).toList();
+  }
+
   Widget _tabBar() => TabBar(
     controller: _tabCtrl,
     isScrollable: true,
@@ -130,13 +148,13 @@ class _MyBookingsScreenState extends State<MyBookingsScreen>
     labelColor: Colors.white,
     unselectedLabelColor: Colors.white.withOpacity(0.55),
     labelStyle: TextStyle(fontSize: 13.sp, fontWeight: FontWeight.w700),
-    unselectedLabelStyle:
-    TextStyle(fontSize: 13.sp, fontWeight: FontWeight.w500),
+    unselectedLabelStyle: TextStyle(fontSize: 13.sp, fontWeight: FontWeight.w500),
     indicator: UnderlineTabIndicator(
         borderSide: const BorderSide(width: 2.5, color: Colors.white),
         insets: EdgeInsets.symmetric(horizontal: 14.w)),
     tabs: const [
       Tab(text: 'All'),
+      Tab(child: _ActiveTabLabel()),
       Tab(text: 'Pending'),
       Tab(text: 'Confirmed'),
       Tab(text: 'Completed'),
@@ -158,10 +176,36 @@ class _MyBookingsScreenState extends State<MyBookingsScreen>
   }
 }
 
+// Pulsing "Active" tab label
+class _ActiveTabLabel extends StatefulWidget {
+  const _ActiveTabLabel();
+  @override State<_ActiveTabLabel> createState() => _ActiveTabLabelState();
+}
+class _ActiveTabLabelState extends State<_ActiveTabLabel>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _c;
+  late final Animation<double> _a;
+  @override void initState() {
+    super.initState();
+    _c = AnimationController(vsync: this, duration: const Duration(milliseconds: 900))
+      ..repeat(reverse: true);
+    _a = Tween(begin: 0.4, end: 1.0).animate(_c);
+  }
+  @override void dispose() { _c.dispose(); super.dispose(); }
+  @override Widget build(BuildContext context) => Row(mainAxisSize: MainAxisSize.min, children: [
+    FadeTransition(opacity: _a, child: Container(
+        width: 7, height: 7,
+        decoration: const BoxDecoration(color: Color(0xFF10B981), shape: BoxShape.circle))),
+    const SizedBox(width: 5),
+    const Text('Active'),
+  ]);
+}
+
 class _BookingList extends StatelessWidget {
   final List<GuideBookingModel> bookings;
   final Future<void> Function(String)? onCancel;
-  const _BookingList({required this.bookings, this.onCancel});
+  final bool isActive;
+  const _BookingList({required this.bookings, this.onCancel, this.isActive = false});
 
   @override
   Widget build(BuildContext context) {
@@ -241,23 +285,25 @@ class _BookingCard extends StatelessWidget {
     final canCancel = (status == 'pending' || status == 'confirmed') && onCancel != null;
 
     return GestureDetector(
-      // FIX HERE: Passing booking.toJson() to avoid the Router Map Casting Error
-      onTap: () => Navigator.pushNamed(context, '/bookingStatus', arguments: bookings.toJson()),
+      onTap: () {
+        if (status == 'completed') {
+          Navigator.pushNamed(context, '/tourCompletion', arguments: bookings.toJson());
+        } else {
+          Navigator.pushNamed(context, '/bookingStatus', arguments: bookings.toJson());
+        }
+      },
       child: Container(
         margin: EdgeInsets.only(bottom: 14.h),
         decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(24.r),
-            boxShadow: [
-              BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 16, offset: const Offset(0, 4)),
-            ]),
+            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 16, offset: const Offset(0, 4))]),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(24.r),
           child: Column(children: [
             Container(
               padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
-              decoration: BoxDecoration(
-                  gradient: LinearGradient(colors: [cfg.color, cfg.colorDark], begin: Alignment.centerLeft, end: Alignment.centerRight)),
+              decoration: BoxDecoration(gradient: LinearGradient(colors: [cfg.color, cfg.colorDark], begin: Alignment.centerLeft, end: Alignment.centerRight)),
               child: Row(children: [
                 Icon(cfg.icon, color: Colors.white, size: 13.w),
                 SizedBox(width: 7.w),
@@ -268,17 +314,22 @@ class _BookingCard extends StatelessWidget {
             ),
             Padding(
               padding: EdgeInsets.fromLTRB(14.w, 14.h, 14.w, 10.h),
-              child: Row(children: [
+              child: Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
                 _photo(),
                 SizedBox(width: 12.w),
                 Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text(bookings.guideName.isNotEmpty ? bookings.guideName : 'Your Guide', style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.w800, color: _dark)),
+                  Text(
+                      bookings.guideName.isNotEmpty ? bookings.guideName : 'Your Guide',
+                      style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.w800, color: _dark),
+                      maxLines: 1, overflow: TextOverflow.ellipsis),
                   SizedBox(height: 3.h),
                   if (bookings.cityName.isNotEmpty)
                     Row(children: [
                       Icon(CupertinoIcons.map_pin, color: _gray, size: 11.w),
                       SizedBox(width: 3.w),
-                      Text(bookings.cityName, style: TextStyle(color: _gray, fontSize: 11.sp)),
+                      Flexible(child: Text(bookings.cityName,
+                          style: TextStyle(color: _gray, fontSize: 11.sp),
+                          maxLines: 1, overflow: TextOverflow.ellipsis)),
                     ]),
                 ])),
               ]),

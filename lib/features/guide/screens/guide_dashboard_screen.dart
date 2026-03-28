@@ -75,7 +75,7 @@ class _GuideDashboardScreenState extends State<GuideDashboardScreen> {
               page = const HostChatScreen();
               break;
             case '/guideBookings':
-              page = const HostBookingsScreen();
+              page = const GuideBookingsScreen();
               break;
             case '/guideWallet':
               page = const GuideWalletScreen();

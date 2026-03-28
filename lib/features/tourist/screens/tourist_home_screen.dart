@@ -9,6 +9,8 @@ import 'package:yaloo/core/constants/colors.dart';
 import 'package:yaloo/core/constants/app_text_styles.dart';
 import '../../../core/widgets/custom_icon_button.dart';
 import '../providers/tourist_provider.dart';
+import '../providers/guide_booking_provider.dart';
+import '../models/guide_booking_model.dart';
 
 // ── Mock data (replace with real API data later) ──────────────────────────────
 final List<Map<String, String>> featuredDestinations = [
@@ -59,6 +61,7 @@ class _TouristHomeScreenState extends State<TouristHomeScreen> {
       await Future.delayed(const Duration(milliseconds: 200));
       if (mounted) {
         context.read<TouristProvider>().loadProfile();
+        context.read<GuideBookingProvider>().loadMyBookings();
       }
     });
   }
@@ -84,7 +87,9 @@ class _TouristHomeScreenState extends State<TouristHomeScreen> {
                   children: [
                     SizedBox(height: 8.h),
                     _buildHeroHeader(context, provider),
-                    SizedBox(height: 20.h),
+                    SizedBox(height: 12.h),
+                    _ActiveBookingBanner(),
+                    SizedBox(height: 12.h),
                     _buildSearchBar(),
                     SizedBox(height: 24.h),
                     _buildFeaturedSlider(),
@@ -616,4 +621,135 @@ class _TouristHomeScreenState extends State<TouristHomeScreen> {
     borderRadius: BorderRadius.circular(24.r),
     boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.045), blurRadius: 16, offset: const Offset(0, 4))],
   );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// _ActiveBookingBanner
+// Shows when tourist has a confirmed booking happening right now.
+// Tapping navigates to /bookingStatus.
+// ─────────────────────────────────────────────────────────────────────────────
+class _ActiveBookingBanner extends StatefulWidget {
+  const _ActiveBookingBanner();
+  @override State<_ActiveBookingBanner> createState() => _ActiveBookingBannerState();
+}
+
+class _ActiveBookingBannerState extends State<_ActiveBookingBanner>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _pulse;
+  late final Animation<double>    _pulseAnim;
+
+  @override
+  void initState() {
+    super.initState();
+    _pulse = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 900))
+      ..repeat(reverse: true);
+    _pulseAnim = Tween(begin: 0.6, end: 1.0)
+        .animate(CurvedAnimation(parent: _pulse, curve: Curves.easeInOut));
+  }
+
+  @override
+  void dispose() { _pulse.dispose(); super.dispose(); }
+
+  // Find the active booking (confirmed + time window is NOW)
+  GuideBookingModel? _activeBooking(List<GuideBookingModel> bookings) {
+    final now = DateTime.now();
+    for (final b in bookings) {
+      if (b.bookingStatus != 'confirmed') continue;
+      try {
+        final sp = b.startTime.split(':');
+        final ep = b.endTime.split(':');
+        final d  = DateTime.parse(b.bookingDate);
+        final start = DateTime(d.year, d.month, d.day, int.parse(sp[0]), int.parse(sp[1]));
+        final end   = DateTime(d.year, d.month, d.day, int.parse(ep[0]), int.parse(ep[1]));
+        if (now.isAfter(start) && now.isBefore(end)) return b;
+      } catch (_) {}
+    }
+    return null;
+  }
+
+  String _fmtTime(String t) {
+    try {
+      final p = t.split(':'); int h = int.parse(p[0]);
+      final m = p[1].padLeft(2,'0');
+      final ap = h >= 12 ? 'PM' : 'AM';
+      if (h == 0) h = 12; else if (h > 12) h -= 12;
+      return '$h:$m $ap';
+    } catch (_) { return t; }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bookings = context.watch<GuideBookingProvider>().myBookings;
+    final active   = _activeBooking(bookings);
+    if (active == null) return const SizedBox.shrink();
+
+    final now   = DateTime.now();
+    final ep    = active.endTime.split(':');
+    final d     = DateTime.parse(active.bookingDate);
+    final end   = DateTime(d.year, d.month, d.day, int.parse(ep[0]), int.parse(ep[1]));
+    final remaining = end.difference(now);
+    final hh = remaining.inHours.toString().padLeft(2,'0');
+    final mm = remaining.inMinutes.remainder(60).toString().padLeft(2,'0');
+
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 16.w),
+      child: GestureDetector(
+        onTap: () => Navigator.pushNamed(context, '/bookingStatus',
+            arguments: active.toJson()),
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+                colors: [Color(0xFF059669), Color(0xFF10B981)],
+                begin: Alignment.topLeft, end: Alignment.bottomRight),
+            borderRadius: BorderRadius.circular(20.r),
+            boxShadow: [BoxShadow(
+                color: const Color(0xFF10B981).withOpacity(0.4),
+                blurRadius: 18, offset: const Offset(0, 6))],
+          ),
+          padding: EdgeInsets.fromLTRB(16.w, 14.h, 16.w, 14.h),
+          child: Row(children: [
+            // Pulsing dot
+            FadeTransition(
+              opacity: _pulseAnim,
+              child: Container(
+                  width: 10.w, height: 10.w,
+                  decoration: const BoxDecoration(
+                      color: Colors.white, shape: BoxShape.circle)),
+            ),
+            SizedBox(width: 10.w),
+            Expanded(child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Tour In Progress!', style: TextStyle(
+                    color: Colors.white, fontSize: 14.sp,
+                    fontWeight: FontWeight.w800)),
+                SizedBox(height: 2.h),
+                Text(
+                    '${active.guideName.isNotEmpty ? active.guideName : "Guide"}'
+                        ' · ${_fmtTime(active.startTime)} – ${_fmtTime(active.endTime)}',
+                    style: TextStyle(
+                        color: Colors.white.withOpacity(0.85), fontSize: 11.sp),
+                    maxLines: 1, overflow: TextOverflow.ellipsis),
+              ],
+            )),
+            SizedBox(width: 8.w),
+            // Time remaining pill
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
+              decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(12.r)),
+              child: Text('$hh:$mm left', style: TextStyle(
+                  color: Colors.white, fontSize: 12.sp,
+                  fontWeight: FontWeight.w700)),
+            ),
+            SizedBox(width: 8.w),
+            Icon(CupertinoIcons.chevron_right,
+                color: Colors.white.withOpacity(0.8), size: 14.w),
+          ]),
+        ),
+      ),
+    );
+  }
 }
