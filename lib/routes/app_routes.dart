@@ -18,6 +18,10 @@ import '../features/auth/screens/guide/guide_profile_completion_screen.dart';
 import '../features/auth/screens/common/profile_submitted_screen.dart';
 import '../features/auth/screens/host/host_signup_screen.dart.';
 import '../features/auth/screens/host/host_profile_completion_screen.dart';
+import '../features/tourist/screens/host/my_stay_bookings_screen.dart';
+import '../features/tourist/screens/host/stay_booking_confirmation_screen.dart';
+import '../features/tourist/screens/host/stay_booking_status_screen.dart';
+import '../features/tourist/screens/host/stay_review_screen.dart';
 import '../features/tourist/screens/my_bookings_screen.dart';
 import '../features/tourist/screens/tourist_tour_completion_screen.dart';
 import '../features/tourist/screens/personal_information_screen.dart';
@@ -30,8 +34,6 @@ import '../features/booking/screens/booking_details_screen.dart';
 import '../features/booking/screens/tour_information_screen.dart';
 import '../features/booking/screens/payment_screen.dart';
 import '../features/booking/screens/booking_request_sent_screen.dart';
-import '../features/booking/screens/booking_status_screen.dart';
-import '../features/booking/screens/tour_completion_screen.dart';
 import '../features/tourist/screens/host/find_host_screen.dart';
 import '../features/tourist/screens/host/host_list_screen.dart';
 import '../features/tourist/screens/host/tourist_host_profile.dart';
@@ -50,7 +52,7 @@ import '../features/common/screens/notification/notification_screen.dart';
 import 'package:yaloo/features/chat/screens/chat_list_screen.dart';
 import 'package:yaloo/features/chat/screens/message_screen.dart';
 import 'package:yaloo/features/auth/screens/common/approval_pending_screen.dart';
-
+import 'package:yaloo/features/tourist/screens/host/stay_booking_form_screen.dart';
 
 
 
@@ -77,16 +79,13 @@ class AppRoutes {
     '/tourInformation': (_) => const TourInformationScreen(),
     '/payment': (_) => const PaymentScreen(),
     '/bookingRequestSent': (_) => const BookingRequestSentScreen(),
-    '/findHost': (_) => const FindHostScreen(),
-    '/hostList': (_) => const HostListScreen(),
-    '/touristHostProfile': (_) => const TouristHostProfileScreen(),
+    '/touristHostProfile': (context) => const TouristHostProfileScreen(),
     '/stayDetails': (_) => const StayDetailsScreen(),
     '/guideDashboard': (_) => const GuideDashboardScreen(),
     '/guideTourRequests': (_) => const GuideTourRequestsScreen(),
     '/guideTourRequestDetails': (_) => const GuideTourRequestDetailsScreen(),
     '/guideBookingCancellation': (_) => const GuideBookingCancellationScreen(),
     '/hostDashboard': (_) => const HostDashboardScreen(),
-    '/hostStayRequests': (_) => const HostStayRequestsScreen(),
     '/hostStayRequestDetails': (_) => const HostStayRequestDetailsScreen(),
     '/touristPublicProfile': (_) => const TouristPublicProfileScreen(),
     '/hostStayCancellation': (_) => const HostStayCancellationScreen(),
@@ -105,6 +104,14 @@ class AppRoutes {
     '/myBookings': (context) => const MyBookingsScreen(),
     '/bookingStatus':   (_) => const TouristBookingStatusScreen(),
     '/tourCompletion':  (_) => const TouristTourCompletionScreen(),
+    '/findHost':               (_) => const FindHostScreen(),
+    '/hostList':               (_) => const HostListScreen(),
+    '/stayBookingForm':        (_) => const StayBookingFormScreen(),
+    '/stayBookingConfirmation':(_) => const StayBookingConfirmationScreen(),
+    '/myStayBookings':         (_) => const MyStayBookingsScreen(),
+    '/stayBookingStatus':      (_) => const StayBookingStatusScreen(),
+    '/hostStayRequests':       (_) => const HostStayRequestsScreen(),
+    '/stayReview': (context) => const StayReviewScreen(),
 
 
   };

@@ -96,11 +96,26 @@ class _TouristProfileScreenState extends State<TouristProfileScreen> {
       context: context, backgroundColor: Colors.transparent,
       builder: (_) => const _LogoutSheet(),
     );
+
     if (confirm != true || !mounted) return;
+
     try {
+      // 1. Delete the access token
       await SecureStorage().deleteAccessToken();
-      if (mounted) { context.read<TouristProvider>().clear(); Navigator.pushReplacementNamed(context, '/login'); }
-    } catch (e) { if (mounted) _snack('Logout failed: $e', Colors.red); }
+
+      if (mounted) {
+        // 2. Clear the user data from the provider
+        context.read<TouristProvider>().clear();
+
+        // 3. Clear the navigation stack and go to login (REPLACED HERE)
+        Navigator.of(context, rootNavigator: true).pushNamedAndRemoveUntil(
+          '/login',
+              (Route<dynamic> route) => false,
+        );
+      }
+    } catch (e) {
+      if (mounted) _snack('Logout failed: $e', Colors.red);
+    }
   }
 
   void _snack(String msg, Color color) {

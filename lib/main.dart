@@ -4,14 +4,15 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'core/constants/colors.dart';
-import 'features/guide/providers/guide_provider.dart';
-import 'features/guide/screens/guide_dashboard_screen.dart';
-import 'features/host/providers/host_provider.dart';
-import 'features/tourist/providers/guide_booking_provider.dart';
-import 'features/tourist/providers/tourist_provider.dart';
-import 'features/tourist/services/guide_booking_service.dart';
-import 'routes/app_routes.dart';
+import 'package:yaloo/core/constants/colors.dart';
+import 'package:yaloo/features/guide/providers/guide_provider.dart';
+import 'package:yaloo/features/guide/screens/guide_dashboard_screen.dart';
+import 'package:yaloo/features/host/providers/host_provider.dart';
+import 'package:yaloo/features/tourist/providers/guide_booking_provider.dart';
+import 'package:yaloo/features/tourist/providers/stay_booking_provider.dart';
+import 'package:yaloo/features/tourist/providers/tourist_provider.dart';
+import 'package:yaloo/features/tourist/services/guide_booking_service.dart';
+import 'package:yaloo/routes/app_routes.dart';
 import 'package:provider/provider.dart';
 
 
@@ -58,6 +59,9 @@ class YalooApp extends StatelessWidget {
             ),
           ),
           ChangeNotifierProvider(create: (_) => GuideProvider()..init()),
+          ChangeNotifierProvider(
+            create: (_) => StayBookingProvider(),
+          ),
         ],
         child: ScreenUtilInit(
       designSize: const Size(390, 844),

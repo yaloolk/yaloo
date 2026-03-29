@@ -26,6 +26,11 @@ import '../../common/screens/settings/language_screen.dart';
 import '../../common/screens/settings/settings_screen.dart';
 import '../../common/screens/notification/notification_screen.dart';
 import 'host/find_host_screen.dart';
+import 'host/my_stay_bookings_screen.dart';
+import 'host/stay_booking_confirmation_screen.dart';
+import 'host/stay_booking_form_screen.dart';
+import 'host/stay_booking_status_screen.dart';
+import 'host/stay_review_screen.dart';
 import 'host/tourist_host_profile.dart';
 import 'tourist_home_screen.dart';
 import 'tourist_bookings_screen.dart';
@@ -104,6 +109,10 @@ class _TouristDashboardScreenState extends State<TouristDashboardScreen> {
             case '/hostList':         page = const HostListScreen();          break;
             case '/touristHostProfile':page = const TouristHostProfileScreen(); break;
             case '/stayDetails':      page = const StayDetailsScreen();       break;
+            case '/stayBookingForm': page = const StayBookingFormScreen(); break;
+            case '/stayBookingConfirmation': page = const StayBookingConfirmationScreen(); break;
+            case '/myStayBookings':       page = const MyStayBookingsScreen(); break;
+            case '/stayBookingStatus':    page = const StayBookingStatusScreen(); break;
 
           // ── Profile / settings ─────────────────────────────────────────
             case '/personalInformation': page = const PersonalInformationScreen(); break;
@@ -124,6 +133,8 @@ class _TouristDashboardScreenState extends State<TouristDashboardScreen> {
 
             case '/bookingStatus':     page = const TouristBookingStatusScreen();
             case '/tourCompletion':     page = const TouristTourCompletionScreen();
+
+            case '/stayReview':     page = const StayReviewScreen();
 
             default:                   page = const TouristHomeScreen();
           }
