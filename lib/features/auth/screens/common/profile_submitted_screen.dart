@@ -71,7 +71,6 @@ class ProfileSubmittedScreen extends StatelessWidget {
             // TODO: Navigate to the Guide Dashboard
             // Navigator.pushReplacementNamed(context, '/guideDashboard');
 
-            // --- MOCKUP: For now, just print ---
             if (kDebugMode) {
               print("Navigating to Guide Dashboard (placeholder)");
             }

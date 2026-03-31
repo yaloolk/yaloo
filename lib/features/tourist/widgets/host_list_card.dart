@@ -120,10 +120,6 @@ class HostListCard extends StatelessWidget {
             // TODO: Handle Favorite
           },
           icon: Icon(FontAwesomeIcons.heart, color: AppColors.primaryGray, size: 20.w),
-          // style: IconButton.styleFrom(
-          //     backgroundColor: AppColors.secondaryGray.withOpacity(0.5),
-          //     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r))
-          // ),
         ),
         SizedBox(width: 12.w),
         TextButton(

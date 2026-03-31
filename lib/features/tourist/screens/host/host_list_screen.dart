@@ -1,5 +1,4 @@
 // lib/features/tourist/screens/host/host_list_screen.dart
-// Step 2: Tourist sees search results → taps → goes to host profile
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
@@ -173,7 +172,6 @@ class _HostListScreenState extends State<HostListScreen> {
   ));
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
 class _StayCard extends StatelessWidget {
   final StaySearchResult stay;
   final VoidCallback onTap;

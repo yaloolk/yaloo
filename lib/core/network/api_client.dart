@@ -1,19 +1,4 @@
 // lib/core/network/api_client.dart
-//
-// ═══════════════════════════════════════════════════════════════════════
-// ROOT CAUSE OF 401 "Token validation failed":
-//   OLD code:  reads token from SecureStorage
-//              → SecureStorage holds the token from login time
-//              → Supabase auto-refreshes the JWT every ~1 hour
-//              → SecureStorage never gets updated → stale token → 401
-//
-// FIX: ALWAYS read the token directly from
-//      Supabase.instance.client.auth.currentSession?.accessToken
-//      This is always fresh because Supabase SDK refreshes it automatically.
-//
-// SECONDARY FIX: On 401, attempt one session refresh then retry.
-// TIMEOUT FIX:   Raised timeouts + retry with backoff.
-// ═══════════════════════════════════════════════════════════════════════
 
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';

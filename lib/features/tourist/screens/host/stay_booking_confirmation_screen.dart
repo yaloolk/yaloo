@@ -1,14 +1,9 @@
 // lib/features/tourist/screens/host/stay_booking_confirmation_screen.dart
 
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:provider/provider.dart';
-import 'package:yaloo/core/network/api_client.dart';
 import 'package:yaloo/features/tourist/models/stay_booking_model.dart';
-import 'package:yaloo/features/tourist/providers/stay_booking_provider.dart';
 
 const _blue       = Color(0xFF2563EB);
 const _blueDark   = Color(0xFF1D4ED8);

@@ -1,17 +1,11 @@
 // lib/features/tourist/screens/host/my_stay_bookings_screen.dart
-//
-// Tourists view all their stay bookings in one place.
-// Completed bookings show a "Leave Review" button.
-// Tapping a booking goes to StayBookingStatusScreen.
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-
 import 'package:yaloo/features/tourist/models/stay_booking_model.dart';
 import 'package:yaloo/features/tourist/providers/stay_booking_provider.dart';
 

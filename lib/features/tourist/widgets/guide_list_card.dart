@@ -13,7 +13,6 @@ class GuideListCard extends StatelessWidget {
   final List<String> languages;
   final List<String> specialties;
   final bool isAvailable;
-  // --- ADDED: We need the full data to pass ---
   final Map<String, dynamic> guideData;
 
   const GuideListCard({
@@ -25,7 +24,7 @@ class GuideListCard extends StatelessWidget {
     required this.languages,
     required this.specialties,
     required this.isAvailable,
-    required this.guideData, // --- ADDED ---
+    required this.guideData,
   });
 
   @override
@@ -80,7 +79,7 @@ class GuideListCard extends StatelessWidget {
              SizedBox(height: 12.h),
             Divider(color: AppColors.secondaryGray),
              SizedBox(height: 8.h),
-            _buildActionButtons(context), // <-- Pass context
+            _buildActionButtons(context),
           ],
         ),
       ),
@@ -178,7 +177,7 @@ class GuideListCard extends StatelessWidget {
     );
   }
 
-  Widget _buildActionButtons(BuildContext context) { // <-- Pass context
+  Widget _buildActionButtons(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -190,11 +189,10 @@ class GuideListCard extends StatelessWidget {
         ),
         TextButton(
           onPressed: () {
-            // --- UPDATED: Navigate to Guide Profile ---
             Navigator.pushNamed(
               context,
               '/touristGuideProfile',
-              arguments: guideData, // <-- Pass the guide's data
+              arguments: guideData,
             );
           },
           child: Text(
@@ -207,12 +205,11 @@ class GuideListCard extends StatelessWidget {
         ),
         ElevatedButton(
           onPressed: () {
-            // --- UPDATED: Navigate to Booking Details ---
             if (isAvailable) {
               Navigator.pushNamed(
                   context,
                   '/bookingDetails',
-                  arguments: { // Pass just what the booking page needs
+                  arguments: {
                     'name': name,
                     'image': imageUrl,
                     'bookingType': 'guide'

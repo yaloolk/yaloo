@@ -69,17 +69,13 @@ class StayBookingService {
     try {
       final r = await _dio.get('/bookings/stays/$stayId/profile/');
 
-      // 1. Safely cast the map to avoid hidden Dart TypeErrors
       final Map<String, dynamic> data = Map<String, dynamic>.from(r.data as Map);
 
-      // 2. 🛡️ CRITICAL FIX: Sanitize all null values so the UI never crashes!
       data['cover_photo'] = data['cover_photo'] ?? '';
       data['host_photo']  = data['host_photo'] ?? '';
       data['host_bio']    = data['host_bio'] ?? 'This host has not provided a biography yet.';
       data['description'] = data['description'] ?? 'No description available.';
       data['city_name']   = data['city_name'] ?? '';
-
-      // 3. Ensure arrays always exist so lists don't crash
       data['photos']      = data['photos'] ?? [];
       data['facilities']  = data['facilities'] ?? [];
       data['reviews']     = data['reviews'] ?? [];

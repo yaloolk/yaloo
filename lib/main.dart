@@ -19,7 +19,7 @@ import 'package:provider/provider.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Load environment variables from .env file
+
   await dotenv.load(fileName: ".env");
 
   final supabaseUrl = dotenv.env['SUPABASE_URL']!;

@@ -1,8 +1,5 @@
 // tourist_api_service.dart  (FIXED)
-//
-// ROOT CAUSE: ApiClient base URL = http://127.0.0.1:8000/api
-// Old service used /api/me/ etc -> resolved to /api/api/me/ (double prefix).
-// ALL paths must be /accounts/... matching Django urls.py exactly.
+
 
 import 'package:dio/dio.dart';
 import '../network/api_client.dart';

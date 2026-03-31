@@ -7,8 +7,6 @@ class EnvConfig {
   static String get supabaseUrl => dotenv.env['SUPABASE_URL'] ?? '';
   static String get supabaseAnonKey => dotenv.env['SUPABASE_ANON_KEY'] ?? '';
 
-  // Backend API
-  // static String get apiBaseUrl => dotenv.env['API_BASE_URL'] ?? '';
 
   static String get apiBaseUrl {
     final url = dotenv.env['API_BASE_URL'];

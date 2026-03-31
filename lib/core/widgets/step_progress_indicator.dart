@@ -26,28 +26,20 @@ class StepProgressIndicator extends StatelessWidget {
   List<Widget> _buildSteps() {
     List<Widget> stepWidgets = [];
     for (int i = 0; i < steps.length; i++) {
-      // --- FIXED ---
-      // 'steps' is a List, so we access it by index.
       final Map<String, IconData> stepMap = steps[i];
-      // Each item in the list is a Map with one entry.
-      // We get the first (and only) entry from that map.
       final MapEntry<String, IconData> step = stepMap.entries.first;
-      // --- END FIX ---
-
       final bool isActive = i == currentStep;
       final bool isCompleted = i < currentStep;
 
-      // Add the step (Icon + Label)
       stepWidgets.add(
         _buildStep(
-          icon: step.value, // Now this is correct (the IconData)
-          label: step.key,   // Now this is correct (the String label)
+          icon: step.value,
+          label: step.key,
           isActive: isActive,
           isCompleted: isCompleted,
         ),
       );
 
-      // Add a connector line between steps
       if (i < steps.length - 1) {
         stepWidgets.add(
           _buildConnector(isCompleted: isCompleted),

@@ -1,7 +1,4 @@
 // lib/features/tourist/services/guide_booking_service.dart
-//
-// API Endpoints updated to use the correct 'bookings' backend folder endpoints:
-// Path mapping: path('api/bookings/', ...)
 
 import 'package:dio/dio.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';

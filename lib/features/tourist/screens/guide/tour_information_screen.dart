@@ -1,14 +1,4 @@
 // lib/features/tourist/screens/guide/tour_information_screen.dart
-//
-// CHANGES FROM ORIGINAL:
-//   • _kDbLocations const list REMOVED — now fetched from API
-//   • GET /api/accounts/locations/         → system locations
-//   • GET /api/accounts/locations/saved/   → tourist's own saved
-//   • POST /api/accounts/locations/saved/  → save current map pin
-//   • DELETE /api/accounts/locations/saved/<id>/ → delete saved
-//   • "Saved" tab shows both system and personal locations in one list
-//   • Tourists can long-press a personal location to delete it
-//   • After picking on Google Map, a "Save this location" button appears
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';

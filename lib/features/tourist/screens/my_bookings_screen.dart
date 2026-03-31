@@ -1,6 +1,5 @@
 // lib/features/tourist/screens/my_bookings_screen.dart
-// Combined screen: Guide bookings (tab 1) + Stay bookings (tab 2)
-// Each type loads its own provider independently
+
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';

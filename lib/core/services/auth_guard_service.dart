@@ -1,10 +1,4 @@
 // lib/core/services/auth_guard_service.dart
-//
-// FIXES:
-//   • Uses the fixed ApiClient (Supabase token always fresh)
-//   • Added timeout guard — returns /login on connection failure
-//   • Reduced consecutive API calls (single /accounts/me/ only)
-//   • Logs the exact failure reason for debugging
 
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';

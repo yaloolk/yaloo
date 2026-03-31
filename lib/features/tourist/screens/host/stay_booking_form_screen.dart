@@ -1,5 +1,4 @@
 // lib/features/tourist/screens/host/stay_booking_form_screen.dart
-// 2-step booking: Step 1 = personal details, Step 2 = stay info & summary
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';

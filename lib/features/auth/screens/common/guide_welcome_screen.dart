@@ -126,10 +126,6 @@ class GuideWelcomeScreen extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────────────────
-// Info card — icon on left, title + reason on right
-// Same shadow style as the rest of the app
-// ─────────────────────────────────────────────────────────
 class _InfoCard extends StatelessWidget {
   final IconData icon;
   final String title;
@@ -207,11 +203,6 @@ class _InfoCard extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────────────────
-// Asset-free illustration: a soft, layered composition of
-// a map-pin with a small person silhouette, built entirely
-// from Flutter primitives — no image assets required.
-// ─────────────────────────────────────────────────────────
 class _IllustrationWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {

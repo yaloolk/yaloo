@@ -1,7 +1,7 @@
 // lib/features/tourist/services/tourist_public_profile_service.dart
 
 import 'dart:convert';
-import 'package:yaloo/core/network/api_client.dart';         // your existing ApiClient
+import 'package:yaloo/core/network/api_client.dart';
 import 'package:yaloo/features/tourist/models/tourist_public_profile_model.dart';
 
 class TouristPublicProfileService {

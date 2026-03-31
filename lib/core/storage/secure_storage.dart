@@ -1,16 +1,5 @@
 // lib/core/storage/secure_storage.dart
-//
-// IMPORTANT NOTE:
-//   The access_token stored here is NO LONGER used by ApiClient to
-//   authenticate requests. ApiClient now reads the token directly from
-//   Supabase.instance.client.auth.currentSession (always fresh).
-//
-//   SecureStorage is still used for:
-//     • user_id, user_role, is_profile_complete  (fast local reads)
-//     • refresh_token  (if needed for non-Supabase flows)
-//
-//   setAccessToken() is called at login for compatibility with any
-//   code that still reads it, but it is NOT the source of truth for auth.
+
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';

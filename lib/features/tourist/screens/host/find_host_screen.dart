@@ -1,5 +1,4 @@
 // lib/features/tourist/screens/host/find_host_screen.dart
-// Step 1: Tourist searches for stays — city (from DB), dates (REQUIRED), guests, rooms
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';

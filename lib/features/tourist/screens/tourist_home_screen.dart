@@ -54,9 +54,6 @@ class _TouristHomeScreenState extends State<TouristHomeScreen> {
   @override
   void initState() {
     super.initState();
-    // ✅ Load via provider — uses cache if already loaded by profile screen.
-    //    Small delay so we don't race with the profile tab on cold start
-    //    (Django dev server is single-threaded).
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await Future.delayed(const Duration(milliseconds: 200));
       if (mounted) {
@@ -623,11 +620,7 @@ class _TouristHomeScreenState extends State<TouristHomeScreen> {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// _ActiveBookingBanner
-// Shows when tourist has a confirmed booking happening right now.
-// Tapping navigates to /bookingStatus.
-// ─────────────────────────────────────────────────────────────────────────────
+
 class _ActiveBookingBanner extends StatefulWidget {
   const _ActiveBookingBanner();
   @override State<_ActiveBookingBanner> createState() => _ActiveBookingBannerState();

@@ -79,9 +79,9 @@ class ProfileCompletionApi {
     String? education,
     double? ratePerHour,
     List<String>? languageIds,
-    required XFile governmentId, // Changed from File to XFile
-    required XFile profilePhoto, // Changed from File to XFile
-    XFile? license, // Changed from File to XFile
+    required XFile governmentId,
+    required XFile profilePhoto,
+    XFile? license,
   }) async {
     try {
       // Create form data for multipart upload

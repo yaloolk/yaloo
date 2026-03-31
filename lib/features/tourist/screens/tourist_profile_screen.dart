@@ -21,9 +21,6 @@ class _TouristProfileScreenState extends State<TouristProfileScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      // ✅ FIX: Small delay so home screen loads first.
-      // Django's dev server is single-threaded — simultaneous requests
-      // queue up and the second one can timeout waiting for the first.
       await Future.delayed(const Duration(milliseconds: 500));
       if (mounted) _loadData();
     });
