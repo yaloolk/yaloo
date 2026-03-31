@@ -1,5 +1,4 @@
 // tourist_provider.dart
-// API matches tourist_profile_screen.dart exactly
 
 import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';

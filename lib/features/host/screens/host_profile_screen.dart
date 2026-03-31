@@ -1,5 +1,4 @@
 // lib/features/host/screens/host_profile_screen.dart
-// ✅ COMPLETE — Inline bio edit, language add/remove/update, full backend wiring, logout
 
 import 'dart:ui';
 import 'package:flutter/material.dart';

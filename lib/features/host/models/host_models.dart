@@ -1,5 +1,4 @@
 // lib/features/host/models/host_models.dart
-// ✅ COMPLETE MODELS
 
 class HostProfile {
   final String id;

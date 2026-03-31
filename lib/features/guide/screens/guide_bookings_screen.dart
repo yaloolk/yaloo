@@ -1,12 +1,4 @@
 // lib/features/guide/screens/guide_bookings_screen.dart
-//
-// Full guide-side booking management screen with:
-//  • Pending requests tab: Accept / Reject with optional note
-//  • Upcoming tab: confirmed tours with countdown + progress
-//  • Active tab: live tour with "Mark as Complete" CTA
-//  • History tab: completed / cancelled / rejected
-//  • Auto-refresh every 30 s in background
-//  • All API calls via GuideBookingService
 
 import 'dart:async';
 import 'package:cached_network_image/cached_network_image.dart';

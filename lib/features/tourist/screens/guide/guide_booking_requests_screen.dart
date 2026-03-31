@@ -1,5 +1,4 @@
 // lib/features/guide/screens/guide/guide_booking_requests_screen.dart
-// Guide sees pending booking requests and accepts / rejects them
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';

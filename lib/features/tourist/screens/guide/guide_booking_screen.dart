@@ -1,5 +1,4 @@
 // lib/features/tourist/screens/guide/guide_booking_screen.dart
-// Tourist fills in extra details and confirms the booking
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';

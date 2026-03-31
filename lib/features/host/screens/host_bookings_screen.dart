@@ -1,5 +1,4 @@
 // lib/features/host/screens/host_bookings_screen.dart
-// Step 11: Host sees all stay bookings — Requests, Upcoming, History
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';

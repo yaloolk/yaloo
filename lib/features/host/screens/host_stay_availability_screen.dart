@@ -1,5 +1,4 @@
 // lib/features/host/screens/host_stay_availability_screen.dart
-// ✅ FIXED - Manages stay availability calendar
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';

@@ -1,5 +1,4 @@
 // lib/features/host/providers/host_provider.dart
-// ✅ COMPLETE HOST PROVIDER
 
 import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';

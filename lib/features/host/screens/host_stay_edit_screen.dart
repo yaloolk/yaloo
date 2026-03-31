@@ -1,5 +1,4 @@
 // lib/features/host/screens/host_stay_edit_screen.dart
-// ✅ FIXED - Photo delete working, improved save button, better photo display
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';

@@ -1,6 +1,4 @@
 // lib/features/host/screens/host_stay_requests_screen.dart
-// Full 3-tab screen for hosts: Requests | Upcoming | History
-// All data from StayBookingProvider (real API)
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';

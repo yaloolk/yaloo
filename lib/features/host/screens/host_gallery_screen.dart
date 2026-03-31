@@ -1,5 +1,4 @@
 // lib/features/host/screens/host_gallery_screen.dart
-// ✅ FIXED - Works with HostProvider
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';

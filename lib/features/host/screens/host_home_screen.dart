@@ -1,5 +1,4 @@
 // lib/features/host/screens/host_home_screen.dart
-// Wired to StayBookingProvider for real requests & upcoming bookings
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';

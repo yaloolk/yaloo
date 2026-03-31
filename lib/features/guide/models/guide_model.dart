@@ -1,7 +1,4 @@
 // lib/features/guide/models/guide_model.dart
-//
-// Typed model matching Django's CompleteGuideProfileSerializer response.
-// Used by GuideProvider and all guide screens.
 
 class GuideLanguage {
   /// UserLanguage bridge-table PK — used for DELETE / PATCH requests.

@@ -1,14 +1,4 @@
 // lib/features/guide/providers/guide_provider.dart
-//
-// Central ChangeNotifier for guide state.
-// KEY FIX: Added _profileFetching guard to prevent duplicate concurrent
-//          calls to /accounts/me/ which caused timeout on Django dev server.
-//
-// Usage in main.dart:
-//   ChangeNotifierProvider(create: (_) => GuideProvider()..init()),
-//
-// Usage in a widget:
-//   final p = context.watch<GuideProvider>();
 
 import 'package:flutter/foundation.dart';
 import 'package:yaloo/core/network/api_client.dart';

@@ -11,7 +11,6 @@ class GuideBookingDetailsDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // ... (Data extraction remains the same) ...
     final String guestName = bookingData['guestName'] ?? 'Emil Carter';
     final String guestImage = bookingData['guestImage'] ?? 'https://placehold.co/100x100/e9c46a/white?text=Emil';
     final String status = bookingData['status'] ?? 'Confirmed';

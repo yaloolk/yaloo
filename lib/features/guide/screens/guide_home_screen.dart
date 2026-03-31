@@ -1,10 +1,4 @@
 // lib/features/guide/screens/guide_home_screen.dart
-//
-// KEY FIX: Removed all direct _api.get('/accounts/me/') calls.
-//          Profile data now comes from GuideProvider (context.watch).
-//          Booking lists (requests / upcoming) also come from GuideProvider.
-//          Screen calls provider.loadRequests() / loadUpcoming() only on
-//          explicit user action (accept/reject/refresh) — NOT on initState.
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';

@@ -1,5 +1,4 @@
 // lib/features/host/screens/host_edit_profile_screen.dart
-// ✅ COMPLETE & FIXED — Gender dropdown safe, date picker, photo upload, all fields wired
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';

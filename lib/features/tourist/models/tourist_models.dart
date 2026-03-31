@@ -1,5 +1,4 @@
 // tourist_models.dart  (updated)
-// BUG FIXES applied – see inline comments
 
 class TouristProfile {
   final String id;
