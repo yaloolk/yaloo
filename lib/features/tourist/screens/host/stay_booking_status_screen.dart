@@ -10,6 +10,7 @@ import 'package:provider/provider.dart';
 import 'package:yaloo/core/network/api_client.dart';
 import 'package:yaloo/features/tourist/models/stay_booking_model.dart';
 import 'package:yaloo/features/tourist/providers/stay_booking_provider.dart';
+import '../../widgets/cancellation_bottom_sheet.dart';
 
 const _blue       = Color(0xFF2563EB);
 const _blueDark   = Color(0xFF1D4ED8);
@@ -211,34 +212,24 @@ class StayBookingStatusScreen extends StatelessWidget {
     ),
   );
 
-  void _showCancelDialog(BuildContext context, StayBookingModel b) {
-    showDialog(context: context, builder: (_) => AlertDialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.r)),
-      title: const Text('Cancel Booking?'),
-      content: const Text('Are you sure? This cannot be undone.'),
-      actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: Text('Keep', style: TextStyle(color: _gray))),
-        ElevatedButton(
-          onPressed: () async {
-            Navigator.pop(context);
-            final prov = Provider.of<StayBookingProvider>(context, listen: false);
-            final ok = await prov.cancelBooking(b.id);
-            if (context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                content: Text(ok ? 'Booking cancelled' : 'Failed to cancel'),
-                backgroundColor: ok ? _green : _red,
-                behavior: SnackBarBehavior.floating,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              ));
-              if (ok) Navigator.pop(context);
-            }
-          },
-          style: ElevatedButton.styleFrom(backgroundColor: _red, elevation: 0,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.r))),
-          child: const Text('Cancel', style: TextStyle(color: Colors.white)),
-        ),
-      ],
+  void _showCancelDialog(BuildContext context, StayBookingModel b) async {
+    final result = await showCancellationSheet(
+      context:     context,
+      bookingType: 'stay',
+      bookingId:   b.id,
+    );
+    if (!context.mounted || result == null) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(result.success
+          ? (result.refundNote.isNotEmpty ? result.refundNote : 'Booking cancelled')
+          : result.error ?? 'Failed to cancel'),
+      backgroundColor: result.success ? _green : _red,
+      behavior: SnackBarBehavior.floating,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
     ));
+
+    if (result.success) Navigator.pop(context);
   }
 
   String _capitalize(String s) => s.isEmpty ? s : '${s[0].toUpperCase()}${s.substring(1).replaceAll('_', ' ')}';

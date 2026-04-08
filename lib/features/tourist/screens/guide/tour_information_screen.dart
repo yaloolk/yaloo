@@ -12,6 +12,7 @@ import 'package:yaloo/core/constants/app_text_styles.dart';
 import 'package:yaloo/core/network/api_client.dart';
 import 'package:yaloo/core/widgets/custom_app_bar.dart';
 import '../../providers/guide_booking_provider.dart';
+import 'package:yaloo/core/services/payment_service.dart';
 
 // ── Palette ───────────────────────────────────────────────────────────────────
 const _blue     = Color(0xFF2563EB);
@@ -85,6 +86,11 @@ class _TourInformationScreenState extends State<TourInformationScreen> {
   double? _lng;
   String  _pickupLabel = '';
 
+  // ── payment state ─────────────────────────────────────────────────────
+  bool   _processingPayment = false;
+  String _paymentError      = '';
+  final  _paymentService    = PaymentService();
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -130,26 +136,73 @@ class _TourInformationScreenState extends State<TourInformationScreen> {
 
   Future<void> _confirm() async {
     if (_lat == null) { _snack('Please choose a pickup location'); return; }
+    if (_processingPayment) return;
+
+    setState(() { _processingPayment = true; _paymentError = ''; });
+
     final prov = context.read<GuideBookingProvider>();
-    final ok = await prov.createBooking(
-      guideProfileId:  (_guide['guide_profile_id'] ?? '').toString(),
-      bookingDate:     _bookingDate,
-      startTime:       _startTime,
-      endTime:         _endTime,
-      guestCount:      _guests,
-      pickupLatitude:  _lat,
-      pickupLongitude: _lng,
-      pickupAddress:   _pickupLabel.isNotEmpty ? _pickupLabel : null,
-      specialNote:     _noteCtrl.text.trim().isNotEmpty
-          ? _noteCtrl.text.trim() : null,
-    );
-    if (!mounted) return;
-    if (ok) {
-      Navigator.pushReplacementNamed(context, '/bookingConfirmation',
-          arguments: {'booking': prov.lastCreatedBooking});
-    } else {
-      _snack(prov.bookingsError.isNotEmpty
-          ? prov.bookingsError : 'Booking failed. Please try again.');
+
+    try {
+      // ── Step 1: Create booking record (status = pending, no payment yet) ──
+      final bookingOk = await prov.createBooking(
+        guideProfileId:  (_guide['guide_profile_id'] ?? '').toString(),
+        bookingDate:     _bookingDate,
+        startTime:       _startTime,
+        endTime:         _endTime,
+        guestCount:      _guests,
+        pickupLatitude:  _lat,
+        pickupLongitude: _lng,
+        pickupAddress:   _pickupLabel.isNotEmpty ? _pickupLabel : null,
+        specialNote:     _noteCtrl.text.trim().isNotEmpty
+            ? _noteCtrl.text.trim() : null,
+      );
+
+      if (!bookingOk || prov.lastCreatedBooking == null) {
+        setState(() {
+          _processingPayment = false;
+          _paymentError = prov.bookingsError.isNotEmpty
+              ? prov.bookingsError : 'Booking failed. Please try again.';
+        });
+        return;
+      }
+
+      final bookingId = prov.lastCreatedBooking!.id;
+
+      // ── Step 2: Create PaymentIntent on backend ────────────────────────────
+      final intentResult = await _paymentService.createPaymentIntent(
+        bookingType: 'guide',
+        bookingId:   bookingId,
+      );
+
+      // ── Step 3: Present Stripe payment sheet ───────────────────────────────
+      // Tourist enters card → funds held, NOT captured yet
+      final paid = await _paymentService.presentPaymentSheet(
+        clientSecret: intentResult.clientSecret,
+        totalLkr:     intentResult.totalLkr,
+      );
+
+      if (!mounted) return;
+
+      if (paid) {
+        // Success — navigate to confirmation
+        Navigator.pushReplacementNamed(
+          context,
+          '/bookingConfirmation',
+          arguments: {'booking': prov.lastCreatedBooking},
+        );
+      } else {
+        // Tourist dismissed the payment sheet — keep booking as pending
+        // so they can pay later from My Bookings, or it will expire in 7 days
+        setState(() { _processingPayment = false; });
+        _snack('Payment cancelled. Your booking request is saved but unpaid.');
+      }
+
+    } on Exception catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _processingPayment = false;
+        _paymentError = e.toString().replaceFirst('Exception: ', '');
+      });
     }
   }
 
@@ -164,9 +217,31 @@ class _TourInformationScreenState extends State<TourInformationScreen> {
       physics: const BouncingScrollPhysics(),
       padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 110.h),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+
+        // ── Payment error banner ───────────────────────────────────────────
+        if (_paymentError.isNotEmpty)
+          Container(
+            width: double.infinity,
+            margin: EdgeInsets.only(bottom: 12.h),
+            padding: EdgeInsets.all(12.w),
+            decoration: BoxDecoration(
+              color: _red.withOpacity(0.08),
+              borderRadius: BorderRadius.circular(12.r),
+              border: Border.all(color: _red.withOpacity(0.3)),
+            ),
+            child: Row(children: [
+              Icon(CupertinoIcons.exclamationmark_circle, color: _red, size: 16.w),
+              SizedBox(width: 8.w),
+              Expanded(child: Text(_paymentError,
+                  style: TextStyle(color: _red, fontSize: 12.sp))),
+            ]),
+          ),
+
         _guideCard(),
         SizedBox(height: 16.h),
         _bookingInfoCard(),
+        SizedBox(height: 20.h),
+        _paymentSummaryCard(),
         SizedBox(height: 20.h),
         _sectionTitle("Who's Traveling?"),
         SizedBox(height: 10.h),
@@ -188,6 +263,37 @@ class _TourInformationScreenState extends State<TourInformationScreen> {
       ]),
     ),
     bottomNavigationBar: _bottomBar(),
+  );
+
+  // ── Payment summary card ────────────────────────────────────────────────────
+  Widget _paymentSummaryCard() => Container(
+    padding: EdgeInsets.all(16.w),
+    decoration: BoxDecoration(
+      color: _blue.withOpacity(0.04),
+      borderRadius: BorderRadius.circular(16.r),
+      border: Border.all(color: _blue.withOpacity(0.15)),
+    ),
+    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Row(children: [
+        Icon(CupertinoIcons.lock_shield_fill, color: _blue, size: 15.w),
+        SizedBox(width: 6.w),
+        Text('Secure Payment Hold', style: TextStyle(
+            color: _blue, fontSize: 13.sp, fontWeight: FontWeight.w700)),
+      ]),
+      SizedBox(height: 8.h),
+      Text(
+        'Your card will be authorised for LKR ${_total.toStringAsFixed(0)} '
+            'but NOT charged now. Payment is captured only after '
+            'the guide confirms your booking.',
+        style: TextStyle(color: _gray, fontSize: 11.sp, height: 1.5),
+      ),
+      SizedBox(height: 10.h),
+      Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+        Text('Tour total', style: TextStyle(color: _gray, fontSize: 12.sp)),
+        Text('LKR ${_total.toStringAsFixed(0)}',
+            style: TextStyle(color: _dark, fontSize: 14.sp, fontWeight: FontWeight.w700)),
+      ]),
+    ]),
   );
 
   // ── Guide card ────────────────────────────────────────────────────────────
@@ -452,39 +558,50 @@ class _TourInformationScreenState extends State<TourInformationScreen> {
 
   // ── Bottom bar ────────────────────────────────────────────────────────────
   Widget _bottomBar() => Consumer<GuideBookingProvider>(
-    builder: (_, prov, __) => Container(
-      padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 24.h),
-      decoration: BoxDecoration(color: Colors.white,
-          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.08),
-              blurRadius: 20, offset: const Offset(0, -4))]),
-      child: Column(mainAxisSize: MainAxisSize.min, children: [
-        Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-          Text('Total', style: TextStyle(color: _gray, fontSize: 13.sp)),
-          Text('LKR ${_total.toStringAsFixed(2)}', style: TextStyle(
-              color: _blue, fontSize: 20.sp, fontWeight: FontWeight.w800)),
-        ]),
-        SizedBox(height: 10.h),
-        SizedBox(width: double.infinity, height: 52.h,
-            child: ElevatedButton(
-              onPressed: prov.createLoading ? null : _confirm,
-              style: ElevatedButton.styleFrom(backgroundColor: _blue,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20.r)), elevation: 0),
-              child: prov.createLoading
-                  ? SizedBox(width: 22.w, height: 22.h,
+    builder: (_, prov, __) {
+      final loading = prov.createLoading || _processingPayment;
+      return Container(
+        padding: EdgeInsets.fromLTRB(20.w, 12.h, 20.w, 24.h),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          boxShadow: [BoxShadow(
+              color: Colors.black.withOpacity(0.07),
+              blurRadius: 16, offset: const Offset(0, -4))],
+        ),
+        child: SizedBox(
+          width: double.infinity,
+          height: 52.h,
+          child: ElevatedButton(
+            onPressed: loading ? null : _confirm,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: _blue,
+              disabledBackgroundColor: _blue.withOpacity(0.5),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20.r)),
+              elevation: 0,
+            ),
+            child: loading
+                ? Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+              SizedBox(
+                  width: 18.w, height: 18.w,
                   child: const CircularProgressIndicator(
-                      color: Colors.white, strokeWidth: 2.5))
-                  : Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                Icon(CupertinoIcons.checkmark_circle_fill,
-                    color: Colors.white, size: 18.w),
-                SizedBox(width: 8.w),
-                Text('Confirm Booking', style: TextStyle(color: Colors.white,
-                    fontSize: 15.sp, fontWeight: FontWeight.w700)),
-              ]),
-            )),
-      ]),
-    ),
+                      color: Colors.white, strokeWidth: 2)),
+              SizedBox(width: 10.w),
+              Text(
+                _processingPayment ? 'Processing payment…' : 'Creating booking…',
+                style: TextStyle(color: Colors.white, fontSize: 14.sp,
+                    fontWeight: FontWeight.w700),
+              ),
+            ])
+                : Text('Confirm & Pay — LKR ${_total.toStringAsFixed(0)}',
+                style: TextStyle(color: Colors.white, fontSize: 15.sp,
+                    fontWeight: FontWeight.w700)),
+          ),
+        ),
+      );
+    },
   );
+
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

@@ -18,6 +18,8 @@ import 'host_chat_screen.dart';
 import 'host_bookings_screen.dart';
 import 'host_wallet_screen.dart';
 import 'host_stay_requests_screen.dart';
+import 'package:iconsax_flutter/iconsax_flutter.dart';
+
 
 class HostDashboardScreen extends StatefulWidget {
   const HostDashboardScreen({super.key});
@@ -134,11 +136,11 @@ class _HostDashboardScreenState extends State<HostDashboardScreen> {
       ),
       child: BottomNavigationBar(
         items: const [
-          BottomNavigationBarItem(icon: Icon(LucideIcons.house),        label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(LucideIcons.messagesSquare), label: 'Chat'),
-          BottomNavigationBarItem(icon: Icon(LucideIcons.calendarCheck2), label: 'Bookings'),
-          BottomNavigationBarItem(icon: Icon(LucideIcons.dollarSign),    label: 'Wallet'),
-          BottomNavigationBarItem(icon: Icon(LucideIcons.user),          label: 'Profile'),
+          BottomNavigationBarItem(icon: Icon(Iconsax.home_2_copy),        label: 'Home'),
+          BottomNavigationBarItem(icon: Icon(Iconsax.message_2_copy), label: 'Chat'),
+          BottomNavigationBarItem(icon: Icon(Iconsax.calendar_2_copy), label: 'Bookings'),
+          BottomNavigationBarItem(icon: Icon(Iconsax.dollar_circle_copy),    label: 'Wallet'),
+          BottomNavigationBarItem(icon: Icon(Iconsax.user_square_copy),          label: 'Profile'),
         ],
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,

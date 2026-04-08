@@ -1,11 +1,13 @@
 // lib/features/tourist/screens/host/stay_booking_form_screen.dart
 
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:yaloo/core/constants/app_text_styles.dart';
+import 'package:yaloo/core/services/payment_service.dart';         // ← NEW
 import 'package:yaloo/core/widgets/custom_app_bar.dart';
 import 'package:yaloo/core/widgets/custom_primary_button.dart';
 import 'package:yaloo/core/widgets/step_progress_indicator.dart';
@@ -16,23 +18,26 @@ const _blue   = Color(0xFF2563EB);
 const _dark   = Color(0xFF1F2937);
 const _gray   = Color(0xFF6B7280);
 const _green  = Color(0xFF10B981);
+const _red    = Color(0xFFEF4444);
 const _bgPage = Color(0xFFF8FAFC);
 
 class StayBookingFormScreen extends StatefulWidget {
   const StayBookingFormScreen({super.key});
-  @override State<StayBookingFormScreen> createState() => _StayBookingFormScreenState();
+  @override State<StayBookingFormScreen> createState() =>
+      _StayBookingFormScreenState();
 }
 
 class _StayBookingFormScreenState extends State<StayBookingFormScreen> {
-  // Args passed from Host Detail Screen
+
+  // ── Args ──────────────────────────────────────────────────────────────────
   Map<String, dynamic> _stay       = {};
   String               _checkin    = '';
   String               _checkout   = '';
   bool                 _argsLoaded = false;
 
-  int    _step       = 0; // 0 = personal details, 1 = stay info / confirm
-  int    _guestCount = 1;
-  int    _roomCount  = 1;
+  int    _step           = 0;
+  int    _guestCount     = 1;
+  int    _roomCount      = 1;
   String _bookingType    = 'per_night';
   String _mealPreference = 'none';
 
@@ -44,16 +49,39 @@ class _StayBookingFormScreenState extends State<StayBookingFormScreen> {
   String _gender   = '';
   String _passport = '';
 
+  // ── NEW: payment state ─────────────────────────────────────────────────────
+  bool   _processingPayment = false;
+  String _paymentError      = '';
+  final  _paymentService    = PaymentService();
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (_argsLoaded) return;
     _argsLoaded = true;
-    final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
-    final stay    = args['stay']     as StaySearchResult;   // ← typed correctly
-    final profile = args['profile']  as Map<String, dynamic>?;
+    final args = ModalRoute.of(context)!.settings.arguments
+    as Map<String, dynamic>;
+
+    // ── BUGFIX: was reading locals without assigning to state ─────────────
+    final stay     = args['stay']    as StaySearchResult;
+    final profile  = args['profile'] as Map<String, dynamic>?;
     final checkin  = args['checkin']  as String? ?? '';
     final checkout = args['checkout'] as String? ?? '';
+
+    setState(() {
+      _stay     = stay.toJson();   // convert StaySearchResult → Map
+      _checkin  = checkin;
+      _checkout = checkout;
+
+      // Pre-fill tourist's own details from their profile
+      if (profile != null) {
+        _nameCtrl.text  = (profile['full_name']    as String?) ?? '';
+        _phoneCtrl.text = (profile['phone_number'] as String?) ?? '';
+        _country        = (profile['country']      as String?) ?? '';
+        _gender         = (profile['gender']       as String?) ?? '';
+        _passport       = (profile['passport_number'] as String?) ?? '';
+      }
+    });
   }
 
   @override
@@ -82,7 +110,8 @@ class _StayBookingFormScreenState extends State<StayBookingFormScreen> {
     return (_stay['price_per_night'] as num?)?.toDouble() ?? 0;
   }
 
-  double get _total => _pricePerNight * (_bookingType == 'halfday' ? 1 : _nights);
+  double get _total =>
+      _pricePerNight * (_bookingType == 'halfday' ? 1 : _nights);
 
   // ── Validation ────────────────────────────────────────────────────────────
 
@@ -91,35 +120,80 @@ class _StayBookingFormScreenState extends State<StayBookingFormScreen> {
           _phoneCtrl.text.trim().isNotEmpty &&
           _emailCtrl.text.trim().isNotEmpty;
 
-  // ── Submit ────────────────────────────────────────────────────────────────
+  // ── Submit: 3-step flow ───────────────────────────────────────────────────
 
   Future<void> _confirm() async {
     if (_stay['stay_id'] == null) {
       _snack('Stay information missing'); return;
     }
+    if (_processingPayment) return;
+
+    setState(() { _processingPayment = true; _paymentError = ''; });
+
     final prov = context.read<StayBookingProvider>();
-    final ok = await prov.createBooking(
-      stayId:          _stay['stay_id'] as String,
-      checkinDate:     _checkin,
-      checkoutDate:    _checkout,
-      bookingType:     _bookingType,
-      roomCount:       _roomCount,
-      guestCount:      _guestCount,
-      mealPreference:  _mealPreference,
-      specialNote:     _noteCtrl.text.trim().isNotEmpty ? _noteCtrl.text.trim() : null,
-      touristFullName: _nameCtrl.text.trim(),
-      touristPassport: _passport.isNotEmpty ? _passport : null,
-      touristPhone:    _phoneCtrl.text.trim(),
-      touristEmail:    _emailCtrl.text.trim(),
-      touristCountry:  _country.isNotEmpty ? _country : null,
-      touristGender:   _gender.isNotEmpty  ? _gender  : null,
-    );
-    if (!mounted) return;
-    if (ok) {
-      Navigator.pushReplacementNamed(context, '/stayBookingConfirmation',
-          arguments: prov.lastCreatedBooking);
-    } else {
-      _snack(prov.createError.isNotEmpty ? prov.createError : 'Booking failed');
+
+    try {
+      // ── Step 1: Create booking record (pending) ────────────────────────
+      final bookingOk = await prov.createBooking(
+        stayId:          _stay['stay_id'] as String,
+        checkinDate:     _checkin,
+        checkoutDate:    _checkout,
+        bookingType:     _bookingType,
+        roomCount:       _roomCount,
+        guestCount:      _guestCount,
+        mealPreference:  _mealPreference,
+        specialNote:     _noteCtrl.text.trim().isNotEmpty
+            ? _noteCtrl.text.trim() : null,
+        touristFullName: _nameCtrl.text.trim(),
+        touristPassport: _passport.isNotEmpty ? _passport : null,
+        touristPhone:    _phoneCtrl.text.trim(),
+        touristEmail:    _emailCtrl.text.trim(),
+        touristCountry:  _country.isNotEmpty ? _country : null,
+        touristGender:   _gender.isNotEmpty  ? _gender  : null,
+      );
+
+      if (!bookingOk || prov.lastCreatedBooking == null) {
+        setState(() {
+          _processingPayment = false;
+          _paymentError = prov.createError.isNotEmpty
+              ? prov.createError : 'Booking failed. Please try again.';
+        });
+        return;
+      }
+
+      final bookingId = prov.lastCreatedBooking!.id;
+
+      // ── Step 2: Create PaymentIntent on backend ────────────────────────
+      final intentResult = await _paymentService.createPaymentIntent(
+        bookingType: 'stay',
+        bookingId:   bookingId,
+      );
+
+      // ── Step 3: Present Stripe payment sheet ───────────────────────────
+      final paid = await _paymentService.presentPaymentSheet(
+        clientSecret: intentResult.clientSecret,
+        totalLkr:     intentResult.totalLkr,
+      );
+
+      if (!mounted) return;
+
+      if (paid) {
+        Navigator.pushReplacementNamed(
+          context,
+          '/stayBookingConfirmation',
+          arguments: prov.lastCreatedBooking,
+        );
+      } else {
+        setState(() { _processingPayment = false; });
+        _snack('Payment cancelled. Your request is saved but unpaid.');
+      }
+
+    } on Exception catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _processingPayment = false;
+        _paymentError = e.toString().replaceFirst('Exception: ', '');
+      });
     }
   }
 
@@ -134,348 +208,335 @@ class _StayBookingFormScreenState extends State<StayBookingFormScreen> {
       backgroundColor: _bgPage,
       appBar: CustomAppBar(title: _step == 0 ? 'Your Details' : 'Stay Info'),
       body: Column(children: [
-        // Step indicator
         Padding(
           padding: EdgeInsets.symmetric(horizontal: 20.w),
           child: StepProgressIndicator(
             currentStep: _step,
             steps: const [
-              {'Details': FontAwesomeIcons.user},
-              {'Stay Info': FontAwesomeIcons.house},
+              {'Your Details': CupertinoIcons.person_fill},
+              {'Stay Info': CupertinoIcons.house_fill},
             ],
           ),
         ),
-        Expanded(child: _step == 0 ? _step0() : _step1()),
+        if (_paymentError.isNotEmpty)
+          Padding(
+            padding: EdgeInsets.fromLTRB(20.w, 8.h, 20.w, 0),
+            child: Container(
+              width: double.infinity,
+              padding: EdgeInsets.all(12.w),
+              decoration: BoxDecoration(
+                color: _red.withOpacity(0.08),
+                borderRadius: BorderRadius.circular(12.r),
+                border: Border.all(color: _red.withOpacity(0.3)),
+              ),
+              child: Text(_paymentError,
+                  style: TextStyle(color: _red, fontSize: 12.sp)),
+            ),
+          ),
+        Expanded(
+          child: SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+            padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 32.h),
+            child: _step == 0 ? _step0() : _step1(),
+          ),
+        ),
+        _bottomBar(),
       ]),
     );
   }
 
-  // ── STEP 0: Personal details ──────────────────────────────────────────────
+  // ── Step 0: Personal details ──────────────────────────────────────────────
 
-  Widget _step0() => SingleChildScrollView(
-    padding: EdgeInsets.fromLTRB(20.w, 0, 20.w, 120.h),
-    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      SizedBox(height: 8.h),
-      _sectionTitle('Personal Information'),
-      Text('Fill in your details for the host.',
-          style: TextStyle(color: _gray, fontSize: 12.sp)),
-      SizedBox(height: 20.h),
-
-      _field('Full Name', _nameCtrl, CupertinoIcons.person, req: true),
-      SizedBox(height: 14.h),
-      _field('Phone Number', _phoneCtrl, CupertinoIcons.phone,
-          req: true, keyboard: TextInputType.phone),
-      SizedBox(height: 14.h),
-      _field('Email Address', _emailCtrl, CupertinoIcons.mail,
-          req: true, keyboard: TextInputType.emailAddress),
-      SizedBox(height: 14.h),
-      _field('Passport Number (optional)', TextEditingController(text: _passport),
-          FontAwesomeIcons.passport,
-          onChanged: (v) => _passport = v),
-      SizedBox(height: 14.h),
-
-      // Country picker
-      _lbl('Country (optional)'),
-      _dropField(_country.isEmpty ? 'Select country' : _country,
-          CupertinoIcons.globe, () => _showCountryPicker()),
-      SizedBox(height: 14.h),
-
-      // Gender
-      _lbl('Gender (optional)'),
-      _dropField(_gender.isEmpty ? 'Select gender' : _gender,
-          CupertinoIcons.person_2, () => _showGenderPicker()),
-
-      SizedBox(height: 32.h),
-      CustomPrimaryButton(
-        text: 'Next →',
-        onPressed: _step0Valid
-            ? () => setState(() => _step = 1)
-            : null,
-      ),
-    ]),
-  );
-
-  // ── STEP 1: Stay info + confirm ────────────────────────────────────────────
-
-  Widget _step1() => SingleChildScrollView(
-    padding: EdgeInsets.fromLTRB(20.w, 0, 20.w, 120.h),
-    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      SizedBox(height: 8.h),
-      _stayCard(),
-      SizedBox(height: 16.h),
-      _bookingTypeSelector(),
-      SizedBox(height: 16.h),
-      _countersRow(),
-      SizedBox(height: 16.h),
-      _mealSelector(),
-      SizedBox(height: 16.h),
-      _noteField(),
-      SizedBox(height: 16.h),
-      _priceSummaryCard(),
-      SizedBox(height: 24.h),
-      Consumer<StayBookingProvider>(
-        builder: (_, prov, __) => CustomPrimaryButton(
-          text: 'Confirm Booking',
-          isLoading: prov.createLoading,
-          onPressed: prov.createLoading ? null : _confirm,
+  Widget _step0() => Column(crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _label('Full Name'),
+        _field(_nameCtrl, 'John Doe'),
+        SizedBox(height: 14.h),
+        _label('Phone Number'),
+        _field(_phoneCtrl, '+94 7X XXX XXXX', inputType: TextInputType.phone),
+        SizedBox(height: 14.h),
+        _label('Email'),
+        _field(_emailCtrl, 'you@email.com', inputType: TextInputType.emailAddress),
+        SizedBox(height: 14.h),
+        _label('Country (optional)'),
+        _field(TextEditingController(text: _country), 'Your country',
+            onChanged: (v) => _country = v),
+        SizedBox(height: 14.h),
+        _label('Gender (optional)'),
+        _genderRow(),
+        SizedBox(height: 14.h),
+        _label('Passport Number (optional)'),
+        TextField(
+          onChanged: (v) => _passport = v,
+          decoration: _inputDecoration('Passport number'),
+          style: TextStyle(fontSize: 14.sp),
         ),
-      ),
-    ]),
-  );
+      ]);
 
-  Widget _stayCard() => Container(
+  // ── Step 1: Stay summary + booking options ────────────────────────────────
+
+  Widget _step1() => Column(crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _staySummaryCard(),
+        SizedBox(height: 16.h),
+        _label('Booking Type'),
+        _bookingTypeRow(),
+        SizedBox(height: 14.h),
+        _label('Guests'),
+        _counterRow('Guests', _guestCount, (v) => setState(() => _guestCount = v),
+            min: 1, max: (_stay['max_guests'] as int?) ?? 10),
+        SizedBox(height: 8.h),
+        _label('Rooms'),
+        _counterRow('Rooms', _roomCount, (v) => setState(() => _roomCount = v),
+            min: 1, max: (_stay['room_count'] as int?) ?? 10),
+        SizedBox(height: 14.h),
+        _label('Meal Preference'),
+        _mealRow(),
+        SizedBox(height: 14.h),
+        _label('Special Note (optional)'),
+        TextField(
+          controller: _noteCtrl,
+          maxLines: 3,
+          decoration: _inputDecoration('Any special requests…'),
+          style: TextStyle(fontSize: 13.sp),
+        ),
+        SizedBox(height: 20.h),
+        _paymentHoldCard(),
+      ]);
+
+  Widget _paymentHoldCard() => Container(
     padding: EdgeInsets.all(14.w),
-    decoration: _cardDec(),
-    child: Row(children: [
-      ClipRRect(
-        borderRadius: BorderRadius.circular(12.r),
-        child: Container(
-            width: 72.w, height: 72.h,
-            color: Colors.grey.shade100,
-            child: Icon(CupertinoIcons.house, color: Colors.grey.shade300, size: 32.w)),
-      ),
-      SizedBox(width: 12.w),
-      Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(_stay['name'] ?? 'Stay', style: TextStyle(
-            fontSize: 15.sp, fontWeight: FontWeight.w800, color: _dark)),
-        SizedBox(height: 4.h),
-        if ((_stay['city_name'] ?? '').isNotEmpty)
-          Row(children: [
-            Icon(CupertinoIcons.map_pin, color: _gray, size: 11.w),
-            SizedBox(width: 3.w),
-            Text(_stay['city_name'], style: TextStyle(color: _gray, fontSize: 11.sp)),
-          ]),
-        SizedBox(height: 6.h),
-        Row(children: [
-          Icon(CupertinoIcons.calendar, color: _blue, size: 12.w),
-          SizedBox(width: 4.w),
-          Text('$_checkin → $_checkout',
-              style: TextStyle(color: _blue, fontSize: 11.sp, fontWeight: FontWeight.w700)),
-        ]),
-      ])),
-    ]),
-  );
-
-  Widget _bookingTypeSelector() => Column(
-      crossAxisAlignment: CrossAxisAlignment.start, children: [
-    _sectionTitle('Booking Type'),
-    SizedBox(height: 10.h),
-    Row(children: [
-      Expanded(child: _typeChip('per_night', 'Per Night', CupertinoIcons.moon)),
-      SizedBox(width: 8.w),
-      if ((_stay['entire_place_is_available'] ?? false) == true)
-        Expanded(child: _typeChip('entire_place', 'Entire Place', CupertinoIcons.home)),
-      if ((_stay['halfday_available'] ?? false) == true) ...[
-        SizedBox(width: 8.w),
-        Expanded(child: _typeChip('halfday', 'Half Day', CupertinoIcons.sun_max)),
-      ],
-    ]),
-  ]);
-
-  Widget _typeChip(String val, String label, IconData icon) {
-    final sel = _bookingType == val;
-    return GestureDetector(
-      onTap: () => setState(() => _bookingType = val),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        padding: EdgeInsets.symmetric(vertical: 12.h),
-        decoration: BoxDecoration(
-            gradient: sel ? const LinearGradient(colors: [_blue, Color(0xFF1D4ED8)]) : null,
-            color: sel ? null : Colors.white,
-            borderRadius: BorderRadius.circular(14.r),
-            border: Border.all(color: sel ? _blue : Colors.grey.shade200),
-            boxShadow: sel ? [BoxShadow(color: _blue.withOpacity(0.3), blurRadius: 10,
-                offset: const Offset(0,4))] : null),
-        child: Column(children: [
-          Icon(icon, color: sel ? Colors.white : _blue, size: 20.w),
-          SizedBox(height: 5.h),
-          Text(label, style: TextStyle(color: sel ? Colors.white : _dark,
-              fontSize: 11.sp, fontWeight: FontWeight.w700)),
-        ]),
-      ),
-    );
-  }
-
-  Widget _countersRow() => Row(children: [
-    Expanded(child: _counterCard('Guests', _guestCount,
-        onDec: _guestCount > 1 ? () => setState(() => _guestCount--) : null,
-        onInc: () => setState(() => _guestCount++))),
-    SizedBox(width: 12.w),
-    Expanded(child: _counterCard('Rooms', _roomCount,
-        onDec: _roomCount > 1 ? () => setState(() => _roomCount--) : null,
-        onInc: () => setState(() => _roomCount++))),
-  ]);
-
-  Widget _counterCard(String label, int val, {VoidCallback? onDec, required VoidCallback onInc}) =>
-      Container(
-        padding: EdgeInsets.all(14.w),
-        decoration: _cardDec(),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(label, style: TextStyle(color: _gray, fontSize: 12.sp, fontWeight: FontWeight.w600)),
-          SizedBox(height: 10.h),
-          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-            GestureDetector(onTap: onDec, child: _counterBtn(Icons.remove, active: onDec != null)),
-            Text('$val', style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.w800, color: _dark)),
-            GestureDetector(onTap: onInc, child: _counterBtn(Icons.add, active: true)),
-          ]),
-        ]),
-      );
-
-  Widget _counterBtn(IconData icon, {required bool active}) => Container(
-    padding: EdgeInsets.all(7.r),
     decoration: BoxDecoration(
-        color: active ? _blue.withOpacity(0.1) : Colors.grey.shade100,
-        borderRadius: BorderRadius.circular(8.r)),
-    child: Icon(icon, size: 14.w, color: active ? _blue : Colors.grey.shade400),
-  );
-
-  Widget _mealSelector() => Column(
-      crossAxisAlignment: CrossAxisAlignment.start, children: [
-    _sectionTitle('Meal Preference'),
-    SizedBox(height: 10.h),
-    Wrap(spacing: 8.w, runSpacing: 8.h,
-        children: [
-          ['none',    'No Preference'],
-          ['veg',     'Vegetarian'],
-          ['non_veg', 'Non-Veg'],
-          ['halal',   'Halal'],
-        ].map((opt) {
-          final sel = _mealPreference == opt[0];
-          return GestureDetector(
-            onTap: () => setState(() => _mealPreference = opt[0]),
-            child: Container(
-              padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 8.h),
-              decoration: BoxDecoration(
-                  color: sel ? _blue : Colors.white,
-                  borderRadius: BorderRadius.circular(12.r),
-                  border: Border.all(color: sel ? _blue : Colors.grey.shade200)),
-              child: Text(opt[1], style: TextStyle(
-                  color: sel ? Colors.white : _dark,
-                  fontSize: 12.sp, fontWeight: FontWeight.w600)),
-            ),
-          );
-        }).toList()),
-  ]);
-
-  Widget _noteField() => Column(
-      crossAxisAlignment: CrossAxisAlignment.start, children: [
-    _sectionTitle('Special Note (optional)'),
-    SizedBox(height: 8.h),
-    TextField(
-      controller: _noteCtrl, maxLines: 3,
-      style: TextStyle(fontSize: 13.sp, color: _dark),
-      decoration: InputDecoration(
-        hintText: 'Any preferences, dietary needs, arrival info…',
-        hintStyle: TextStyle(color: _gray, fontSize: 13.sp),
-        filled: true, fillColor: Colors.white,
-        contentPadding: EdgeInsets.all(14.w),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16.r),
-            borderSide: BorderSide(color: Colors.grey.shade200)),
-        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16.r),
-            borderSide: BorderSide(color: Colors.grey.shade200)),
-        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16.r),
-            borderSide: const BorderSide(color: _blue, width: 1.5)),
-      ),
+      color: _blue.withOpacity(0.04),
+      borderRadius: BorderRadius.circular(14.r),
+      border: Border.all(color: _blue.withOpacity(0.15)),
     ),
-  ]);
-
-  Widget _priceSummaryCard() => Container(
-    padding: EdgeInsets.all(16.w),
-    decoration: _cardDec(),
     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      _sectionTitle('Price Summary'),
-      SizedBox(height: 12.h),
-      _prRow('Rate', _bookingType == 'halfday'
-          ? 'LKR ${_pricePerNight.toStringAsFixed(0)} (half-day)'
-          : 'LKR ${_pricePerNight.toStringAsFixed(0)}/night'),
-      if (_bookingType != 'halfday')
-        _prRow('Nights', '$_nights'),
-      _prRow('Rooms', '$_roomCount'),
-      Divider(color: Colors.grey.shade100, height: 16.h),
-      _prRow('Total', 'LKR ${_total.toStringAsFixed(2)}', bold: true, color: _blue),
+      Row(children: [
+        Icon(CupertinoIcons.lock_shield_fill, color: _blue, size: 14.w),
+        SizedBox(width: 6.w),
+        Text('Secure Payment Hold', style: TextStyle(
+            color: _blue, fontSize: 12.sp, fontWeight: FontWeight.w700)),
+      ]),
+      SizedBox(height: 6.h),
+      Text(
+        'Your card will be authorised for LKR ${_total.toStringAsFixed(0)} '
+            'but NOT charged until the host confirms your request.',
+        style: TextStyle(color: _gray, fontSize: 11.sp, height: 1.5),
+      ),
     ]),
   );
 
-  Widget _prRow(String l, String v, {bool bold = false, Color? color}) =>
-      Padding(padding: EdgeInsets.symmetric(vertical: 4.h),
-          child: Row(children: [
-            Text(l, style: TextStyle(color: _gray, fontSize: 12.sp)),
-            const Spacer(),
-            Text(v, style: TextStyle(
-                color: color ?? _dark,
-                fontSize: bold ? 16.sp : 13.sp,
-                fontWeight: bold ? FontWeight.w800 : FontWeight.w600)),
-          ]));
+  Widget _staySummaryCard() => Container(
+    padding: EdgeInsets.all(14.w),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(16.r),
+      boxShadow: [BoxShadow(
+          color: Colors.black.withOpacity(0.05),
+          blurRadius: 10, offset: const Offset(0, 3))],
+    ),
+    child: Column(children: [
+      _row(CupertinoIcons.house_fill,       'Stay',     (_stay['name'] as String?) ?? ''),
+      _row(CupertinoIcons.calendar,          'Check-in', _checkin),
+      _row(CupertinoIcons.calendar,          'Check-out',_checkout),
+      _row(CupertinoIcons.moon_stars_fill,   'Nights',   '$_nights'),
+      _row(CupertinoIcons.money_dollar_circle,'Total',   'LKR ${_total.toStringAsFixed(0)}'),
+    ]),
+  );
 
-  // ── Small helpers ─────────────────────────────────────────────────────────
+  Widget _row(IconData icon, String label, String value) => Padding(
+    padding: EdgeInsets.symmetric(vertical: 4.h),
+    child: Row(children: [
+      Icon(icon, color: _blue, size: 14.w),
+      SizedBox(width: 8.w),
+      Text(label, style: TextStyle(color: _gray, fontSize: 12.sp)),
+      const Spacer(),
+      Text(value, style: TextStyle(
+          color: _dark, fontSize: 13.sp, fontWeight: FontWeight.w700)),
+    ]),
+  );
 
-  Widget _sectionTitle(String t) => Text(t, style: TextStyle(
-      fontSize: 14.sp, fontWeight: FontWeight.w800, color: _dark));
-
-  Widget _lbl(String t) => Padding(
-      padding: EdgeInsets.only(bottom: 8.h),
-      child: Text(t, style: TextStyle(color: _dark, fontWeight: FontWeight.w700, fontSize: 13.sp)));
-
-  Widget _field(String hint, TextEditingController ctrl, IconData icon,
-      {bool req = false, TextInputType? keyboard, ValueChanged<String>? onChanged}) =>
-      TextField(
-        controller: ctrl,
-        keyboardType: keyboard,
-        onChanged: onChanged ?? (_) => setState(() {}),
-        style: TextStyle(fontSize: 14.sp, color: _dark),
-        decoration: InputDecoration(
-          hintText: hint + (req ? ' *' : ''),
-          hintStyle: TextStyle(color: _gray, fontSize: 13.sp),
-          prefixIcon: Icon(icon, color: _gray, size: 18.w),
-          filled: true, fillColor: Colors.white,
-          contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(14.r),
-              borderSide: BorderSide(color: Colors.grey.shade200)),
-          enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14.r),
-              borderSide: BorderSide(color: Colors.grey.shade200)),
-          focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14.r),
-              borderSide: const BorderSide(color: _blue, width: 1.5)),
-        ),
-      );
-
-  Widget _dropField(String text, IconData icon, VoidCallback onTap) =>
-      GestureDetector(
-        onTap: onTap,
-        child: Container(
-          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
-          decoration: BoxDecoration(color: Colors.white,
-              borderRadius: BorderRadius.circular(14.r),
-              border: Border.all(color: Colors.grey.shade200)),
-          child: Row(children: [
-            Icon(icon, color: _gray, size: 18.w),
-            SizedBox(width: 12.w),
-            Expanded(child: Text(text,
-                style: TextStyle(color: text.contains('Select') ? _gray : _dark, fontSize: 14.sp))),
-            Icon(Icons.keyboard_arrow_down, color: _gray),
-          ]),
-        ),
-      );
-
-  BoxDecoration _cardDec() => BoxDecoration(
-      color: Colors.white, borderRadius: BorderRadius.circular(20.r),
-      boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.045),
-          blurRadius: 16, offset: const Offset(0,4))]);
-
-  void _showCountryPicker() {
-    showModalBottomSheet(context: context, builder: (_) => Column(
-      mainAxisSize: MainAxisSize.min,
-      children: ['Sri Lanka','India','Germany','United Kingdom','United States','Australia','France','Japan'].map((c) =>
-          ListTile(title: Text(c),
-              onTap: () { setState(() => _country = c); Navigator.pop(context); })).toList(),
-    ));
+  Widget _bookingTypeRow() {
+    final types = [
+      ('per_night',    'Per Night'),
+      ('entire_place', 'Entire Place'),
+      if ((_stay['halfday_available'] as bool?) == true) ('halfday', 'Half Day'),
+    ];
+    return Wrap(spacing: 8.w, children: types.map((t) => ChoiceChip(
+      label: Text(t.$2),
+      selected: _bookingType == t.$1,
+      onSelected: (_) => setState(() => _bookingType = t.$1),
+      selectedColor: _blue,
+      labelStyle: TextStyle(
+        color: _bookingType == t.$1 ? Colors.white : _dark,
+        fontSize: 12.sp,
+      ),
+    )).toList());
   }
 
-  void _showGenderPicker() {
-    showModalBottomSheet(context: context, builder: (_) => Column(
-      mainAxisSize: MainAxisSize.min,
-      children: ['Male','Female','Other','Prefer not to say'].map((g) =>
-          ListTile(title: Text(g),
-              onTap: () { setState(() => _gender = g); Navigator.pop(context); })).toList(),
-    ));
+  Widget _mealRow() {
+    const meals = [
+      ('none',    'No Pref'),
+      ('veg',     'Veg'),
+      ('non_veg', 'Non-Veg'),
+      ('halal',   'Halal'),
+    ];
+    return Wrap(spacing: 8.w, children: meals.map((m) => ChoiceChip(
+      label: Text(m.$2),
+      selected: _mealPreference == m.$1,
+      onSelected: (_) => setState(() => _mealPreference = m.$1),
+      selectedColor: _blue,
+      labelStyle: TextStyle(
+        color: _mealPreference == m.$1 ? Colors.white : _dark,
+        fontSize: 12.sp,
+      ),
+    )).toList());
+  }
+
+  Widget _genderRow() {
+    const genders = [('male', 'Male'), ('female', 'Female'), ('other', 'Other')];
+    return Wrap(spacing: 8.w, children: genders.map((g) => ChoiceChip(
+      label: Text(g.$2),
+      selected: _gender == g.$1,
+      onSelected: (_) => setState(() => _gender = g.$1),
+      selectedColor: _blue,
+      labelStyle: TextStyle(
+        color: _gender == g.$1 ? Colors.white : _dark,
+        fontSize: 12.sp,
+      ),
+    )).toList());
+  }
+
+  Widget _counterRow(String label, int value, ValueChanged<int> onChanged,
+      {required int min, required int max}) =>
+      Row(children: [
+        Text(label, style: TextStyle(color: _gray, fontSize: 12.sp)),
+        const Spacer(),
+        IconButton(
+          icon: const Icon(CupertinoIcons.minus_circle),
+          color: value <= min ? _gray : _blue,
+          onPressed: value <= min ? null : () => onChanged(value - 1),
+        ),
+        Text('$value', style: TextStyle(
+            fontSize: 15.sp, fontWeight: FontWeight.w700, color: _dark)),
+        IconButton(
+          icon: const Icon(CupertinoIcons.add_circled),
+          color: value >= max ? _gray : _blue,
+          onPressed: value >= max ? null : () => onChanged(value + 1),
+        ),
+      ]);
+
+  Widget _label(String t) => Padding(
+    padding: EdgeInsets.only(bottom: 6.h),
+    child: Text(t, style: TextStyle(
+        fontSize: 13.sp, fontWeight: FontWeight.w700, color: _dark)),
+  );
+
+  Widget _field(TextEditingController ctrl, String hint, {
+    TextInputType inputType = TextInputType.text,
+    ValueChanged<String>? onChanged,
+  }) => TextField(
+    controller: ctrl,
+    keyboardType: inputType,
+    onChanged: onChanged,
+    decoration: _inputDecoration(hint),
+    style: TextStyle(fontSize: 14.sp),
+  );
+
+  InputDecoration _inputDecoration(String hint) => InputDecoration(
+    hintText: hint,
+    hintStyle: TextStyle(color: _gray, fontSize: 13.sp),
+    filled: true,
+    fillColor: Colors.white,
+    contentPadding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
+    border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12.r),
+        borderSide: BorderSide(color: Colors.grey.shade200)),
+    enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12.r),
+        borderSide: BorderSide(color: Colors.grey.shade200)),
+    focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12.r),
+        borderSide: const BorderSide(color: _blue, width: 1.8)),
+  );
+
+  // ── Bottom bar ────────────────────────────────────────────────────────────
+
+  Widget _bottomBar() {
+    final loading = _processingPayment;
+
+    if (_step == 0) {
+      return Padding(
+        padding: EdgeInsets.fromLTRB(20.w, 8.h, 20.w, 24.h),
+        child: SizedBox(
+          width: double.infinity, height: 52.h,
+          child: ElevatedButton(
+            onPressed: _step0Valid
+                ? () => setState(() => _step = 1) : null,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: _blue,
+              disabledBackgroundColor: Colors.grey.shade300,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20.r)),
+              elevation: 0,
+            ),
+            child: Text('Continue', style: TextStyle(
+                color: Colors.white, fontSize: 15.sp,
+                fontWeight: FontWeight.w700)),
+          ),
+        ),
+      );
+    }
+
+    return Padding(
+      padding: EdgeInsets.fromLTRB(20.w, 8.h, 20.w, 24.h),
+      child: Row(children: [
+        OutlinedButton(
+          onPressed: loading ? null : () => setState(() => _step = 0),
+          style: OutlinedButton.styleFrom(
+            foregroundColor: _blue,
+            side: const BorderSide(color: _blue),
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16.r)),
+            padding: EdgeInsets.symmetric(horizontal: 18.w, vertical: 14.h),
+          ),
+          child: const Text('Back'),
+        ),
+        SizedBox(width: 12.w),
+        Expanded(
+          child: SizedBox(
+            height: 52.h,
+            child: ElevatedButton(
+              onPressed: loading ? null : _confirm,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _blue,
+                disabledBackgroundColor: _blue.withOpacity(0.5),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20.r)),
+                elevation: 0,
+              ),
+              child: loading
+                  ? Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                SizedBox(width: 18.w, height: 18.w,
+                    child: const CircularProgressIndicator(
+                        color: Colors.white, strokeWidth: 2)),
+                SizedBox(width: 8.w),
+                Text(
+                  _processingPayment ? 'Processing…' : 'Submitting…',
+                  style: TextStyle(color: Colors.white, fontSize: 13.sp,
+                      fontWeight: FontWeight.w700),
+                ),
+              ])
+                  : Text(
+                'Pay & Request — LKR ${_total.toStringAsFixed(0)}',
+                style: TextStyle(color: Colors.white, fontSize: 13.sp,
+                    fontWeight: FontWeight.w700),
+              ),
+            ),
+          ),
+        ),
+      ]),
+    );
   }
 }

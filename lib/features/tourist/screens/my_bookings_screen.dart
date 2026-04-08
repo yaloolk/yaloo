@@ -7,11 +7,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
-
 import '../models/guide_booking_model.dart';
 import '../models/stay_booking_model.dart';
 import '../providers/guide_booking_provider.dart';
 import '../providers/stay_booking_provider.dart';
+import '../widgets/cancellation_bottom_sheet.dart';
 
 const _blue       = Color(0xFF2563EB);
 const _blueDark   = Color(0xFF1D4ED8);
@@ -168,14 +168,20 @@ class _GuideBookingsTabState extends State<_GuideBookingsTab>
   ]));
 
   Future<void> _cancel(String bookingId) async {
-    final prov = context.read<GuideBookingProvider>();
-    final ok = await prov.cancelBooking(bookingId);
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(ok ? 'Booking cancelled' : 'Failed to cancel'),
-        backgroundColor: ok ? _green : _red, behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
-      ));
+    final result = await showCancellationSheet(
+      context:     context,
+      bookingType: 'guide',
+      bookingId:   bookingId,
+    );
+    if (!mounted || result == null) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(result.success ? result.refundNote : result.error ?? 'Failed'),
+      backgroundColor: result.success ? _green : _red,
+      behavior: SnackBarBehavior.floating,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+    ));
+    if (result.success) {
+      context.read<GuideBookingProvider>().loadMyBookings();
     }
   }
 }
@@ -369,14 +375,20 @@ class _StayBookingsTabState extends State<_StayBookingsTab>
   ]));
 
   Future<void> _cancel(String bookingId) async {
-    final prov = context.read<StayBookingProvider>();
-    final ok = await prov.cancelBooking(bookingId);
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(ok ? 'Booking cancelled' : 'Failed to cancel'),
-        backgroundColor: ok ? _green : _red, behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
-      ));
+    final result = await showCancellationSheet(
+      context:     context,
+      bookingType: 'stay',
+      bookingId:   bookingId,
+    );
+    if (!mounted || result == null) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(result.success ? result.refundNote : result.error ?? 'Failed'),
+      backgroundColor: result.success ? _green : _red,
+      behavior: SnackBarBehavior.floating,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+    ));
+    if (result.success) {
+      context.read<StayBookingProvider>().loadMyBookings();
     }
   }
 }

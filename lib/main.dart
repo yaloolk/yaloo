@@ -14,16 +14,19 @@ import 'package:yaloo/features/tourist/providers/tourist_provider.dart';
 import 'package:yaloo/features/tourist/services/guide_booking_service.dart';
 import 'package:yaloo/routes/app_routes.dart';
 import 'package:provider/provider.dart';
-
+import 'package:flutter_stripe/flutter_stripe.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
 
   await dotenv.load(fileName: ".env");
 
   final supabaseUrl = dotenv.env['SUPABASE_URL']!;
   final supabaseAnonKey = dotenv.env['SUPABASE_ANON_KEY']!;
+  final stripePublishable = dotenv.env['STRIPE_PUBLISHABLE_KEY']!;
+
+  Stripe.publishableKey = stripePublishable;
+  await Stripe.instance.applySettings();
 
   await Supabase.initialize(
     url: supabaseUrl,

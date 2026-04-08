@@ -1,3 +1,5 @@
+// lib/core/widgets/step_progress_indicator.dart
+
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:yaloo/core/constants/colors.dart';

@@ -45,5 +45,12 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>LSApplicationQueriesSchemes</key>
+    <array>
+        <string>itms-apps</string>
+        <string>stripe</string>
+        <string>googlepay</string>
+        <string>applepay</string>
+    </array>
 </dict>
 </plist>

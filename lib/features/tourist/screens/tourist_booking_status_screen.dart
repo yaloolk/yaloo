@@ -9,6 +9,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:yaloo/features/tourist/models/guide_booking_model.dart';
 import 'package:yaloo/features/tourist/services/guide_booking_service.dart';
+import '../widgets/cancellation_bottom_sheet.dart';
 
 const _blue       = Color(0xFF2563EB);
 const _blueDark   = Color(0xFF1D4ED8);
@@ -161,38 +162,38 @@ class _TouristBookingStatusScreenState extends State<TouristBookingStatusScreen>
   }
 
   // ── Cancel ────────────────────────────────────────────────────────────────
-  Future<void> _cancel() async {
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.r)),
-        title: const Text('Cancel Booking?'),
-        content: const Text('Are you sure you want to cancel this booking?'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('No')),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: _red,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.r)),
-            ),
-            child: const Text('Yes, Cancel', style: TextStyle(color: Colors.white)),
-          ),
-        ],
-      ),
-    );
-    if (ok != true) return;
+  Future<void> _cancelBooking() async {
+    if (_cancelling) return;
     setState(() => _cancelling = true);
-    try {
-      await _service.cancelBooking(_booking!.id);
-      if (!mounted) return;
+
+    final result = await showCancellationSheet(
+      context:     context,
+      bookingType: 'guide',
+      bookingId:   _booking!.id,
+    );
+
+    if (!mounted) return;
+    setState(() => _cancelling = false);
+
+    if (result == null) return; // tourist dismissed sheet
+
+    if (result.success) {
       setState(() => _booking = GuideBookingModel.fromJson({
         ..._booking!.toJson(), 'booking_status': 'cancelled',
       }));
-    } catch (e) {
-      if (mounted) _snack(e.toString(), _red);
-    } finally {
-      if (mounted) setState(() => _cancelling = false);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(result.refundNote.isNotEmpty
+            ? result.refundNote : 'Booking cancelled'),
+        backgroundColor: _green,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+      ));
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(result.error ?? 'Failed to cancel'),
+        backgroundColor: _red,
+        behavior: SnackBarBehavior.floating,
+      ));
     }
   }
 
@@ -557,7 +558,7 @@ class _TouristBookingStatusScreenState extends State<TouristBookingStatusScreen>
   Widget _cancelButton() => SizedBox(
     width: double.infinity,
     child: OutlinedButton.icon(
-      onPressed: _cancelling ? null : _cancel,
+      onPressed: _cancelling ? null : _cancelBooking,
       icon: _cancelling
           ? SizedBox(width: 16.w, height: 16.h, child: const CircularProgressIndicator(strokeWidth: 2))
           : Icon(FontAwesomeIcons.ban, size: 14.w),

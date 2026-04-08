@@ -62,6 +62,7 @@ dependencies:
   provider: ^6.1.5+1
   cached_network_image: ^3.4.1
   geocoding: ^4.0.0
+  flutter_stripe: ^11.5.0
 
 dev_dependencies:
   flutter_test:

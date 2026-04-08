@@ -160,7 +160,7 @@ class _HostHomeScreenState extends State<HostHomeScreen>
           },
         ),
       ),
-      floatingActionButton: _addPropertyFab(),
+      // floatingActionButton: _addPropertyFab(),
     );
   }
 

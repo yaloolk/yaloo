@@ -14,6 +14,7 @@ import 'guide_tour_requests_screen.dart';
 import 'guide_wallet_screen.dart';
 import 'guide_profile_screen.dart';
 import 'package:yaloo/core/widgets/floating_chat_button.dart';
+import 'package:iconsax_flutter/iconsax_flutter.dart';
 
 class GuideDashboardScreen extends StatefulWidget {
   const GuideDashboardScreen({super.key});
@@ -116,23 +117,23 @@ class _GuideDashboardScreenState extends State<GuideDashboardScreen> {
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
-            icon: Icon(LucideIcons.house),
+            icon: Icon(Iconsax.home_2_copy),
             label: 'Home',
           ),
           BottomNavigationBarItem(
-            icon: Icon(LucideIcons.messagesSquare),
+            icon: Icon(Iconsax.message_2_copy),
             label: 'Chat',
           ),
           BottomNavigationBarItem(
-            icon: Icon(LucideIcons.calendarCheck2),
+            icon: Icon(Iconsax.calendar_2_copy),
             label: 'Bookings',
           ),
           BottomNavigationBarItem(
-            icon: Icon(LucideIcons.dollarSign),
+            icon: Icon(Iconsax.dollar_circle_copy),
             label: 'Wallet',
           ),
           BottomNavigationBarItem(
-            icon: Icon(LucideIcons.user),
+            icon: Icon(Iconsax.user_square_copy),
             label: 'Profile',
           ),
         ],
