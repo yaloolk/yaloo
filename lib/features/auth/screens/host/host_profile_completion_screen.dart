@@ -20,21 +20,19 @@ class HostProfileCompletionScreen extends StatefulWidget {
 }
 
 class _HostProfileCompletionScreenState
-    extends State<HostProfileCompletionScreen> {
+    extends State<HostProfileCompletionScreen>
+    with SingleTickerProviderStateMixin {
   bool _isLoading = false;
 
-  // ── API ──
+  // ── ALL ORIGINAL STATE & LOGIC PRESERVED ──
   late final ProfileCompletionApi _profileApi;
 
-  // ── Controllers ──
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
 
-  // ── State ──
   String _countryCode = '94';
   String? _selectedGender;
 
-  // ── Uploads ──
   XFile? _profilePhotoFile;
   String? _profilePhotoFileName;
 
@@ -43,6 +41,10 @@ class _HostProfileCompletionScreenState
 
   XFile? _otherDocFile;
   String? _otherDocFileName;
+
+  late AnimationController _animController;
+  late Animation<double> _fadeAnim;
+  late Animation<Offset> _slideAnim;
 
   @override
   void initState() {
@@ -55,152 +57,31 @@ class _HostProfileCompletionScreenState
       apiClient: apiClient,
       secureStorage: secureStorage,
     );
+
+    _animController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    );
+    _fadeAnim =
+        CurvedAnimation(parent: _animController, curve: Curves.easeOut);
+    _slideAnim = Tween<Offset>(
+      begin: const Offset(0, 0.05),
+      end: Offset.zero,
+    ).animate(
+        CurvedAnimation(parent: _animController, curve: Curves.easeOut));
+    _animController.forward();
   }
 
   @override
   void dispose() {
     _nameController.dispose();
     _phoneController.dispose();
+    _animController.dispose();
     super.dispose();
   }
 
-  // ─────────────────────────────────────────────
-  // BUILD
-  // ─────────────────────────────────────────────
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        child: Column(
-          children: [
-            // ── Fixed header ──
-            Padding(
-              padding:
-              EdgeInsets.only(top: 28.h, left: 24.w, right: 24.w, bottom: 4.h),
-              child: Row(
-                children: [
-                  Image.asset(
-                    'assets/images/yaloo_logo.png',
-                    width: 36.w,
-                    height: 36.h,
-                  ),
-                  SizedBox(width: 12.w),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Complete Your Profile',
-                        style: AppTextStyles.headlineLarge.copyWith(
-                          fontSize: 20.sp,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Text(
-                        'Fill in the details below to get started',
-                        style: AppTextStyles.textSmall.copyWith(
-                          color: AppColors.primaryGray,
-                          fontSize: 12.sp,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
+  // ── ALL ORIGINAL LOGIC PRESERVED ──────────────────────────────────────────
 
-            // ── Scrollable body ──
-            Expanded(
-              child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                padding: EdgeInsets.symmetric(horizontal: 24.w),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SizedBox(height: 24.h),
-
-                    // ── Personal Info ──
-                    _buildSectionLabel(
-                        'Personal Information', Icons.person_outline),
-                    SizedBox(height: 14.h),
-
-                    _buildShadowedTextField(
-                      controller: _nameController,
-                      hint: 'Full Name',
-                      icon: Icons.person_outline,
-                    ),
-                    SizedBox(height: 12.h),
-                    _buildPhoneField(),
-                    SizedBox(height: 12.h),
-                    _buildShadowedDropdown(
-                      hint: 'Gender',
-                      icon: Icons.wc_outlined,
-                      value: _selectedGender,
-                      items: [
-                        'Male',
-                        'Female',
-                        'Other',
-                        'Prefer not to say',
-                      ],
-                      onChanged: (val) {
-                        setState(() {
-                          _selectedGender = val;
-                        });
-                      },
-                    ),
-                    SizedBox(height: 28.h),
-
-                    // ── Verification Documents ──
-                    _buildSectionLabel(
-                        'Verification Documents', Icons.verified_outlined),
-                    SizedBox(height: 6.h),
-                    Text(
-                      'Profile photo and Government ID are required.',
-                      style: AppTextStyles.textSmall.copyWith(
-                        color: AppColors.primaryGray,
-                        fontSize: 12.sp,
-                      ),
-                    ),
-                    SizedBox(height: 14.h),
-
-                    _buildUploadButton(
-                      label: 'Profile Photo',
-                      icon: Icons.camera_alt_outlined,
-                      fileName: _profilePhotoFileName,
-                      onPressed: () => _pickFile('profilePhoto'),
-                    ),
-                    SizedBox(height: 12.h),
-                    _buildUploadButton(
-                      label: 'Government ID / Passport',
-                      icon: Icons.badge_outlined,
-                      fileName: _govIdFileName,
-                      onPressed: () => _pickFile('govId'),
-                    ),
-                    SizedBox(height: 12.h),
-                    _buildUploadButton(
-                      label: 'Other Document (Optional)',
-                      icon: Icons.description_outlined,
-                      fileName: _otherDocFileName,
-                      onPressed: () => _pickFile('otherDoc'),
-                    ),
-
-                    // ── Submit ──
-                    SizedBox(height: 32.h),
-                    _buildSubmitButton(),
-                    SizedBox(height: 36.h),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // ─────────────────────────────────────────────
-  // VALIDATION
-  // ─────────────────────────────────────────────
   bool _validate() {
     if (_nameController.text.trim().isEmpty) {
       _showError('Please enter your full name');
@@ -225,31 +106,22 @@ class _HostProfileCompletionScreenState
     return true;
   }
 
-  // ─────────────────────────────────────────────
-  // SUBMIT
-  // ─────────────────────────────────────────────
   Future<void> _handleSubmit() async {
     if (!_validate()) return;
-
     setState(() => _isLoading = true);
 
     try {
-      // ── split full name into first / last ──
       final nameParts = _nameController.text.trim().split(' ');
       final firstName = nameParts.first;
       final lastName =
       nameParts.length > 1 ? nameParts.sublist(1).join(' ') : '';
 
-      // ── build the full phone number with country code ──
       final phoneNumber = '+$_countryCode${_phoneController.text.trim()}';
 
-      // ── lowercase gender so it matches the DB choices ──
-      // "Prefer not to say" is not a DB choice; map it to "other"
       final gender = _selectedGender! == 'Prefer not to say'
           ? 'other'
           : _selectedGender!.toLowerCase();
 
-      // ── POST to backend ──
       await _profileApi.completeHostProfile(
         firstName: firstName,
         lastName: lastName,
@@ -257,14 +129,10 @@ class _HostProfileCompletionScreenState
         gender: gender,
         profilePhoto: _profilePhotoFile!,
         governmentId: _govIdFile!,
-        otherDoc: _otherDocFile, // null → backend ignores it (optional)
+        otherDoc: _otherDocFile,
       );
 
       if (!mounted) return;
-
-      // Host always moves to Stay Details next.
-      // Full verification only completes after the stay + SLTDA doc
-      // are submitted and reviewed by admin.
       Navigator.pushReplacementNamed(context, '/hostStayDetails');
     } catch (e) {
       _showError('Failed to submit profile: $e');
@@ -273,12 +141,17 @@ class _HostProfileCompletionScreenState
     }
   }
 
-  // ─────────────────────────────────────────────
-  // FILE PICKER
-  // ─────────────────────────────────────────────
   Future<void> _pickFile(String field) async {
     final ImagePicker picker = ImagePicker();
-    final XFile? file = await picker.pickImage(source: ImageSource.gallery);
+
+    // ADD COMPRESSION HERE: Limit quality and max dimensions
+    final XFile? file = await picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 70, // Compresses image to 70% quality (drastically reduces file size)
+      maxWidth: 1920,   // Prevents massive 4K+ resolutions
+      maxHeight: 1920,
+    );
+
     if (file == null) return;
 
     setState(() {
@@ -299,9 +172,6 @@ class _HostProfileCompletionScreenState
     });
   }
 
-  // ─────────────────────────────────────────────
-  // COUNTRY CODE PICKER (phone prefix only)
-  // ─────────────────────────────────────────────
   void _showCountryPicker() {
     showCountryPicker(
       context: context,
@@ -314,200 +184,464 @@ class _HostProfileCompletionScreenState
     );
   }
 
-  // ─────────────────────────────────────────────
-  // ERROR
-  // ─────────────────────────────────────────────
   void _showError(String message) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(message)));
-  }
-
-  // ═══════════════════════════════════════════════
-  // UI WIDGETS
-  // ═══════════════════════════════════════════════
-
-  Widget _buildSectionLabel(String title, IconData icon) {
-    return Row(
-      children: [
-        Container(
-          width: 32.w,
-          height: 32.h,
-          decoration: BoxDecoration(
-            color: AppColors.primaryBlue.withAlpha(12),
-            borderRadius: BorderRadius.circular(8.r),
-          ),
-          child:
-          Center(child: Icon(icon, color: AppColors.primaryBlue, size: 17.w)),
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.error_outline_rounded,
+                color: Colors.white, size: 20),
+            const SizedBox(width: 10),
+            Expanded(
+                child: Text(message,
+                    style: const TextStyle(fontSize: 14))),
+          ],
         ),
-        SizedBox(width: 10.w),
-        Text(
-          title,
-          style: AppTextStyles.bodyLarge.copyWith(
-            fontSize: 15.sp,
-            fontWeight: FontWeight.bold,
-            color: Colors.black87,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSubmitButton() {
-    return SizedBox(
-      width: double.infinity,
-      height: 54.h,
-      child: ElevatedButton(
-        onPressed: _isLoading ? null : _handleSubmit,
-        style: ElevatedButton.styleFrom(
-          backgroundColor:
-          _isLoading ? AppColors.primaryGray : AppColors.primaryBlue,
-          disabledBackgroundColor: AppColors.primaryGray,
-          shape: const StadiumBorder(),
-          elevation: 0,
-        ),
-        child: _isLoading
-            ? SizedBox(
-          width: 24.w,
-          height: 24.h,
-          child: const CircularProgressIndicator(
-            color: Colors.white,
-            strokeWidth: 2.5,
-          ),
-        )
-            : Text(
-          'Continue',
-          style: AppTextStyles.bodyLarge.copyWith(
-            color: Colors.white,
-            fontSize: 16.sp,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
+        backgroundColor: const Color(0xFFE53935),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14)),
+        margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+        duration: const Duration(seconds: 3),
       ),
     );
   }
 
-  Widget _buildShadowedTextField({
+  // ── UI ─────────────────────────────────────────────────────────────────────
+
+  @override
+  Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+
+    return Scaffold(
+      backgroundColor: const Color(0xFFF5F7FA),
+      body: Stack(
+        children: [
+          // Gradient header — warm purple/violet for Host role
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: Container(
+              height: size.height * 0.22,
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Color(0xFF4A148C),
+                    Color(0xFF7B1FA2),
+                    Color(0xFFAB47BC),
+                  ],
+                ),
+                borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(32),
+                  bottomRight: Radius.circular(32),
+                ),
+              ),
+            ),
+          ),
+
+          SafeArea(
+            child: Column(
+              children: [
+                // ── Top bar ──────────────────────────────────
+                Padding(
+                  padding:
+                  const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 42,
+                        height: 42,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(14),
+                          boxShadow: [
+                            BoxShadow(
+                              color:
+                              Colors.black.withOpacity(0.15),
+                              blurRadius: 12,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        padding: const EdgeInsets.all(8),
+                        child: Image.asset(
+                            'assets/images/yaloo_logo.png'),
+                      ),
+                      const SizedBox(width: 14),
+                      Column(
+                        crossAxisAlignment:
+                        CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Host Profile',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w800,
+                              color: Colors.white,
+                              letterSpacing: -0.2,
+                            ),
+                          ),
+                          Text(
+                            'Verify your identity to start hosting',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color:
+                              Colors.white.withOpacity(0.80),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const Spacer(),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 5),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.18),
+                          borderRadius:
+                          BorderRadius.circular(20),
+                          border: Border.all(
+                              color:
+                              Colors.white.withOpacity(0.4)),
+                        ),
+                        child: Row(
+                          children: const [
+                            Icon(Icons.home_outlined,
+                                color: Colors.white, size: 13),
+                            SizedBox(width: 5),
+                            Text(
+                              'Host',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 20),
+
+                // ── Scrollable content ───────────────────────
+                Expanded(
+                  child: FadeTransition(
+                    opacity: _fadeAnim,
+                    child: SlideTransition(
+                      position: _slideAnim,
+                      child: SingleChildScrollView(
+                        physics: const BouncingScrollPhysics(),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 20),
+                        child: Column(
+                          crossAxisAlignment:
+                          CrossAxisAlignment.start,
+                          children: [
+                            // ── Personal Information ────────
+                            _sectionCard(
+                              title: 'Personal Information',
+                              icon: Icons.person_outline_rounded,
+                              accentColor:
+                              const Color(0xFF7B1FA2),
+                              children: [
+                                _formField(
+                                  controller: _nameController,
+                                  hint: 'Full Name',
+                                  icon: Icons.person_outline,
+                                  accentColor:
+                                  const Color(0xFF7B1FA2),
+                                ),
+                                const SizedBox(height: 12),
+                                _phoneField(),
+                                const SizedBox(height: 12),
+                                _dropdownField(
+                                  hint: 'Gender',
+                                  icon: Icons.wc_outlined,
+                                  value: _selectedGender,
+                                  items: [
+                                    'Male',
+                                    'Female',
+                                    'Other',
+                                    'Prefer not to say',
+                                  ],
+                                  accentColor:
+                                  const Color(0xFF7B1FA2),
+                                  onChanged: (val) => setState(
+                                          () => _selectedGender = val),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+
+                            // ── Verification Documents ──────
+                            _sectionCard(
+                              title: 'Verification Documents',
+                              icon: Icons.verified_outlined,
+                              accentColor:
+                              const Color(0xFF7B1FA2),
+                              subtitle:
+                              'Profile photo and Government ID are required.',
+                              children: [
+                                _uploadButton(
+                                  label: 'Profile Photo',
+                                  icon: Icons.camera_alt_outlined,
+                                  fileName: _profilePhotoFileName,
+                                  isRequired: true,
+                                  accentColor:
+                                  const Color(0xFF7B1FA2),
+                                  onPressed: () =>
+                                      _pickFile('profilePhoto'),
+                                ),
+                                const SizedBox(height: 10),
+                                _uploadButton(
+                                  label:
+                                  'Government ID / Passport',
+                                  icon: Icons.badge_outlined,
+                                  fileName: _govIdFileName,
+                                  isRequired: true,
+                                  accentColor:
+                                  const Color(0xFF7B1FA2),
+                                  onPressed: () =>
+                                      _pickFile('govId'),
+                                ),
+                                const SizedBox(height: 10),
+                                _uploadButton(
+                                  label:
+                                  'Other Document (Optional)',
+                                  icon:
+                                  Icons.description_outlined,
+                                  fileName: _otherDocFileName,
+                                  isRequired: false,
+                                  accentColor:
+                                  const Color(0xFF7B1FA2),
+                                  onPressed: () =>
+                                      _pickFile('otherDoc'),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 28),
+
+                            // ── Submit ──────────────────────
+                            _submitButton(),
+                            const SizedBox(height: 36),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── UI helpers ─────────────────────────────────────────────────────────────
+
+  Widget _sectionCard({
+    required String title,
+    required IconData icon,
+    required Color accentColor,
+    String? subtitle,
+    required List<Widget> children,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 14,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.all(18),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: accentColor.withOpacity(0.09),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(icon, color: accentColor, size: 18),
+              ),
+              const SizedBox(width: 10),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF0D1B2A),
+                ),
+              ),
+            ],
+          ),
+          if (subtitle != null) ...[
+            const SizedBox(height: 10),
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: accentColor.withOpacity(0.06),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.info_outline_rounded,
+                      size: 14, color: accentColor),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      subtitle,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: accentColor,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+          const SizedBox(height: 16),
+          ...children,
+        ],
+      ),
+    );
+  }
+
+  Widget _formField({
     required TextEditingController controller,
     required String hint,
     required IconData icon,
+    Color accentColor = const Color(0xFF7B1FA2),
     TextInputType? keyboardType,
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24.r),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primaryGray.withAlpha(20),
-            blurRadius: 20,
-            offset: const Offset(0, 5),
-          ),
-        ],
+        color: const Color(0xFFF8F9FC),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE8EAED)),
       ),
       child: TextFormField(
         controller: controller,
         keyboardType: keyboardType,
-        style: AppTextStyles.textSmall.copyWith(color: Colors.black),
+        style: const TextStyle(
+            fontSize: 14,
+            color: Color(0xFF0D1B2A),
+            fontWeight: FontWeight.w400),
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle: AppTextStyles.textSmall
-              .copyWith(color: AppColors.primaryGray.withAlpha(150)),
-          prefixIcon: Padding(
-            padding: const EdgeInsets.only(left: 20.0, right: 16.0),
-            child: Icon(icon, color: AppColors.primaryGray),
-          ),
-          filled: true,
-          fillColor: Colors.white,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(24.r),
-            borderSide: BorderSide.none,
-          ),
-          contentPadding:
-          EdgeInsets.only(top: 20.h, bottom: 20.h, right: 20.w),
+          hintStyle: TextStyle(
+              color: Colors.grey[400],
+              fontSize: 14,
+              fontWeight: FontWeight.w400),
+          prefixIcon:
+          Icon(icon, color: accentColor, size: 18),
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16, vertical: 14),
         ),
       ),
     );
   }
 
-  Widget _buildPhoneField() {
+  Widget _phoneField() {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24.r),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primaryGray.withAlpha(20),
-            blurRadius: 20,
-            offset: const Offset(0, 5),
-          ),
-        ],
+        color: const Color(0xFFF8F9FC),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE8EAED)),
       ),
       child: TextFormField(
         controller: _phoneController,
         keyboardType: TextInputType.phone,
-        style: AppTextStyles.textSmall.copyWith(color: Colors.black),
+        style: const TextStyle(
+            fontSize: 14,
+            color: Color(0xFF0D1B2A),
+            fontWeight: FontWeight.w400),
         decoration: InputDecoration(
           hintText: 'Phone Number',
-          hintStyle: AppTextStyles.textSmall
-              .copyWith(color: AppColors.primaryGray.withAlpha(150)),
+          hintStyle: TextStyle(
+              color: Colors.grey[400], fontSize: 14),
           prefixIcon: InkWell(
             onTap: _showCountryPicker,
+            borderRadius: BorderRadius.circular(12),
             child: Padding(
-              padding: const EdgeInsets.only(left: 20.0, right: 10.0),
+              padding: const EdgeInsets.only(left: 14, right: 8),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.phone_outlined, color: AppColors.primaryGray),
-                  SizedBox(width: 8.w),
-                  Text('+$_countryCode',
-                      style: AppTextStyles.textSmall
-                          .copyWith(color: Colors.black)),
-                  Icon(Icons.arrow_drop_down, color: AppColors.primaryGray),
+                  const Icon(Icons.phone_outlined,
+                      color: Color(0xFF7B1FA2), size: 18),
+                  const SizedBox(width: 6),
+                  Text(
+                    '+$_countryCode',
+                    style: const TextStyle(
+                        fontSize: 14,
+                        color: Color(0xFF0D1B2A),
+                        fontWeight: FontWeight.w500),
+                  ),
+                  Icon(Icons.arrow_drop_down,
+                      color: Colors.grey[400], size: 18),
                 ],
               ),
             ),
           ),
-          filled: true,
-          fillColor: Colors.white,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(24.r),
-            borderSide: BorderSide.none,
-          ),
-          contentPadding:
-          EdgeInsets.only(top: 20.h, bottom: 20.h, right: 20.w),
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16, vertical: 14),
         ),
       ),
     );
   }
 
-  Widget _buildShadowedDropdown({
+  Widget _dropdownField({
     required String hint,
     required IconData icon,
     String? value,
     required List<String> items,
+    Color accentColor = const Color(0xFF7B1FA2),
     required ValueChanged<String?> onChanged,
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24.r),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primaryGray.withAlpha(20),
-            blurRadius: 20,
-            offset: const Offset(0, 5),
-          ),
-        ],
+        color: value != null
+            ? accentColor.withOpacity(0.05)
+            : const Color(0xFFF8F9FC),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: value != null
+              ? accentColor.withOpacity(0.3)
+              : const Color(0xFFE8EAED),
+        ),
       ),
       child: DropdownButtonFormField<String>(
         value: value,
-        style: AppTextStyles.textSmall.copyWith(color: Colors.black),
+        style: const TextStyle(
+            fontSize: 14,
+            color: Color(0xFF0D1B2A),
+            fontWeight: FontWeight.w400),
         items: items
             .map((item) => DropdownMenuItem<String>(
           value: item,
           child: Text(item,
-              style: AppTextStyles.textSmall,
+              style: const TextStyle(fontSize: 14),
               overflow: TextOverflow.ellipsis),
         ))
             .toList(),
@@ -515,76 +649,149 @@ class _HostProfileCompletionScreenState
         isExpanded: true,
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle: AppTextStyles.textSmall
-              .copyWith(color: AppColors.primaryGray.withAlpha(150)),
-          prefixIcon: Padding(
-            padding: const EdgeInsets.only(left: 20.0, right: 16.0),
-            child: Icon(icon, color: AppColors.primaryGray),
-          ),
-          filled: true,
-          fillColor: Colors.white,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(24.r),
-            borderSide: BorderSide.none,
-          ),
-          contentPadding:
-          EdgeInsets.only(top: 20.h, bottom: 20.h, right: 0.w),
+          hintStyle: TextStyle(
+              color: Colors.grey[400], fontSize: 14),
+          prefixIcon: Icon(icon,
+              color: value != null ? accentColor : Colors.grey[400],
+              size: 18),
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16, vertical: 14),
         ),
-        icon: Padding(
-          padding: const EdgeInsets.only(right: 12.0),
-          child: Icon(Icons.arrow_drop_down, color: AppColors.primaryGray),
-        ),
+        icon: Icon(Icons.arrow_drop_down,
+            color: Colors.grey[400], size: 20),
+        dropdownColor: Colors.white,
+        borderRadius: BorderRadius.circular(14),
       ),
     );
   }
 
-  Widget _buildUploadButton({
+  Widget _uploadButton({
     required String label,
     required IconData icon,
     String? fileName,
+    required bool isRequired,
+    Color accentColor = const Color(0xFF7B1FA2),
     required VoidCallback onPressed,
   }) {
     final bool isUploaded = fileName != null;
     return GestureDetector(
       onTap: onPressed,
-      child: Container(
-        padding: EdgeInsets.symmetric(vertical: 18.h, horizontal: 20.w),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(
+            vertical: 14, horizontal: 16),
         decoration: BoxDecoration(
-          color: isUploaded ? AppColors.thirdBlue : Colors.white,
-          borderRadius: BorderRadius.circular(24.r),
-          border:
-          isUploaded ? Border.all(color: AppColors.primaryBlue) : null,
-          boxShadow: [
-            if (!isUploaded)
-              BoxShadow(
-                color: AppColors.primaryGray.withAlpha(20),
-                blurRadius: 20,
-                offset: const Offset(0, 5),
-              ),
-          ],
+          color: isUploaded
+              ? accentColor.withOpacity(0.07)
+              : const Color(0xFFF8F9FC),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: isUploaded
+                ? accentColor
+                : const Color(0xFFE8EAED),
+            width: isUploaded ? 1.5 : 1,
+          ),
         ),
         child: Row(
           children: [
-            Icon(
-              isUploaded ? Icons.check_circle_outline : icon,
-              color: isUploaded
-                  ? AppColors.primaryBlue
-                  : AppColors.primaryGray,
-            ),
-            SizedBox(width: 12.w),
-            Expanded(
-              child: Text(
-                isUploaded ? fileName : label,
-                style: AppTextStyles.textSmall.copyWith(
-                  color: isUploaded
-                      ? AppColors.primaryBlue
-                      : AppColors.primaryGray,
-                  fontWeight:
-                  isUploaded ? FontWeight.bold : FontWeight.normal,
-                ),
-                overflow: TextOverflow.ellipsis,
+            Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                color: isUploaded
+                    ? accentColor.withOpacity(0.12)
+                    : Colors.grey[100],
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(
+                isUploaded ? Icons.check_circle_rounded : icon,
+                color: isUploaded ? accentColor : Colors.grey[500],
+                size: 20,
               ),
             ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    isUploaded ? fileName : label,
+                    style: TextStyle(
+                      fontSize: 13.5,
+                      fontWeight: isUploaded
+                          ? FontWeight.w600
+                          : FontWeight.w500,
+                      color: isUploaded
+                          ? accentColor
+                          : Colors.grey[700],
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  if (!isUploaded)
+                    Text(
+                      isRequired ? 'Required' : 'Optional',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: isRequired
+                            ? Colors.orange[600]
+                            : Colors.grey[400],
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            Icon(
+              isUploaded ? Icons.edit_outlined : Icons.upload_rounded,
+              color: isUploaded ? accentColor : Colors.grey[400],
+              size: 18,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _submitButton() {
+    return SizedBox(
+      width: double.infinity,
+      height: 52,
+      child: ElevatedButton(
+        onPressed: _isLoading ? null : _handleSubmit,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFF7B1FA2),
+          disabledBackgroundColor:
+          const Color(0xFF7B1FA2).withOpacity(0.45),
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+        ),
+        child: _isLoading
+            ? const SizedBox(
+          width: 22,
+          height: 22,
+          child: CircularProgressIndicator(
+            strokeWidth: 2.5,
+            color: Colors.white,
+          ),
+        )
+            : Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: const [
+            Text(
+              'Continue',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: Colors.white,
+                letterSpacing: 0.2,
+              ),
+            ),
+            SizedBox(width: 8),
+            Icon(Icons.arrow_forward_rounded,
+                color: Colors.white, size: 18),
           ],
         ),
       ),

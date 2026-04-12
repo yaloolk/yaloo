@@ -4,9 +4,11 @@ import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:yaloo/core/services/host_api_service.dart';
 import 'package:yaloo/features/host/models/host_models.dart';
+import 'package:yaloo/core/network/api_client.dart';
 
 class HostProvider extends ChangeNotifier {
   final HostApiService _api = HostApiService();
+  final ApiClient _apiClient = ApiClient();
 
   // State
   HostProfile? _profile;

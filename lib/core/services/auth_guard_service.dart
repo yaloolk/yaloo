@@ -8,13 +8,9 @@ import 'package:yaloo/core/network/api_client.dart';
 class AuthGuardService {
   final ApiClient _apiClient = ApiClient();
 
-  /// Determine where user should be routed after login.
-  /// Returns a named route string.
   Future<String> getInitialRoute({bool forceRefresh = false}) async {
-    // ── Fast-fail: if Supabase has no session, skip the API call entirely ──
     final session = Supabase.instance.client.auth.currentSession;
     if (session == null) {
-      if (kDebugMode) debugPrint('🔐 No Supabase session → /login');
       return '/login';
     }
 
@@ -27,29 +23,31 @@ class AuthGuardService {
       final verificationStatus = user['verification_status'] as String?        ?? 'not_required';
       final hasVerifiedStay    = user['has_verified_stay']   as bool?          ?? false;
 
-      if (kDebugMode) {
-        debugPrint('🔐 Auth Guard:');
-        debugPrint('   role=$userRole  complete=$isComplete');
-        debugPrint('   verification=$verificationStatus  hasVerifiedStay=$hasVerifiedStay');
-      }
-
+      // Logic for existing profiles
       if (!isComplete) return _profileCompletionRoute(userRole);
       return _homeRoute(userRole, verificationStatus, hasVerifiedStay);
 
     } on DioException catch (e) {
-      if (kDebugMode) {
-        debugPrint('❌ Auth guard DioException: ${e.type}');
-        debugPrint('   status=${e.response?.statusCode}  msg=${e.message}');
+      // ✅ FIX: Handle the "Profile Not Found" 404
+      if (e.response?.statusCode == 404) {
+        final errorMsg = e.response?.data['error']?.toString() ?? '';
+
+        // Check user metadata from Supabase to know which completion screen to show
+        final String roleFromMeta = session.user.userMetadata?['role'] ?? 'tourist';
+
+        if (errorMsg.contains('Guide profile not found')) {
+          return '/guideWelcome'; // Send to Guide completion flow
+        } else if (errorMsg.contains('Host profile not found')) {
+          return '/hostProfileCompletion';
+        } else if (errorMsg.contains('Tourist profile not found')) {
+          return '/profileCompletion';
+        }
       }
-      // 401 → not logged in; timeout → let caller retry
+
       if (e.response?.statusCode == 401) return '/login';
-      if (e.type == DioExceptionType.connectionTimeout ||
-          e.type == DioExceptionType.receiveTimeout) {
-        return '/login'; // caller should show "server unreachable" UI
-      }
-      return '/login';
+
+      return '/login'; // Default fallback
     } catch (e) {
-      if (kDebugMode) debugPrint('❌ Auth guard error: $e');
       return '/login';
     }
   }

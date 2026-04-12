@@ -10,18 +10,15 @@ import 'package:yaloo/core/constants/app_text_styles.dart';
 import '../../../core/widgets/custom_icon_button.dart';
 import '../providers/tourist_provider.dart';
 import '../providers/guide_booking_provider.dart';
+import '../providers/city_provider.dart';
 import '../models/guide_booking_model.dart';
+import '../models/city_model.dart';
+import '../widgets/city_detail_sheet.dart';
 
-// ── Mock data (replace with real API data later) ──────────────────────────────
+// ── Mock data (featured — keep as-is until real API) ─────────────────────────
 final List<Map<String, String>> featuredDestinations = [
-  {"name": "Yala",   "image": "assets/images/yaloo_banner_1.jpg"},
-  {"name": "Forest", "image": "assets/images/yaloo_banner_2.jpg"},
-];
-
-final List<Map<String, String>> popularDestinations = [
-  {"name": "Sigiriya", "location": "Sigiriya", "image": "assets/images/sigiriya.jpg"},
-  {"name": "Ella",     "location": "Ella",     "image": "assets/images/ella.jpg"},
-  {"name": "Galle",    "location": "Galle",    "image": "assets/images/galle.jpg"},
+  {"name": "Sri Lanka",   "image": "assets/images/yaloo_banner_1.jpg"},
+  {"name": "Yala", "image": "assets/images/yaloo_banner_2.jpg"},
 ];
 
 final List<Map<String, dynamic>> categories = [
@@ -31,7 +28,7 @@ final List<Map<String, dynamic>> categories = [
   {"name": "Culture",  "icon": FontAwesomeIcons.landmark},
 ];
 
-// ── Design tokens (mirrors profile screen) ────────────────────────────────────
+// ── Design tokens ─────────────────────────────────────────────────────────────
 const _blue       = Color(0xFF2563EB);
 const _blueDark   = Color(0xFF1D4ED8);
 const _blueDarker = Color(0xFF1E40AF);
@@ -59,12 +56,16 @@ class _TouristHomeScreenState extends State<TouristHomeScreen> {
       if (mounted) {
         context.read<TouristProvider>().loadProfile();
         context.read<GuideBookingProvider>().loadMyBookings();
+        context.read<CityProvider>().loadCities();   // ← load cities
       }
     });
   }
 
   Future<void> _onRefresh() async {
-    await context.read<TouristProvider>().loadProfile(forceRefresh: true);
+    await Future.wait([
+      context.read<TouristProvider>().loadProfile(forceRefresh: true),
+      context.read<CityProvider>().loadCities(forceRefresh: true),
+    ]);
   }
 
   @override
@@ -95,7 +96,7 @@ class _TouristHomeScreenState extends State<TouristHomeScreen> {
                     SizedBox(height: 24.h),
                     _buildSectionHeader(title: "Popular Destinations"),
                     SizedBox(height: 16.h),
-                    _buildPopularSlider(),
+                    _buildPopularSlider(),     // ← now uses real city data
                     SizedBox(height: 24.h),
                     _buildSectionHeader(title: "Choose Category"),
                     SizedBox(height: 16.h),
@@ -111,7 +112,7 @@ class _TouristHomeScreenState extends State<TouristHomeScreen> {
     );
   }
 
-  // ── HERO HEADER — gradient card matching profile screen ───────────────────
+  // ── HERO HEADER ───────────────────────────────────────────────────────────
   Widget _buildHeroHeader(BuildContext context, TouristProvider provider) {
     final profile = provider.profile;
     final isLoading = provider.profileLoading && profile == null;
@@ -145,10 +146,8 @@ class _TouristHomeScreenState extends State<TouristHomeScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Top row: avatar + name + actions
             Row(
               children: [
-                // Avatar
                 if (profile != null && profile.profilePic.isNotEmpty)
                   Container(
                     decoration: BoxDecoration(
@@ -177,7 +176,6 @@ class _TouristHomeScreenState extends State<TouristHomeScreen> {
 
                 SizedBox(width: 12.w),
 
-                // Greeting + name
                 Expanded(
                   child: isLoading
                       ? Container(
@@ -204,11 +202,9 @@ class _TouristHomeScreenState extends State<TouristHomeScreen> {
                   ),
                 ),
 
-                // Settings icon
                 _glassIconBtn(CupertinoIcons.gear, () => Navigator.pushNamed(context, '/settings')),
                 SizedBox(width: 8.w),
 
-                // Notification with badge
                 Stack(
                   children: [
                     _glassIconBtn(CupertinoIcons.bell, () => Navigator.pushNamed(context, '/notification')),
@@ -226,7 +222,6 @@ class _TouristHomeScreenState extends State<TouristHomeScreen> {
 
             SizedBox(height: 20.h),
 
-            // Title text
             Text(
               'Explore Amazing',
               style: TextStyle(color: Colors.white, fontSize: 24.sp, fontWeight: FontWeight.w800, letterSpacing: -0.5),
@@ -238,7 +233,6 @@ class _TouristHomeScreenState extends State<TouristHomeScreen> {
 
             SizedBox(height: 16.h),
 
-            // Traveler badge (mirrors profile screen badge)
             Container(
               padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 8.h),
               decoration: BoxDecoration(
@@ -264,7 +258,6 @@ class _TouristHomeScreenState extends State<TouristHomeScreen> {
     );
   }
 
-  /// Glass-style icon button for the header (matches profile screen's card style)
   Widget _glassIconBtn(IconData icon, VoidCallback onPressed) {
     return GestureDetector(
       onTap: onPressed,
@@ -358,7 +351,6 @@ class _TouristHomeScreenState extends State<TouristHomeScreen> {
       ),
       child: Stack(
         children: [
-          // Gradient overlay
           Container(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(24.r),
@@ -369,7 +361,6 @@ class _TouristHomeScreenState extends State<TouristHomeScreen> {
               ),
             ),
           ),
-          // Destination name
           Positioned(
             bottom: 16.h, left: 16.w,
             child: Row(
@@ -380,7 +371,6 @@ class _TouristHomeScreenState extends State<TouristHomeScreen> {
               ],
             ),
           ),
-          // Top-right glassy badge
           Positioned(
             top: 12.h, right: 12.w,
             child: Container(
@@ -425,12 +415,8 @@ class _TouristHomeScreenState extends State<TouristHomeScreen> {
           SizedBox(height: 16.h),
           Row(children: [
             Expanded(child: _findBtn(context, "GUIDE",  CupertinoIcons.compass,   _blue,   () => Navigator.pushNamed(context, '/findGuide'))),
-            SizedBox(width: 10.w),
+            SizedBox(width: 2.w),
             Expanded(child: _findBtn(context, "HOST",   CupertinoIcons.house_fill, _green,  () => Navigator.pushNamed(context, '/findHost'))),
-            SizedBox(width: 10.w),
-            Expanded(child: _findBtn(context, "FOOD",   FontAwesomeIcons.utensils, _amber,  () {})),
-            SizedBox(width: 10.w),
-            Expanded(child: _findBtn(context, "HOTEL",  FontAwesomeIcons.hotel,    _purple, () {})),
           ]),
         ]),
       ),
@@ -490,82 +476,220 @@ class _TouristHomeScreenState extends State<TouristHomeScreen> {
     );
   }
 
-  // ── POPULAR SLIDER ────────────────────────────────────────────────────────
+  // ── POPULAR SLIDER — now driven by CityProvider ───────────────────────────
   Widget _buildPopularSlider() {
-    return SizedBox(
-      height: 220.h,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        physics: const BouncingScrollPhysics(),
-        itemCount: popularDestinations.length,
-        padding: EdgeInsets.symmetric(horizontal: 8.w),
-        itemBuilder: (context, index) {
-          final item = popularDestinations[index];
-          return _buildPopularCard(
-            title: item['name']!, location: item['location']!, imageUrl: item['image']!,
-            isFirst: index == 0, isLast: index == popularDestinations.length - 1,
+    return Consumer<CityProvider>(
+      builder: (context, cityProvider, _) {
+        // Loading skeleton
+        if (cityProvider.loading && cityProvider.cities.isEmpty) {
+          return SizedBox(
+            height: 220.h,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: 3,
+              padding: EdgeInsets.symmetric(horizontal: 8.w),
+              itemBuilder: (_, i) => _buildPopularCardSkeleton(
+                isFirst: i == 0, isLast: i == 2,
+              ),
+            ),
           );
-        },
+        }
+
+        // Error state
+        if (cityProvider.error != null && cityProvider.cities.isEmpty) {
+          return SizedBox(
+            height: 220.h,
+            child: Center(
+              child: Column(mainAxisSize: MainAxisSize.min, children: [
+                Icon(CupertinoIcons.exclamationmark_circle,
+                    color: _textGray, size: 32.w),
+                SizedBox(height: 8.h),
+                Text('Could not load destinations',
+                    style: TextStyle(color: _textGray, fontSize: 13.sp)),
+                SizedBox(height: 8.h),
+                TextButton(
+                  onPressed: () => cityProvider.loadCities(forceRefresh: true),
+                  child: const Text('Retry'),
+                ),
+              ]),
+            ),
+          );
+        }
+
+        final cities = cityProvider.cities;
+
+        // Empty state
+        if (cities.isEmpty) {
+          return SizedBox(
+            height: 80.h,
+            child: Center(
+              child: Text('No destinations available yet.',
+                  style: TextStyle(color: _textGray, fontSize: 13.sp)),
+            ),
+          );
+        }
+
+        return SizedBox(
+          height: 220.h,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
+            itemCount: cities.length,
+            padding: EdgeInsets.symmetric(horizontal: 8.w),
+            itemBuilder: (context, index) {
+              final city = cities[index];
+              return _buildCityCard(
+                city: city,
+                isFirst: index == 0,
+                isLast: index == cities.length - 1,
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+
+  /// ── Real city card — tappable, opens bottom sheet popup ─────────────────
+  Widget _buildCityCard({
+    required CityModel city,
+    bool isFirst = false,
+    bool isLast = false,
+  }) {
+    return GestureDetector(
+      onTap: () => showCityDetail(context, city),
+      child: Container(
+        width: 160.w,
+        margin: EdgeInsets.only(
+          left: isFirst ? 16.w : 8.w,
+          right: isLast ? 16.w : 8.w,
+        ),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(24.r),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.12),
+              blurRadius: 14,
+              offset: const Offset(0, 6),
+              spreadRadius: -4,
+            )
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(24.r),
+          child: Stack(children: [
+            // Network image
+            Positioned.fill(
+              child: city.imageUrl != null && city.imageUrl!.isNotEmpty
+                  ? Image.network(
+                city.imageUrl!,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => Container(
+                  color: _blue.withOpacity(0.12),
+                  child: const Center(
+                    child: Icon(Icons.image_not_supported_rounded,
+                        color: _blue, size: 30),
+                  ),
+                ),
+                loadingBuilder: (context, child, progress) {
+                  if (progress == null) return child;
+                  return Container(
+                    color: _blue.withOpacity(0.07),
+                    child: const Center(
+                      child: CircularProgressIndicator(
+                          color: _blue, strokeWidth: 2),
+                    ),
+                  );
+                },
+              )
+                  : Container(
+                color: _blue.withOpacity(0.12),
+                child: const Center(
+                  child: Icon(Icons.image_not_supported_rounded,
+                      color: _blue, size: 30),
+                ),
+              ),
+            ),
+
+            // Gradient overlay
+            Positioned.fill(
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      Colors.black.withOpacity(0.65),
+                      Colors.transparent,
+                    ],
+                    begin: Alignment.bottomCenter,
+                    end: Alignment.topCenter,
+                  ),
+                ),
+              ),
+            ),
+
+            // Viewfinder icon top-right
+            Positioned(
+              top: 10.h, right: 10.w,
+              child: Container(
+                padding: EdgeInsets.all(7.w),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.22),
+                  borderRadius: BorderRadius.circular(10.r),
+                  border: Border.all(color: Colors.white.withOpacity(0.3)),
+                ),
+                child: Icon(CupertinoIcons.viewfinder,
+                    color: Colors.white, size: 14.w),
+              ),
+            ),
+
+            // City name + country bottom
+            Positioned(
+              bottom: 14.h, left: 12.w, right: 12.w,
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Row(children: [
+                  Icon(CupertinoIcons.map_pin,
+                      color: Colors.white, size: 11.w),
+                  SizedBox(width: 4.w),
+                  Expanded(
+                    child: Text(
+                      city.name,
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 14.sp,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ]),
+                SizedBox(height: 3.h),
+                Text(
+                  city.country,
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.75),
+                    fontSize: 11.sp,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ]),
+            ),
+          ]),
+        ),
       ),
     );
   }
 
-  Widget _buildPopularCard({required String title, required String location, required String imageUrl, bool isFirst = false, bool isLast = false}) {
+  /// Skeleton placeholder while loading
+  Widget _buildPopularCardSkeleton({bool isFirst = false, bool isLast = false}) {
     return Container(
       width: 160.w,
-      margin: EdgeInsets.only(left: isFirst ? 16.w : 8.w, right: isLast ? 16.w : 8.w),
+      margin: EdgeInsets.only(
+          left: isFirst ? 16.w : 8.w, right: isLast ? 16.w : 8.w),
       decoration: BoxDecoration(
+        color: Colors.black.withOpacity(0.07),
         borderRadius: BorderRadius.circular(24.r),
-        image: DecorationImage(
-          image: imageUrl.startsWith('assets/') ? AssetImage(imageUrl) as ImageProvider : NetworkImage(imageUrl),
-          fit: BoxFit.cover,
-        ),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.12), blurRadius: 14, offset: const Offset(0, 6), spreadRadius: -4)],
       ),
-      child: Stack(children: [
-        // Gradient overlay
-        Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(24.r),
-            gradient: LinearGradient(
-              colors: [Colors.black.withOpacity(0.65), Colors.transparent],
-              begin: Alignment.bottomCenter, end: Alignment.topCenter,
-            ),
-          ),
-        ),
-        // Top-right viewfinder
-        Positioned(
-          top: 10.h, right: 10.w,
-          child: Container(
-            padding: EdgeInsets.all(7.w),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.22),
-              borderRadius: BorderRadius.circular(10.r),
-              border: Border.all(color: Colors.white.withOpacity(0.3)),
-            ),
-            child: Icon(CupertinoIcons.viewfinder, color: Colors.white, size: 14.w),
-          ),
-        ),
-        // Bottom info
-        Positioned(
-          bottom: 14.h, left: 12.w, right: 12.w,
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Row(children: [
-              Icon(CupertinoIcons.map_pin, color: Colors.white, size: 11.w),
-              SizedBox(width: 4.w),
-              Expanded(
-                child: Text(title,
-                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 14.sp),
-                    overflow: TextOverflow.ellipsis),
-              ),
-            ]),
-            SizedBox(height: 3.h),
-            Text(location,
-                style: TextStyle(color: Colors.white.withOpacity(0.75), fontSize: 11.sp, fontWeight: FontWeight.w500),
-                overflow: TextOverflow.ellipsis),
-          ]),
-        ),
-      ]),
     );
   }
 
@@ -612,7 +736,6 @@ class _TouristHomeScreenState extends State<TouristHomeScreen> {
     );
   }
 
-  // ── SHARED CARD DECORATION (mirrors profile _card()) ─────────────────────
   BoxDecoration _cardDecoration() => BoxDecoration(
     color: Colors.white,
     borderRadius: BorderRadius.circular(24.r),
@@ -621,6 +744,9 @@ class _TouristHomeScreenState extends State<TouristHomeScreen> {
 }
 
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// Active Booking Banner (unchanged)
+// ═══════════════════════════════════════════════════════════════════════════════
 class _ActiveBookingBanner extends StatefulWidget {
   const _ActiveBookingBanner();
   @override State<_ActiveBookingBanner> createState() => _ActiveBookingBannerState();
@@ -644,7 +770,6 @@ class _ActiveBookingBannerState extends State<_ActiveBookingBanner>
   @override
   void dispose() { _pulse.dispose(); super.dispose(); }
 
-  // Find the active booking (confirmed + time window is NOW)
   GuideBookingModel? _activeBooking(List<GuideBookingModel> bookings) {
     final now = DateTime.now();
     for (final b in bookings) {
@@ -688,8 +813,7 @@ class _ActiveBookingBannerState extends State<_ActiveBookingBanner>
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 16.w),
       child: GestureDetector(
-        onTap: () => Navigator.pushNamed(context, '/bookingStatus',
-            arguments: active.toJson()),
+        onTap: () => Navigator.pushNamed(context, '/bookingStatus', arguments: active.toJson()),
         child: Container(
           decoration: BoxDecoration(
             gradient: const LinearGradient(
@@ -702,7 +826,6 @@ class _ActiveBookingBannerState extends State<_ActiveBookingBanner>
           ),
           padding: EdgeInsets.fromLTRB(16.w, 14.h, 16.w, 14.h),
           child: Row(children: [
-            // Pulsing dot
             FadeTransition(
               opacity: _pulseAnim,
               child: Container(
@@ -727,7 +850,6 @@ class _ActiveBookingBannerState extends State<_ActiveBookingBanner>
               ],
             )),
             SizedBox(width: 8.w),
-            // Time remaining pill
             Container(
               padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
               decoration: BoxDecoration(

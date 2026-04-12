@@ -47,6 +47,42 @@ class GuideInterest {
   );
 }
 
+class Interest {
+  final String id;
+  final String name;
+  final String category;
+
+  const Interest({required this.id, required this.name, required this.category});
+
+  factory Interest.fromJson(Map<String, dynamic> j) => Interest(
+    id: j['id'] ?? '',
+    name: j['name'] ?? '',
+    category: j['category'] ?? '',
+  );
+}
+
+class GuideSpecialization {
+  final String id;
+  final String slug;
+  final String label;
+  final String category;
+
+  const GuideSpecialization({
+    required this.id,
+    required this.slug,
+    required this.label,
+    required this.category,
+  });
+
+  factory GuideSpecialization.fromJson(Map<String, dynamic> j) =>
+      GuideSpecialization(
+        id:       j['id']?.toString()       ?? '',
+        slug:     j['slug']?.toString()     ?? '',
+        label:    j['label']?.toString()    ?? '',
+        category: j['category']?.toString() ?? '',
+      );
+}
+
 class GuideCity {
   final String id;
   final String name;
@@ -192,6 +228,8 @@ class GuideModel {
   // Related
   final List<GuideLanguage>         languages;
   final List<GuideInterest>         interests;
+  final List<GuideSpecialization>   specializations;
+  final List<Map<String, dynamic>>  localActivities;
   final List<Map<String, dynamic>>  gallery;
   final List<GuideAvailabilitySlot> availability;
   final List<GuideReview>           reviews;
@@ -222,6 +260,8 @@ class GuideModel {
     required this.isComplete,
     required this.languages,
     required this.interests,
+    required this.specializations,
+    required this.localActivities,
     required this.gallery,
     required this.availability,
     required this.reviews,
@@ -270,6 +310,12 @@ class GuideModel {
       interests:  (j['interests'] as List? ?? [])
           .map((e) => GuideInterest.fromJson(e as Map<String, dynamic>))
           .toList(),
+      specializations: (j['specializations'] as List? ?? [])
+          .map((e) => GuideSpecialization.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      localActivities: List<Map<String, dynamic>>.from(
+          (j['local_activities'] as List? ?? [])
+              .map((e) => Map<String, dynamic>.from(e as Map))),
       gallery:    List<Map<String, dynamic>>.from(
           (j['gallery'] as List? ?? [])
               .map((e) => Map<String, dynamic>.from(e as Map))),
@@ -295,6 +341,8 @@ class GuideModel {
     bool? isAvailable,
     double? avgRating,
     List<GuideLanguage>? languages,
+    List<GuideSpecialization>? specializations,
+    List<Map<String, dynamic>>? localActivities,
   }) => GuideModel(
     guideProfileId:      guideProfileId,
     userProfileId:       userProfileId,
@@ -314,12 +362,14 @@ class GuideModel {
     bookingResponseRate: bookingResponseRate,
     totalCompleted:      totalCompleted,
     totalEarned:         totalEarned,
-    isAvailable:         isAvailable ?? this.isAvailable,
+    isAvailable:         isAvailable     ?? this.isAvailable,
     isSLTDAVerified:     isSLTDAVerified,
     verificationStatus:  verificationStatus,
     isComplete:          isComplete,
-    languages:           languages  ?? this.languages,
+    languages:           languages       ?? this.languages,
     interests:           interests,
+    specializations:     specializations ?? this.specializations,
+    localActivities:     localActivities ?? this.localActivities,
     gallery:             gallery,
     availability:        availability,
     reviews:             reviews,

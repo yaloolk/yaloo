@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' hide MultipartFile;
 import 'package:yaloo/core/constants/colors.dart';
 import 'package:provider/provider.dart';
 import 'package:yaloo/core/network/api_client.dart';
@@ -14,6 +14,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:intl/intl.dart';
 import 'package:table_calendar/table_calendar.dart';
+import 'package:yaloo/features/guide/models/guide_model.dart';
 
 // ─── Data models ────────────────────────────────────────────────────────────
 
@@ -128,6 +129,84 @@ class UserLanguage {
   };
 }
 
+class Specialization {
+  final String id;
+  final String slug;
+  final String label;
+  final String category;
+
+  const Specialization({
+    required this.id,
+    required this.slug,
+    required this.label,
+    required this.category,
+  });
+
+  factory Specialization.fromJson(Map<String, dynamic> j) => Specialization(
+    id:       j['id']       ?? '',
+    slug:     j['slug']     ?? '',
+    label:    j['label']    ?? '',
+    category: j['category'] ?? '',
+  );
+}
+
+class GuideLocalActivity {
+  final String  localActivityId;
+  final String  activityId;
+  final String  name;
+  final String  category;
+  final String  description;
+  final String  instruction;
+  final int?    duration;       // minutes
+  final int?    basePrice;
+  final double? setPrice;
+  final String  budget;
+  final String  difficultyLevel;
+  final String  specialNote;
+
+  const GuideLocalActivity({
+    required this.localActivityId,
+    required this.activityId,
+    required this.name,
+    required this.category,
+    required this.description,
+    required this.instruction,
+    this.duration,
+    this.basePrice,
+    this.setPrice,
+    required this.budget,
+    required this.difficultyLevel,
+    required this.specialNote,
+  });
+
+  factory GuideLocalActivity.fromJson(Map<String, dynamic> j) {
+    // The API returns two shapes:
+    //  1. Flat  (from guide profile serializer): top-level name/category/etc.
+    //  2. Nested (from LocalActivitySerializer after add): { id, activity: {...}, set_price, special_note }
+    final act = j['activity'] as Map<String, dynamic>?;
+    return GuideLocalActivity(
+      // flat uses 'local_activity_id'; nested uses 'id'
+      localActivityId: (j['local_activity_id'] ?? j['id'])?.toString() ?? '',
+      activityId:      (j['activity_id'] ?? act?['id'])?.toString()    ?? '',
+      name:            (j['name']        ?? act?['name'])?.toString()   ?? '',
+      category:        (j['category']    ?? act?['category'])?.toString() ?? '',
+      description:     (j['description'] ?? act?['description'])?.toString() ?? '',
+      instruction:     (j['instruction'] ?? act?['instruction'])?.toString() ?? '',
+      duration:        (j['duration']    ?? act?['duration']) as int?,
+      basePrice:       (j['base_price']  ?? act?['base_price']) as int?,
+      setPrice:        (j['set_price'] != null
+          ? (j['set_price'] as num).toDouble()
+          : null),
+      budget:          (j['budget']           ?? act?['budget'])?.toString()           ?? '',
+      difficultyLevel: (j['difficulty_level'] ?? act?['difficulty_level'])?.toString() ?? '',
+      specialNote:     j['special_note']?.toString() ?? '',
+    );
+  }
+
+  /// Display price — set_price overrides base_price
+  double? get displayPrice => setPrice ?? (basePrice?.toDouble());
+}
+
 // ─── Screen ─────────────────────────────────────────────────────────────────
 
 class GuideProfileScreen extends StatefulWidget {
@@ -172,15 +251,26 @@ class _GuideProfileScreenState extends State<GuideProfileScreen> {
   // NEW: User languages with proficiency
   List<UserLanguage> _userLanguages = [];
   List<Map<String, dynamic>> _interests = [];
+  List<Specialization>       _specializations = [];
+
+  // Master list loaded from API
+  List<Specialization> _allSpecializations = [];
+  bool _isLoadingSpecializations = false;
+
+  // Local activities
+  List<GuideLocalActivity>          _localActivities    = [];
+  List<Map<String, dynamic>>        _allActivities      = [];  // master list
+  bool                              _isLoadingActivities = false;
 
   // ─── Sub-data ────────────────────────────────────────────
   List<AvailabilitySlot>        _slots    = [];
   List<GuideReview>             _reviews  = [];
-  List<Map<String, String>>     _gallery  = [];
+  List<Map<String, dynamic>>     _gallery  = [];
 
   // NEW: Master data for dropdowns
   List<City> _allCities = [];
   List<Language> _allLanguages = [];
+  List<Interest> _allInterests = [];
 
   // ─── Edit flags ──────────────────────────────────────────
   bool _isEditingBio = false;
@@ -226,8 +316,6 @@ class _GuideProfileScreenState extends State<GuideProfileScreen> {
     setState(() {
       _isLoadingAvailability = _isLoadingGallery = true;
     });
-    // Profile comes from GuideProvider — no direct API call needed.
-    // Populate local fields from provider data immediately.
     _syncProfileFromProvider();
     _loadAvailability();
     _loadGallery();
@@ -274,6 +362,20 @@ class _GuideProfileScreenState extends State<GuideProfileScreen> {
 
       _interests = p.interests
           .map((i) => {'id': i.id, 'name': i.name, 'category': i.category})
+          .toList();
+
+      _specializations = p.specializations
+          .map((s) => Specialization(
+        id:       s.id,
+        slug:     s.slug,
+        label:    s.label,
+        category: s.category,
+      ))
+          .toList();
+
+      // Sync local activities from provider
+      _localActivities = (p.localActivities ?? [])
+          .map((a) => GuideLocalActivity.fromJson(a))
           .toList();
 
       _reviews = p.reviews
@@ -330,8 +432,8 @@ class _GuideProfileScreenState extends State<GuideProfileScreen> {
       if (!mounted) return;
       setState(() {
         _gallery = (r.data as List<dynamic>)
-            .map((i) => {'id': i['id'].toString(), 'url': i['url'].toString()})
-            .toList().cast<Map<String, String>>();
+            .map((i) => <String, dynamic>{'id': i['id'].toString(), 'url': i['url'].toString()})
+            .toList();
         _isLoadingGallery = false;
       });
     } catch (e) {
@@ -340,11 +442,14 @@ class _GuideProfileScreenState extends State<GuideProfileScreen> {
     }
   }
 
-  // NEW: Load cities and languages from database
+  // NEW: Load cities, languages, specializations and activities from database
   Future<void> _loadMasterData() async {
     try {
       final cities = await _apiClient.get('/accounts/cities/');
-      final langs = await _apiClient.get('/accounts/languages/');
+      final langs  = await _apiClient.get('/accounts/languages/');
+      final interestsRes = await _apiClient.get('/accounts/interests/');
+      final specs  = await _apiClient.get('/accounts/specializations/');
+      final acts   = await _apiClient.get('/accounts/activities/');
       if (!mounted) return;
       setState(() {
         _allCities = (cities.data as List<dynamic>)
@@ -352,6 +457,15 @@ class _GuideProfileScreenState extends State<GuideProfileScreen> {
             .toList();
         _allLanguages = (langs.data as List<dynamic>)
             .map((l) => Language.fromJson(l))
+            .toList();
+        _allInterests = (interestsRes.data as List<dynamic>)
+            .map((i) => Interest.fromJson(i))
+            .toList();
+        _allSpecializations = (specs.data as List<dynamic>)
+            .map((s) => Specialization.fromJson(s))
+            .toList();
+        _allActivities = (acts.data as List<dynamic>)
+            .map((a) => Map<String, dynamic>.from(a as Map))
             .toList();
       });
     } catch (e) {
@@ -415,6 +529,47 @@ class _GuideProfileScreenState extends State<GuideProfileScreen> {
       await _savePersonalInfo();
     }
     setState(() => _isEditingPersonalInfo = !_isEditingPersonalInfo);
+  }
+
+  Future<void> _saveInterests() async {
+    try {
+      // Extract the IDs of the locally selected interests
+      final List<String> interestIds = _interests
+          .map((i) => i['id'].toString())
+          .toList();
+
+      // Send the updated list to your Django backend
+      await _apiClient.post(
+        '/accounts/interests/user/add/',
+        data: {'interest_ids': interestIds},
+      );
+
+      if (mounted) {
+        // Force the provider to reload the latest data from the server
+        final provider = context.read<GuideProvider>();
+        await provider.forceReloadProfile();
+
+        // Update local state variables from the newly loaded provider profile
+        _syncProfileFromProvider();
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Interests updated successfully! ✓'),
+            backgroundColor: Color(0xFF22C55E),
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint('Save interests error: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error updating interests: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   // ─── Availability management ─────────────────────────────
@@ -929,6 +1084,751 @@ class _GuideProfileScreenState extends State<GuideProfileScreen> {
     }
   }
 
+  void _showInterestDialog() {
+    // Work on a local copy so dialog state is independent until Save is tapped
+    List<Map<String, dynamic>> localSelected = List.from(
+      _interests.map((i) => Map<String, dynamic>.from(i)),
+    );
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => Dialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.r)),
+          child: Padding(
+            padding: EdgeInsets.all(20.w),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('Edit Interests',
+                        style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.w700)),
+                    IconButton(
+                      onPressed: () => Navigator.pop(ctx),
+                      icon: Icon(Icons.close, size: 20.w),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 4.h),
+                Text('Tap to select or deselect interests',
+                    style: TextStyle(fontSize: 12.sp, color: Colors.grey.shade500)),
+                SizedBox(height: 16.h),
+                Container(
+                  constraints: BoxConstraints(
+                      maxHeight: MediaQuery.of(context).size.height * 0.55),
+                  child: _allInterests.isEmpty
+                      ? Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(20.h),
+                      child: Text('Loading interests…',
+                          style: TextStyle(color: Colors.grey.shade500)),
+                    ),
+                  )
+                      : SingleChildScrollView(
+                    child: Wrap(
+                      spacing: 8.w,
+                      runSpacing: 8.h,
+                      children: _allInterests.map((interest) {
+                        final isSelected =
+                        localSelected.any((i) => i['id'] == interest.id);
+                        return GestureDetector(
+                          onTap: () {
+                            setDialogState(() {
+                              if (isSelected) {
+                                localSelected.removeWhere(
+                                        (i) => i['id'] == interest.id);
+                              } else {
+                                localSelected.add({
+                                  'id': interest.id,
+                                  'name': interest.name,
+                                  'category': interest.category,
+                                });
+                              }
+                            });
+                          },
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 160),
+                            padding: EdgeInsets.symmetric(
+                                horizontal: 12.w, vertical: 7.h),
+                            decoration: BoxDecoration(
+                              color: isSelected
+                                  ? const Color(0xFF8B5CF6)
+                                  : const Color(0xFFF5F3FF),
+                              borderRadius: BorderRadius.circular(20.r),
+                              border: Border.all(
+                                color: isSelected
+                                    ? const Color(0xFF8B5CF6)
+                                    : Colors.grey.shade200,
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                if (isSelected) ...[
+                                  Icon(Icons.check_rounded,
+                                      size: 12.w, color: Colors.white),
+                                  SizedBox(width: 4.w),
+                                ],
+                                Text(
+                                  interest.name,
+                                  style: TextStyle(
+                                    fontSize: 12.sp,
+                                    fontWeight: FontWeight.w600,
+                                    color: isSelected
+                                        ? Colors.white
+                                        : const Color(0xFF7C3AED),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                ),
+                SizedBox(height: 20.h),
+                SizedBox(
+                  width: double.infinity,
+                  height: 48.h,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      // Commit local copy back to outer state
+                      setState(() => _interests = localSelected);
+                      Navigator.pop(ctx);
+                      _saveInterests();
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primaryBlue,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12.r)),
+                      elevation: 0,
+                    ),
+                    child: Text('Save Interests',
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 14.sp,
+                            fontWeight: FontWeight.w700)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ─── Specializations ─────────────────────────────────────
+
+  void _showSpecializationDialog() {
+    // Group all specializations by category for display
+    final Map<String, List<Specialization>> grouped = {};
+    for (final s in _allSpecializations) {
+      grouped.putIfAbsent(s.category, () => []).add(s);
+    }
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => Dialog(
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20.r)),
+          child: Padding(
+            padding: EdgeInsets.all(20.w),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('Edit Specializations',
+                        style: TextStyle(
+                            fontSize: 18.sp,
+                            fontWeight: FontWeight.w700)),
+                    IconButton(
+                      onPressed: () => Navigator.pop(ctx),
+                      icon: Icon(Icons.close, size: 20.w),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 4.h),
+                Text('Tap to select your areas of expertise',
+                    style: TextStyle(
+                        fontSize: 12.sp,
+                        color: Colors.grey.shade500)),
+                SizedBox(height: 16.h),
+                Container(
+                  constraints: BoxConstraints(
+                      maxHeight:
+                      MediaQuery.of(context).size.height * 0.55),
+                  child: _allSpecializations.isEmpty
+                      ? Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(20.h),
+                      child: Text('Loading…',
+                          style: TextStyle(
+                              color: Colors.grey.shade500)),
+                    ),
+                  )
+                      : SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment:
+                      CrossAxisAlignment.start,
+                      children: grouped.entries.map((entry) {
+                        return Column(
+                          crossAxisAlignment:
+                          CrossAxisAlignment.start,
+                          children: [
+                            Padding(
+                              padding: EdgeInsets.symmetric(
+                                  vertical: 8.h),
+                              child: Text(
+                                entry.key,
+                                style: TextStyle(
+                                    fontSize: 11.sp,
+                                    fontWeight: FontWeight.w700,
+                                    color: Colors.grey.shade500,
+                                    letterSpacing: 0.8),
+                              ),
+                            ),
+                            Wrap(
+                              spacing: 8.w,
+                              runSpacing: 8.h,
+                              children:
+                              entry.value.map((spec) {
+                                final selected =
+                                _specializations.any(
+                                        (s) => s.id == spec.id);
+                                return GestureDetector(
+                                  onTap: () {
+                                    setDialogState(() {
+                                      if (selected) {
+                                        _specializations
+                                            .removeWhere((s) =>
+                                        s.id == spec.id);
+                                      } else {
+                                        _specializations
+                                            .add(spec);
+                                      }
+                                    });
+                                    setState(() {});
+                                  },
+                                  child: AnimatedContainer(
+                                    duration: const Duration(
+                                        milliseconds: 180),
+                                    padding:
+                                    EdgeInsets.symmetric(
+                                        horizontal: 12.w,
+                                        vertical: 6.h),
+                                    decoration: BoxDecoration(
+                                      color: selected
+                                          ? const Color(
+                                          0xFF0EA5E9)
+                                          : const Color(
+                                          0xFFF1F5F9),
+                                      borderRadius:
+                                      BorderRadius.circular(
+                                          20.r),
+                                      border: Border.all(
+                                        color: selected
+                                            ? const Color(
+                                            0xFF0EA5E9)
+                                            : Colors
+                                            .grey.shade200,
+                                      ),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize:
+                                      MainAxisSize.min,
+                                      children: [
+                                        if (selected) ...[
+                                          Icon(
+                                              Icons
+                                                  .check_rounded,
+                                              size: 13.w,
+                                              color:
+                                              Colors.white),
+                                          SizedBox(width: 4.w),
+                                        ],
+                                        Text(
+                                          spec.label,
+                                          style: TextStyle(
+                                            fontSize: 12.sp,
+                                            fontWeight:
+                                            FontWeight.w600,
+                                            color: selected
+                                                ? Colors.white
+                                                : const Color(
+                                                0xFF374151),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                );
+                              }).toList(),
+                            ),
+                            SizedBox(height: 4.h),
+                          ],
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                ),
+                SizedBox(height: 16.h),
+                SizedBox(
+                  width: double.infinity,
+                  height: 48.h,
+                  child: ElevatedButton(
+                    onPressed: _isLoadingSpecializations
+                        ? null
+                        : () {
+                      Navigator.pop(ctx);
+                      _saveSpecializations();
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primaryBlue,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12.r)),
+                      elevation: 0,
+                    ),
+                    child: _isLoadingSpecializations
+                        ? SizedBox(
+                        width: 20.w,
+                        height: 20.w,
+                        child: const CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white))
+                        : Text('Save Specializations',
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 14.sp,
+                            fontWeight: FontWeight.w700)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _saveSpecializations() async {
+    setState(() => _isLoadingSpecializations = true);
+    try {
+      final ids = _specializations.map((s) => s.id).toList();
+      await _apiClient.post(
+        '/accounts/guide/specializations/add/',
+        data: {'specialization_ids': ids},
+      );
+      if (mounted) {
+        await context.read<GuideProvider>().forceReloadProfile();
+        _syncProfileFromProvider();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Specializations updated ✓'),
+            backgroundColor: Color(0xFF22C55E),
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint('Save specializations error: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text('Error: $e'),
+              backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoadingSpecializations = false);
+    }
+  }
+
+  // ─── Local Activities ─────────────────────────────────────
+
+  Future<void> _loadLocalActivities() async {
+    try {
+      final r = await _apiClient.get('/accounts/guide/activities/');
+      if (!mounted) return;
+      setState(() {
+        _localActivities = (r.data as List<dynamic>)
+            .map((a) => GuideLocalActivity.fromJson(
+            Map<String, dynamic>.from(a as Map)))
+            .toList();
+      });
+    } catch (e) {
+      debugPrint('Load local activities error: $e');
+    }
+  }
+
+  void _showAddActivityDialog() {
+    // Group master activities by category
+    final Map<String, List<Map<String, dynamic>>> grouped = {};
+    for (final a in _allActivities) {
+      final cat = a['category']?.toString() ?? 'Other';
+      grouped.putIfAbsent(cat, () => []).add(a);
+    }
+
+    showDialog(
+      context: context,
+      builder: (ctx) => Dialog(
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20.r)),
+        child: Padding(
+          padding: EdgeInsets.all(20.w),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Add Activity',
+                      style: TextStyle(
+                          fontSize: 18.sp, fontWeight: FontWeight.w700)),
+                  IconButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    icon: Icon(Icons.close, size: 20.w),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
+                ],
+              ),
+              SizedBox(height: 4.h),
+              Text('Select from available activities',
+                  style: TextStyle(
+                      fontSize: 12.sp, color: Colors.grey.shade500)),
+              SizedBox(height: 12.h),
+              Container(
+                constraints: BoxConstraints(
+                    maxHeight:
+                    MediaQuery.of(context).size.height * 0.55),
+                child: _allActivities.isEmpty
+                    ? Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(20.h),
+                    child: Text('Loading activities…',
+                        style: TextStyle(
+                            color: Colors.grey.shade500)),
+                  ),
+                )
+                    : ListView(
+                  shrinkWrap: true,
+                  children: grouped.entries.map((entry) {
+                    return Column(
+                      crossAxisAlignment:
+                      CrossAxisAlignment.start,
+                      children: [
+                        Padding(
+                          padding: EdgeInsets.symmetric(
+                              vertical: 8.h),
+                          child: Text(
+                            entry.key,
+                            style: TextStyle(
+                                fontSize: 11.sp,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.grey.shade500,
+                                letterSpacing: 0.8),
+                          ),
+                        ),
+                        ...entry.value.map((act) {
+                          final alreadyAdded =
+                          _localActivities.any((la) =>
+                          la.activityId ==
+                              act['id']?.toString());
+                          return ListTile(
+                            contentPadding:
+                            EdgeInsets.symmetric(
+                                horizontal: 4.w,
+                                vertical: 2.h),
+                            leading: Container(
+                              padding: EdgeInsets.all(8.w),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFE0F2FE),
+                                borderRadius:
+                                BorderRadius.circular(10.r),
+                              ),
+                              child: Icon(
+                                  Icons
+                                      .directions_run_rounded,
+                                  size: 18.w,
+                                  color: const Color(
+                                      0xFF0369A1)),
+                            ),
+                            title: Text(
+                              act['name']?.toString() ?? '',
+                              style: TextStyle(
+                                  fontSize: 14.sp,
+                                  fontWeight: FontWeight.w600),
+                            ),
+                            subtitle: act['duration'] != null
+                                ? Text(
+                                '${act['duration']} min',
+                                style: TextStyle(
+                                    fontSize: 11.sp,
+                                    color: Colors
+                                        .grey.shade500))
+                                : null,
+                            trailing: alreadyAdded
+                                ? Icon(Icons.check_circle,
+                                color:
+                                const Color(0xFF22C55E),
+                                size: 20.w)
+                                : Icon(Icons.add_circle_outline,
+                                color: AppColors.primaryBlue,
+                                size: 20.w),
+                            onTap: alreadyAdded
+                                ? null
+                                : () {
+                              Navigator.pop(ctx);
+                              _showSetPriceDialog(act);
+                            },
+                          );
+                        }),
+                        Divider(
+                            color: Colors.grey.shade100,
+                            height: 8.h),
+                      ],
+                    );
+                  }).toList(),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showSetPriceDialog(Map<String, dynamic> activity) {
+    final priceCtrl = TextEditingController(
+        text: activity['base_price']?.toString() ?? '');
+    final noteCtrl  = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (ctx) => Dialog(
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20.r)),
+        child: Padding(
+          padding: EdgeInsets.all(20.w),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(activity['name']?.toString() ?? 'Activity',
+                  style: TextStyle(
+                      fontSize: 17.sp, fontWeight: FontWeight.w700)),
+              SizedBox(height: 4.h),
+              Text(
+                  'Base price: \$${activity['base_price'] ?? 'N/A'}',
+                  style: TextStyle(
+                      fontSize: 12.sp, color: Colors.grey.shade500)),
+              SizedBox(height: 16.h),
+              Text('Your price (optional)',
+                  style: TextStyle(
+                      fontSize: 12.sp, color: Colors.grey.shade600,
+                      fontWeight: FontWeight.w600)),
+              SizedBox(height: 6.h),
+              TextField(
+                controller: priceCtrl,
+                keyboardType:
+                const TextInputType.numberWithOptions(decimal: true),
+                style: TextStyle(fontSize: 14.sp),
+                decoration: InputDecoration(
+                  hintText: 'Enter your price',
+                  prefixText: '\$ ',
+                  contentPadding: EdgeInsets.symmetric(
+                      horizontal: 12.w, vertical: 10.h),
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10.r),
+                      borderSide:
+                      BorderSide(color: Colors.grey.shade300)),
+                  focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10.r),
+                      borderSide: BorderSide(
+                          color: AppColors.primaryBlue, width: 2)),
+                ),
+              ),
+              SizedBox(height: 12.h),
+              Text('Special note (optional)',
+                  style: TextStyle(
+                      fontSize: 12.sp, color: Colors.grey.shade600,
+                      fontWeight: FontWeight.w600)),
+              SizedBox(height: 6.h),
+              TextField(
+                controller: noteCtrl,
+                maxLines: 2,
+                style: TextStyle(fontSize: 13.sp),
+                decoration: InputDecoration(
+                  hintText: 'e.g. Includes equipment',
+                  contentPadding: EdgeInsets.symmetric(
+                      horizontal: 12.w, vertical: 10.h),
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10.r),
+                      borderSide:
+                      BorderSide(color: Colors.grey.shade300)),
+                  focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10.r),
+                      borderSide: BorderSide(
+                          color: AppColors.primaryBlue, width: 2)),
+                ),
+              ),
+              SizedBox(height: 20.h),
+              Row(children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    style: OutlinedButton.styleFrom(
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12.r)),
+                      side: BorderSide(color: Colors.grey.shade300),
+                      padding: EdgeInsets.symmetric(vertical: 12.h),
+                    ),
+                    child: Text('Cancel',
+                        style: TextStyle(
+                            fontSize: 14.sp,
+                            color: Colors.grey.shade600)),
+                  ),
+                ),
+                SizedBox(width: 12.w),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(ctx);
+                      _addLocalActivity(
+                        activityId:  activity['id']?.toString() ?? '',
+                        setPrice: priceCtrl.text.trim().isNotEmpty
+                            ? double.tryParse(priceCtrl.text.trim())
+                            : null,
+                        specialNote: noteCtrl.text.trim(),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primaryBlue,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12.r)),
+                      elevation: 0,
+                      padding: EdgeInsets.symmetric(vertical: 12.h),
+                    ),
+                    child: Text('Add',
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 14.sp,
+                            fontWeight: FontWeight.w700)),
+                  ),
+                ),
+              ]),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _addLocalActivity({
+    required String activityId,
+    double?  setPrice,
+    String   specialNote = '',
+  }) async {
+    setState(() => _isLoadingActivities = true);
+    try {
+      await _apiClient.post('/accounts/guide/activities/add/', data: {
+        'activity_id':  activityId,
+        if (setPrice != null) 'set_price': setPrice,
+        if (specialNote.isNotEmpty) 'special_note': specialNote,
+      });
+      await _loadLocalActivities();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Activity added ✓'),
+            backgroundColor: Color(0xFF22C55E),
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint('Add activity error: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'),
+              backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoadingActivities = false);
+    }
+  }
+
+  Future<void> _removeLocalActivity(GuideLocalActivity la) async {
+    // Guard: if localActivityId is empty we cannot delete
+    if (la.localActivityId.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Cannot delete: activity ID is missing. Try refreshing.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      return;
+    }
+
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16.r)),
+        title: const Text('Remove Activity'),
+        content: Text('Remove "${la.name}" from your profile?'),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Cancel')),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: Text('Remove',
+                  style: TextStyle(color: Colors.red.shade600))),
+        ],
+      ),
+    );
+    if (ok != true) return;
+    try {
+      await _apiClient.delete(
+          '/accounts/guide/activities/${la.localActivityId}/delete/');
+      if (mounted) {
+        setState(() => _localActivities.removeWhere(
+                (a) => a.localActivityId == la.localActivityId));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('"${la.name}" removed'),
+            backgroundColor: const Color(0xFF22C55E),
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint('Remove activity error: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to remove activity: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   // ─── Bio ─────────────────────────────────────────────────
 
   Future<void> _saveBio() async {
@@ -988,7 +1888,7 @@ class _GuideProfileScreenState extends State<GuideProfileScreen> {
       final r  = await _apiClient.post('/accounts/gallery/upload/', data: fd);
       if (mounted) {
         setState(() {
-          _gallery.insert(0, {
+          _gallery.insert(0, <String, dynamic>{
             'id':  r.data['photo_id'].toString(),
             'url': r.data['photo_url'].toString(),
           });
@@ -1149,9 +2049,15 @@ class _GuideProfileScreenState extends State<GuideProfileScreen> {
                   SizedBox(height: 20.h),
                   _buildAboutCard(),
                   SizedBox(height: 16.h),
-                  _buildLanguagesCard(), // NEW: Shows languages with proficiency
+                  _buildLanguagesCard(),
                   SizedBox(height: 16.h),
-                  _buildAvailabilitySection(), // MODIFIED: Grouped by date
+                  _buildInterestsCard(),
+                  SizedBox(height: 16.h),
+                  _buildSpecializationsCard(),
+                  SizedBox(height: 16.h),
+                  _buildLocalActivitiesCard(),
+                  SizedBox(height: 16.h),
+                  _buildAvailabilitySection(),
                   SizedBox(height: 16.h),
                   _buildGallerySection(),
                   SizedBox(height: 16.h),
@@ -1473,7 +2379,7 @@ class _GuideProfileScreenState extends State<GuideProfileScreen> {
     );
   }
 
-  // NEW: Languages card with proficiency
+  // ── Languages card ────────────────────────────────────────
   Widget _buildLanguagesCard() {
     return _buildCard(
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -1483,25 +2389,37 @@ class _GuideProfileScreenState extends State<GuideProfileScreen> {
             Row(children: [
               Container(
                 padding: EdgeInsets.all(10.r),
-                decoration: BoxDecoration(color: const Color(0xFF10B981).withOpacity(0.1), borderRadius: BorderRadius.circular(12.r)),
-                child: Icon(Icons.language_rounded, color: const Color(0xFF10B981), size: 20.w),
+                decoration: BoxDecoration(
+                    color: const Color(0xFF10B981).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12.r)),
+                child: Icon(Icons.language_rounded,
+                    color: const Color(0xFF10B981), size: 20.w),
               ),
               SizedBox(width: 12.w),
-              Text('Languages', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 17.sp, color: const Color(0xFF1F2937))),
+              Text('Languages',
+                  style: TextStyle(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 17.sp,
+                      color: const Color(0xFF1F2937))),
             ]),
             GestureDetector(
               onTap: _showLanguageDialog,
               child: Container(
                 padding: EdgeInsets.all(9.w),
-                decoration: BoxDecoration(color: AppColors.primaryBlue.withOpacity(0.08), borderRadius: BorderRadius.circular(10.r)),
-                child: Icon(Icons.add_rounded, size: 17.w, color: AppColors.primaryBlue),
+                decoration: BoxDecoration(
+                    color: AppColors.primaryBlue.withOpacity(0.08),
+                    borderRadius: BorderRadius.circular(10.r)),
+                child: Icon(Icons.add_rounded,
+                    size: 17.w, color: AppColors.primaryBlue),
               ),
             ),
           ],
         ),
         SizedBox(height: 12.h),
         _userLanguages.isEmpty
-            ? Text('No languages added', style: TextStyle(fontSize: 13.sp, color: Colors.grey.shade400))
+            ? Text('No languages added',
+            style: TextStyle(
+                fontSize: 13.sp, color: Colors.grey.shade400))
             : Wrap(
           spacing: 8.w,
           runSpacing: 8.h,
@@ -1509,50 +2427,373 @@ class _GuideProfileScreenState extends State<GuideProfileScreen> {
             return GestureDetector(
               onTap: () => _changeProficiency(ul),
               child: Container(
-                padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 7.h),
+                padding: EdgeInsets.symmetric(
+                    horizontal: 14.w, vertical: 7.h),
                 decoration: BoxDecoration(
                   color: const Color(0xFFEFF6FF),
                   borderRadius: BorderRadius.circular(20.r),
-                  border: Border.all(color: AppColors.primaryBlue.withOpacity(0.25)),
+                  border: Border.all(
+                      color: AppColors.primaryBlue.withOpacity(0.25)),
                 ),
                 child: Row(mainAxisSize: MainAxisSize.min, children: [
-                  Icon(Icons.language_rounded, size: 13.w, color: AppColors.primaryBlue),
+                  Icon(Icons.language_rounded,
+                      size: 13.w, color: AppColors.primaryBlue),
                   SizedBox(width: 5.w),
                   Text(
                     '${ul.name} · ${ul.proficiency}',
-                    style: TextStyle(fontSize: 12.sp, fontWeight: FontWeight.w600, color: AppColors.primaryBlue),
+                    style: TextStyle(
+                        fontSize: 12.sp,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.primaryBlue),
                   ),
                   SizedBox(width: 6.w),
                   GestureDetector(
                     onTap: () => _removeLanguage(ul),
-                    child: Icon(Icons.close_rounded, size: 14.w, color: AppColors.primaryBlue),
+                    child: Icon(Icons.close_rounded,
+                        size: 14.w, color: AppColors.primaryBlue),
                   ),
                 ]),
               ),
             );
           }).toList(),
         ),
-        if (_interests.isNotEmpty) ...[
-          SizedBox(height: 16.h),
-          Row(children: [
-            Container(
-              padding: EdgeInsets.all(8.r),
-              decoration: BoxDecoration(color: const Color(0xFF8B5CF6).withOpacity(0.1), borderRadius: BorderRadius.circular(10.r)),
-              child: Icon(Icons.interests_rounded, size: 15.w, color: const Color(0xFF8B5CF6)),
+      ]),
+    );
+  }
+
+  // ── Interests card ────────────────────────────────────────
+  Widget _buildInterestsCard() {
+    return _buildCard(
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(children: [
+              Container(
+                padding: EdgeInsets.all(10.r),
+                decoration: BoxDecoration(
+                    color: const Color(0xFF8B5CF6).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12.r)),
+                child: Icon(Icons.interests_rounded,
+                    color: const Color(0xFF8B5CF6), size: 20.w),
+              ),
+              SizedBox(width: 12.w),
+              Text('Interests',
+                  style: TextStyle(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 17.sp,
+                      color: const Color(0xFF1F2937))),
+            ]),
+            GestureDetector(
+              onTap: _showInterestDialog,
+              child: Container(
+                padding: EdgeInsets.all(9.w),
+                decoration: BoxDecoration(
+                    color: AppColors.primaryBlue.withOpacity(0.08),
+                    borderRadius: BorderRadius.circular(10.r)),
+                child: Icon(Icons.edit_rounded,
+                    size: 17.w, color: AppColors.primaryBlue),
+              ),
             ),
-            SizedBox(width: 8.w),
-            Text('Interests', style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w700, color: const Color(0xFF1F2937))),
-          ]),
-          SizedBox(height: 10.h),
-          Wrap(
-            spacing: 8.w,
-            runSpacing: 8.h,
-            children: _interests
-                .map((i) => _chip(i['name'] ?? '', const Color(0xFF8B5CF6), const Color(0xFFF5F3FF)))
-                .toList(),
+          ],
+        ),
+        SizedBox(height: 12.h),
+        _interests.isEmpty
+            ? GestureDetector(
+          onTap: _showInterestDialog,
+          child: Container(
+            padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF5F3FF),
+              borderRadius: BorderRadius.circular(12.r),
+              border: Border.all(color: Colors.grey.shade200),
+            ),
+            child: Row(children: [
+              Icon(Icons.add_circle_outline_rounded,
+                  size: 16.w, color: const Color(0xFF8B5CF6)),
+              SizedBox(width: 8.w),
+              Text('Add your interests',
+                  style: TextStyle(
+                      fontSize: 13.sp,
+                      color: const Color(0xFF8B5CF6),
+                      fontWeight: FontWeight.w600)),
+            ]),
+          ),
+        )
+            : Wrap(
+          spacing: 8.w,
+          runSpacing: 8.h,
+          children: _interests
+              .map((i) => _chip(
+            i['name']?.toString() ?? '',
+            const Color(0xFF8B5CF6),
+            const Color(0xFFF5F3FF),
+          ))
+              .toList(),
+        ),
+      ]),
+    );
+  }
+
+  // ── Specializations card ──────────────────────────────────
+  Widget _buildSpecializationsCard() {
+    return _buildCard(
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(children: [
+              Container(
+                padding: EdgeInsets.all(10.r),
+                decoration: BoxDecoration(
+                    color: const Color(0xFF0EA5E9).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12.r)),
+                child: Icon(Icons.workspace_premium_rounded,
+                    color: const Color(0xFF0EA5E9), size: 20.w),
+              ),
+              SizedBox(width: 12.w),
+              Text('Specializations',
+                  style: TextStyle(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 17.sp,
+                      color: const Color(0xFF1F2937))),
+            ]),
+            GestureDetector(
+              onTap: _showSpecializationDialog,
+              child: Container(
+                padding: EdgeInsets.all(9.w),
+                decoration: BoxDecoration(
+                    color: AppColors.primaryBlue.withOpacity(0.08),
+                    borderRadius: BorderRadius.circular(10.r)),
+                child: Icon(Icons.edit_rounded,
+                    size: 17.w, color: AppColors.primaryBlue),
+              ),
+            ),
+          ],
+        ),
+        SizedBox(height: 12.h),
+        _isLoadingSpecializations
+            ? Center(
+          child: Padding(
+            padding: EdgeInsets.all(12.h),
+            child: CircularProgressIndicator(
+                strokeWidth: 2, color: AppColors.primaryBlue),
+          ),
+        )
+            : _specializations.isEmpty
+            ? GestureDetector(
+          onTap: _showSpecializationDialog,
+          child: Container(
+            padding: EdgeInsets.symmetric(
+                horizontal: 14.w, vertical: 12.h),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF1F5F9),
+              borderRadius: BorderRadius.circular(12.r),
+              border: Border.all(color: Colors.grey.shade200),
+            ),
+            child: Row(children: [
+              Icon(Icons.add_circle_outline_rounded,
+                  size: 16.w, color: AppColors.primaryBlue),
+              SizedBox(width: 8.w),
+              Text('Add your specializations',
+                  style: TextStyle(
+                      fontSize: 13.sp,
+                      color: AppColors.primaryBlue,
+                      fontWeight: FontWeight.w600)),
+            ]),
+          ),
+        )
+            : Wrap(
+          spacing: 8.w,
+          runSpacing: 8.h,
+          children: _specializations
+              .map((s) => _specializationChip(s))
+              .toList(),
+        ),
+      ]),
+    );
+  }
+
+  // ── Local Activities card ─────────────────────────────────
+  Widget _buildLocalActivitiesCard() {
+    return _buildCard(
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        // Header row
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(children: [
+              Container(
+                padding: EdgeInsets.all(10.r),
+                decoration: BoxDecoration(
+                    color: const Color(0xFFF59E0B).withOpacity(0.12),
+                    borderRadius: BorderRadius.circular(12.r)),
+                child: Icon(Icons.directions_run_rounded,
+                    color: const Color(0xFFF59E0B), size: 20.w),
+              ),
+              SizedBox(width: 12.w),
+              Text('Activities',
+                  style: TextStyle(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 17.sp,
+                      color: const Color(0xFF1F2937))),
+              SizedBox(width: 8.w),
+              if (_localActivities.isNotEmpty)
+                Container(
+                  padding: EdgeInsets.symmetric(
+                      horizontal: 8.w, vertical: 3.h),
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryBlue.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(10.r),
+                  ),
+                  child: Text('${_localActivities.length}',
+                      style: TextStyle(
+                          fontSize: 12.sp,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.primaryBlue)),
+                ),
+            ]),
+            GestureDetector(
+              onTap: _showAddActivityDialog,
+              child: Container(
+                padding: EdgeInsets.symmetric(
+                    horizontal: 14.w, vertical: 8.h),
+                decoration: BoxDecoration(
+                  color: AppColors.primaryBlue,
+                  borderRadius: BorderRadius.circular(14.r),
+                  boxShadow: [
+                    BoxShadow(
+                        color: AppColors.primaryBlue.withOpacity(0.3),
+                        blurRadius: 8,
+                        offset: const Offset(0, 3))
+                  ],
+                ),
+                child: Row(mainAxisSize: MainAxisSize.min, children: [
+                  Icon(Icons.add_rounded, size: 16.w, color: Colors.white),
+                  SizedBox(width: 4.w),
+                  Text('Add',
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 13.sp,
+                          fontWeight: FontWeight.w700)),
+                ]),
+              ),
+            ),
+          ],
+        ),
+        SizedBox(height: 14.h),
+
+        // Body
+        _isLoadingActivities
+            ? Center(
+          child: Padding(
+            padding: EdgeInsets.all(20.h),
+            child: CircularProgressIndicator(
+                color: AppColors.primaryBlue, strokeWidth: 2),
+          ),
+        )
+            : _localActivities.isEmpty
+            ? _buildEmptyActivities()
+            : Column(
+          children: _localActivities
+              .map((la) => _buildActivityTile(la))
+              .toList(),
+        ),
+      ]),
+    );
+  }
+
+  Widget _buildEmptyActivities() {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(20.h),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF9FAFB),
+        borderRadius: BorderRadius.circular(14.r),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Column(children: [
+        Icon(Icons.directions_run_rounded,
+            size: 32.w, color: Colors.grey.shade300),
+        SizedBox(height: 8.h),
+        Text('No activities added',
+            style: TextStyle(
+                color: Colors.grey.shade500,
+                fontSize: 13.sp,
+                fontWeight: FontWeight.w500)),
+        SizedBox(height: 4.h),
+        Text('Tap "Add" to offer activities to tourists',
+            style:
+            TextStyle(color: Colors.grey.shade400, fontSize: 12.sp)),
+      ]),
+    );
+  }
+
+  Widget _buildActivityTile(GuideLocalActivity la) {
+    final price = la.displayPrice;
+    Color diffColor = la.difficultyLevel == 'hard' ? Colors.red :
+    (la.difficultyLevel == 'medium' ? Colors.orange : Colors.green);
+
+    return Container(
+      margin: EdgeInsets.only(bottom: 12.h),
+      padding: EdgeInsets.all(16.w),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16.r),
+        border: Border.all(color: Colors.grey.shade100),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 4))],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Text(la.name, style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.w700)),
+              ),
+              IconButton(
+                onPressed: () => _removeLocalActivity(la),
+                icon: Icon(Icons.delete_outline, color: Colors.red.shade300, size: 20.w),
+              )
+            ],
+          ),
+          SizedBox(height: 8.h),
+          Row(
+            children: [
+              _miniChip(la.category, const Color(0xFF0369A1), const Color(0xFFE0F2FE)),
+              SizedBox(width: 8.w),
+              _miniChip(la.difficultyLevel, diffColor, diffColor.withOpacity(0.1)),
+            ],
+          ),
+          SizedBox(height: 12.h),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(children: [
+                Icon(Icons.access_time, size: 14.w, color: Colors.grey),
+                SizedBox(width: 4.w),
+                Text('${la.duration} mins', style: TextStyle(fontSize: 12.sp, color: Colors.grey.shade600)),
+              ]),
+              Text('\$${price?.toStringAsFixed(0)}',
+                  style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w800, color: AppColors.primaryBlue)),
+            ],
           ),
         ],
-      ]),
+      ),
+    );
+  }
+
+  Widget _miniChip(String label, Color textColor, Color bgColor) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
+      decoration: BoxDecoration(
+          color: bgColor, borderRadius: BorderRadius.circular(6.r)),
+      child: Text(label,
+          style: TextStyle(
+              fontSize: 10.sp,
+              fontWeight: FontWeight.w600,
+              color: textColor)),
     );
   }
 
@@ -1578,6 +2819,31 @@ class _GuideProfileScreenState extends State<GuideProfileScreen> {
               fontSize: 12.sp,
               fontWeight: FontWeight.w600,
               color: textColor)),
+    );
+  }
+
+  Widget _specializationChip(Specialization spec) {
+    return GestureDetector(
+      onTap: _showSpecializationDialog,
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 5.h),
+        decoration: BoxDecoration(
+          color: const Color(0xFFE0F2FE),
+          borderRadius: BorderRadius.circular(20.r),
+          border: Border.all(
+              color: const Color(0xFF0EA5E9).withOpacity(0.35)),
+        ),
+        child: Row(mainAxisSize: MainAxisSize.min, children: [
+          Icon(Icons.workspace_premium_rounded,
+              size: 12.w, color: const Color(0xFF0EA5E9)),
+          SizedBox(width: 5.w),
+          Text(spec.label,
+              style: TextStyle(
+                  fontSize: 12.sp,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF0369A1))),
+        ]),
+      ),
     );
   }
 
@@ -2587,6 +3853,8 @@ class _AvailabilityModalState extends State<_AvailabilityModal> {
     }
     Navigator.pop(context);
   }
+
+
 
   @override
   Widget build(BuildContext context) {

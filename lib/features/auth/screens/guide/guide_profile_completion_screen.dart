@@ -20,12 +20,13 @@ class GuideProfileCompletionScreen extends StatefulWidget {
 }
 
 class _GuideProfileCompletionScreenState
-    extends State<GuideProfileCompletionScreen> {
+    extends State<GuideProfileCompletionScreen>
+    with SingleTickerProviderStateMixin {
   bool _isLoading = false;
 
   late final ProfileCompletionApi _profileApi;
 
-  // --- Page 1 Data ---
+  // ── ALL ORIGINAL STATE & LOGIC PRESERVED ──
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
   final _experienceController = TextEditingController();
@@ -45,18 +46,22 @@ class _GuideProfileCompletionScreenState
   List<Map<String, dynamic>> _cities = [];
   List<Map<String, dynamic>> _languages = [];
 
-  // --- Page 2 Data - Changed from File to XFile ---
   String? _govIdFileName;
   String? _profilePhotoFileName;
   String? _licenseFileName;
-  XFile? _govIdFile; // Changed to XFile
-  XFile? _profilePhotoFile; // Changed to XFile
-  XFile? _licenseFile; // Changed to XFile
+  XFile? _govIdFile;
+  XFile? _profilePhotoFile;
+  XFile? _licenseFile;
+
+  late AnimationController _animController;
+  late Animation<double> _fadeAnim;
+  late Animation<Offset> _slideAnim;
 
   @override
   void initState() {
     super.initState();
     _debugToken();
+
     final dio = Dio(BaseOptions(
       connectTimeout: const Duration(seconds: 10),
       receiveTimeout: const Duration(seconds: 10),
@@ -75,6 +80,19 @@ class _GuideProfileCompletionScreenState
     );
 
     _loadCitiesAndLanguages();
+
+    _animController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    );
+    _fadeAnim =
+        CurvedAnimation(parent: _animController, curve: Curves.easeOut);
+    _slideAnim = Tween<Offset>(
+      begin: const Offset(0, 0.05),
+      end: Offset.zero,
+    ).animate(
+        CurvedAnimation(parent: _animController, curve: Curves.easeOut));
+    _animController.forward();
   }
 
   @override
@@ -84,22 +102,20 @@ class _GuideProfileCompletionScreenState
     _experienceController.dispose();
     _educationController.dispose();
     _rateController.dispose();
+    _animController.dispose();
     super.dispose();
   }
+
+  // ── ALL ORIGINAL LOGIC PRESERVED ──────────────────────────────────────────
 
   Future<void> _debugToken() async {
     final token = await SecureStorage().getAccessToken();
     if (token != null) {
-      if (kDebugMode) {
+      if (kDebugMode)
         print('✅ TOKEN EXISTS: ${token.substring(0, 50)}...');
-      }
     } else {
-      if (kDebugMode) {
-        print('❌ NO TOKEN FOUND!');
-      }
-      if (kDebugMode) {
-        print('⚠️  Please login again');
-      }
+      if (kDebugMode) print('❌ NO TOKEN FOUND!');
+      if (kDebugMode) print('⚠️  Please login again');
     }
   }
 
@@ -107,7 +123,6 @@ class _GuideProfileCompletionScreenState
     try {
       final cities = await _profileApi.getCities();
       final languages = await _profileApi.getLanguages();
-
       setState(() {
         _cities = cities;
         _languages = languages;
@@ -117,280 +132,12 @@ class _GuideProfileCompletionScreenState
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        child: Column(
-          children: [
-            // ─── Fixed header ───
-            Padding(
-              padding: EdgeInsets.only(top: 28.h, left: 24.w, right: 24.w, bottom: 4.h),
-              child: Row(
-                children: [
-                  Image.asset(
-                    'assets/images/yaloo_logo.png',
-                    width: 36.w,
-                    height: 36.h,
-                  ),
-                  SizedBox(width: 12.w),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Complete Your Profile',
-                        style: AppTextStyles.headlineLarge.copyWith(
-                          fontSize: 20.sp,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Text(
-                        'Fill in the details below to get started',
-                        style: AppTextStyles.textSmall.copyWith(
-                          color: AppColors.primaryGray,
-                          fontSize: 12.sp,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-
-            // ─── Scrollable body ───
-            Expanded(
-              child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                padding: EdgeInsets.symmetric(horizontal: 24.w),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SizedBox(height: 24.h),
-
-                    // ── Section: Personal Info ──
-                    _buildSectionLabel('Personal Information', Icons.person_outline),
-                    SizedBox(height: 14.h),
-
-                    _buildShadowedTextField(
-                      controller: _nameController,
-                      hint: 'Full Name',
-                      icon: Icons.person_outline,
-                    ),
-                    SizedBox(height: 12.h),
-                    _buildPhoneField(),
-                    SizedBox(height: 12.h),
-                    _buildShadowedPickerButton(
-                      hint: 'Country',
-                      icon: Icons.public_outlined,
-                      value: _selectedCountry?.name,
-                      onTap: _showCountryPicker,
-                    ),
-                    SizedBox(height: 12.h),
-                    _buildShadowedPickerButton(
-                      hint: 'City',
-                      icon: Icons.location_city_outlined,
-                      value: _selectedCityName,
-                      onTap: _showCityPicker,
-                    ),
-                    SizedBox(height: 12.h),
-
-                    // ── Row: DOB + Gender side by side ──
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildShadowedPickerButton(
-                            hint: 'Date of Birth',
-                            icon: Icons.calendar_today_outlined,
-                            value: _selectedDateOfBirth == null
-                                ? null
-                                : "${_selectedDateOfBirth!.day}/${_selectedDateOfBirth!.month}/${_selectedDateOfBirth!.year}",
-                            onTap: _showDatePicker,
-                          ),
-                        ),
-                        SizedBox(width: 12.w),
-                        Expanded(
-                          child: _buildShadowedDropdown(
-                            hint: 'Gender',
-                            icon: Icons.wc_outlined,
-                            value: _selectedGender,
-                            items: ['Male', 'Female', 'Other', 'Prefer not to say'],
-                            onChanged: (val) {
-                              setState(() {
-                                _selectedGender = val;
-                              });
-                            },
-                          ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 12.h),
-
-                    _buildShadowedPickerButton(
-                      hint: 'Languages Spoken',
-                      icon: Icons.translate_outlined,
-                      value: _selectedLanguageNames.isEmpty
-                          ? null
-                          : _selectedLanguageNames.join(', '),
-                      onTap: _showLanguageMultiSelect,
-                    ),
-                    SizedBox(height: 24.h),
-
-                    // ── Section: Professional Details ──
-                    _buildSectionLabel('Professional Details', Icons.work_outline),
-                    SizedBox(height: 14.h),
-
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildShadowedTextField(
-                            controller: _experienceController,
-                            hint: 'Experience (years)',
-                            icon: Icons.work_outline,
-                            keyboardType: TextInputType.number,
-                          ),
-                        ),
-                        SizedBox(width: 12.w),
-                        Expanded(
-                          child: _buildShadowedTextField(
-                            controller: _rateController,
-                            hint: 'Rate / Hour (\$)',
-                            icon: Icons.attach_money_outlined,
-                            keyboardType: TextInputType.number,
-                          ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 12.h),
-                    _buildShadowedTextField(
-                      controller: _educationController,
-                      hint: 'Education / Qualifications',
-                      icon: Icons.school_outlined,
-                    ),
-                    SizedBox(height: 24.h),
-
-                    // ── Section: Verification Documents ──
-                    _buildSectionLabel('Verification Documents', Icons.verified_outlined),
-                    SizedBox(height: 6.h),
-                    Text(
-                      'Government ID and a selfie are required. License is optional.',
-                      style: AppTextStyles.textSmall.copyWith(
-                        color: AppColors.primaryGray,
-                        fontSize: 12.sp,
-                      ),
-                    ),
-                    SizedBox(height: 14.h),
-
-                    _buildUploadButton(
-                      label: 'Government ID / Passport',
-                      icon: Icons.badge_outlined,
-                      fileName: _govIdFileName,
-                      onPressed: () => _pickFile('govId'),
-                    ),
-                    SizedBox(height: 12.h),
-                    _buildUploadButton(
-                      label: 'Profile Photo (selfie)',
-                      icon: Icons.camera_alt_outlined,
-                      fileName: _profilePhotoFileName,
-                      onPressed: () => _pickFile('profilePhoto'),
-                    ),
-                    SizedBox(height: 12.h),
-                    _buildUploadButton(
-                      label: 'License / Certificate  (Optional)',
-                      icon: Icons.school_outlined,
-                      fileName: _licenseFileName,
-                      onPressed: () => _pickFile('license'),
-                    ),
-
-                    // ── Submit button (bottom) ──
-                    SizedBox(height: 32.h),
-                    _buildSubmitButton(),
-                    SizedBox(height: 36.h),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // ─────────────────────────────────────────────
-  // Section label helper
-  // ─────────────────────────────────────────────
-  Widget _buildSectionLabel(String title, IconData icon) {
-    return Row(
-      children: [
-        Container(
-          width: 32.w,
-          height: 32.h,
-          decoration: BoxDecoration(
-            color: AppColors.primaryBlue.withAlpha(12),
-            borderRadius: BorderRadius.circular(8.r),
-          ),
-          child: Center(
-            child: Icon(icon, color: AppColors.primaryBlue, size: 17.w),
-          ),
-        ),
-        SizedBox(width: 10.w),
-        Text(
-          title,
-          style: AppTextStyles.bodyLarge.copyWith(
-            fontSize: 15.sp,
-            fontWeight: FontWeight.bold,
-            color: Colors.black87,
-          ),
-        ),
-      ],
-    );
-  }
-
-  // ─────────────────────────────────────────────
-  // Submit button
-  // ─────────────────────────────────────────────
-  Widget _buildSubmitButton() {
-    return SizedBox(
-      width: double.infinity,
-      height: 54.h,
-      child: ElevatedButton(
-        onPressed: _isLoading ? null : _onSubmitTapped,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: _isLoading ? AppColors.primaryGray : AppColors.primaryBlue,
-          disabledBackgroundColor: AppColors.primaryGray,
-          shape: const StadiumBorder(),
-          elevation: 0,
-        ),
-        child: _isLoading
-            ? SizedBox(
-          width: 24.w,
-          height: 24.h,
-          child: const CircularProgressIndicator(
-            color: Colors.white,
-            strokeWidth: 2.5,
-          ),
-        )
-            : Text(
-          'Submit Profile',
-          style: AppTextStyles.bodyLarge.copyWith(
-            color: Colors.white,
-            fontSize: 16.sp,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ),
-    );
-  }
-
   void _onSubmitTapped() {
     if (!_validatePage1()) return;
     if (!_validatePage2()) return;
     _handleSubmitProfile();
   }
 
-  // ─────────────────────────────────────────────
-  // Validation (unchanged logic)
-  // ─────────────────────────────────────────────
   bool _validatePage1() {
     if (_nameController.text.trim().isEmpty) {
       _showError('Please enter your full name');
@@ -435,20 +182,14 @@ class _GuideProfileCompletionScreenState
     return true;
   }
 
-  // ─────────────────────────────────────────────
-  // Submit handler (unchanged logic)
-  // ─────────────────────────────────────────────
   void _handleSubmitProfile() async {
-    setState(() {
-      _isLoading = true;
-    });
-
+    setState(() => _isLoading = true);
     try {
       final nameParts = _nameController.text.trim().split(' ');
       final firstName = nameParts.first;
-      final lastName = nameParts.length > 1 ? nameParts.sublist(1).join(' ') : '';
+      final lastName =
+      nameParts.length > 1 ? nameParts.sublist(1).join(' ') : '';
 
-      // 1. Get the response from the API
       final response = await _profileApi.completeGuideProfile(
         firstName: firstName,
         lastName: lastName,
@@ -457,7 +198,8 @@ class _GuideProfileCompletionScreenState
         gender: _selectedGender!.toLowerCase(),
         country: _selectedCountry!.name,
         cityId: _selectedCityId!,
-        experienceYears: int.tryParse(_experienceController.text.trim()),
+        experienceYears:
+        int.tryParse(_experienceController.text.trim()),
         education: _educationController.text.trim(),
         ratePerHour: double.tryParse(_rateController.text.trim()),
         languageIds: _selectedLanguageIds.toList(),
@@ -468,40 +210,21 @@ class _GuideProfileCompletionScreenState
 
       if (!mounted) return;
 
-      // 2. Check the status from the response
-      // Assuming response contains the serialized GuideProfile which has 'verification_status'
       final status = response['verification_status'] as String?;
-
       if (status == 'verified') {
-        // If auto-verified, go straight to Dashboard
         Navigator.pushNamedAndRemoveUntil(
-            context,
-            '/guideDashboard', // Replace with your actual dashboard route name
-                (route) => false
-        );
+            context, '/guideDashboard', (route) => false);
       } else {
-        // Otherwise, go to Pending Screen
         Navigator.pushNamedAndRemoveUntil(
-            context,
-            '/approvalPending',
-                (route) => false
-        );
+            context, '/approvalPending', (route) => false);
       }
-
     } catch (e) {
       _showError('Failed to submit profile: $e');
     } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
-  // ─────────────────────────────────────────────
-  // Pickers (unchanged logic)
-  // ─────────────────────────────────────────────
   void _showCountryPicker({bool showPhoneCode = false}) {
     showCountryPicker(
       context: context,
@@ -523,30 +246,51 @@ class _GuideProfileCompletionScreenState
       _showError('Cities are loading...');
       return;
     }
-
-    showDialog(
+    showModalBottomSheet(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Select City'),
-        content: SizedBox(
-          width: double.maxFinite,
-          child: ListView.builder(
-            shrinkWrap: true,
-            itemCount: _cities.length,
-            itemBuilder: (context, index) {
-              final city = _cities[index];
-              return ListTile(
-                title: Text(city['name']),
-                subtitle: Text(city['country']),
-                onTap: () {
-                  setState(() {
-                    _selectedCityId = city['id'];
-                    _selectedCityName = city['name'];
-                  });
-                  Navigator.pop(context);
-                },
-              );
-            },
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.65,
+        minChildSize: 0.4,
+        maxChildSize: 0.9,
+        builder: (context, scrollController) => Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius:
+            BorderRadius.vertical(top: Radius.circular(28)),
+          ),
+          child: Column(
+            children: [
+              _sheetHandle(),
+              _sheetHeader('Select City', Icons.location_city_outlined),
+              const Divider(height: 1),
+              Expanded(
+                child: ListView.builder(
+                  controller: scrollController,
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 16, vertical: 8),
+                  itemCount: _cities.length,
+                  itemBuilder: (context, index) {
+                    final city = _cities[index];
+                    final isSelected =
+                        _selectedCityId == city['id'];
+                    return _sheetListTile(
+                      title: city['name'],
+                      subtitle: city['country'],
+                      isSelected: isSelected,
+                      onTap: () {
+                        setState(() {
+                          _selectedCityId = city['id'];
+                          _selectedCityName = city['name'];
+                        });
+                        Navigator.pop(context);
+                      },
+                    );
+                  },
+                ),
+              ),
+            ],
           ),
         ),
       ),
@@ -558,49 +302,197 @@ class _GuideProfileCompletionScreenState
       _showError('Languages are loading...');
       return;
     }
-
-    showDialog(
+    showModalBottomSheet(
       context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) {
-          return AlertDialog(
-            title: const Text('Select Languages'),
-            contentPadding: EdgeInsets.zero,
-            content: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: _languages.map((lang) {
-                  final isSelected = _selectedLanguageIds.contains(lang['id']);
-                  return CheckboxListTile(
-                    title: Text(lang['name']),
-                    subtitle: Text(lang['code']),
-                    value: isSelected,
-                    activeColor: AppColors.primaryBlue,
-                    onChanged: (bool? selected) {
-                      setDialogState(() {
-                        if (selected == true) {
-                          _selectedLanguageIds.add(lang['id']);
-                          _selectedLanguageNames.add(lang['name']);
-                        } else {
-                          _selectedLanguageIds.remove(lang['id']);
-                          _selectedLanguageNames.remove(lang['name']);
-                        }
-                      });
-                      setState(() {});
-                    },
-                  );
-                }).toList(),
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text('Done',
-                    style: TextStyle(color: AppColors.primaryBlue)),
-              ),
-            ],
-          );
-        },
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.7,
+        minChildSize: 0.4,
+        maxChildSize: 0.9,
+        builder: (context, scrollController) =>
+            StatefulBuilder(builder: (context, setSheetState) {
+              return Container(
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius:
+                  BorderRadius.vertical(top: Radius.circular(28)),
+                ),
+                child: Column(
+                  children: [
+                    _sheetHandle(),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: AppColors.primaryBlue
+                                  .withOpacity(0.09),
+                              borderRadius:
+                              BorderRadius.circular(12),
+                            ),
+                            child: Icon(Icons.translate_outlined,
+                                color: AppColors.primaryBlue,
+                                size: 20),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment:
+                              CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'Select Languages',
+                                  style: TextStyle(
+                                    fontSize: 17,
+                                    fontWeight: FontWeight.w800,
+                                    color: Color(0xFF0D1B2A),
+                                  ),
+                                ),
+                                if (_selectedLanguageIds.isNotEmpty)
+                                  Text(
+                                    '${_selectedLanguageIds.length} selected',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: AppColors.primaryBlue,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: Text(
+                              'Done',
+                              style: TextStyle(
+                                color: AppColors.primaryBlue,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Divider(height: 1),
+                    Expanded(
+                      child: ListView.builder(
+                        controller: scrollController,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 8),
+                        itemCount: _languages.length,
+                        itemBuilder: (context, index) {
+                          final lang = _languages[index];
+                          final isSelected =
+                          _selectedLanguageIds.contains(lang['id']);
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 8),
+                            child: InkWell(
+                              onTap: () {
+                                setSheetState(() {
+                                  if (isSelected) {
+                                    _selectedLanguageIds
+                                        .remove(lang['id']);
+                                    _selectedLanguageNames
+                                        .remove(lang['name']);
+                                  } else {
+                                    _selectedLanguageIds
+                                        .add(lang['id']);
+                                    _selectedLanguageNames
+                                        .add(lang['name']);
+                                  }
+                                });
+                                setState(() {});
+                              },
+                              borderRadius: BorderRadius.circular(14),
+                              child: AnimatedContainer(
+                                duration:
+                                const Duration(milliseconds: 180),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 16, vertical: 13),
+                                decoration: BoxDecoration(
+                                  color: isSelected
+                                      ? AppColors.primaryBlue
+                                      .withOpacity(0.07)
+                                      : Colors.grey[50],
+                                  borderRadius:
+                                  BorderRadius.circular(14),
+                                  border: Border.all(
+                                    color: isSelected
+                                        ? AppColors.primaryBlue
+                                        : Colors.grey[200]!,
+                                    width: isSelected ? 1.5 : 1,
+                                  ),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            lang['name'],
+                                            style: TextStyle(
+                                              fontWeight: isSelected
+                                                  ? FontWeight.w700
+                                                  : FontWeight.w500,
+                                              color: isSelected
+                                                  ? AppColors.primaryBlue
+                                                  : Colors.grey[800],
+                                              fontSize: 15,
+                                            ),
+                                          ),
+                                          Text(
+                                            lang['code'],
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: Colors.grey[500],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    AnimatedContainer(
+                                      duration: const Duration(
+                                          milliseconds: 180),
+                                      width: 22,
+                                      height: 22,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        color: isSelected
+                                            ? AppColors.primaryBlue
+                                            : Colors.transparent,
+                                        border: Border.all(
+                                          color: isSelected
+                                              ? AppColors.primaryBlue
+                                              : Colors.grey[300]!,
+                                          width: 2,
+                                        ),
+                                      ),
+                                      child: isSelected
+                                          ? const Icon(
+                                        Icons.check_rounded,
+                                        color: Colors.white,
+                                        size: 13,
+                                      )
+                                          : null,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }),
       ),
     );
   }
@@ -625,29 +517,27 @@ class _GuideProfileCompletionScreenState
       },
     );
     if (picked != null && picked != _selectedDateOfBirth) {
-      setState(() {
-        _selectedDateOfBirth = picked;
-      });
+      setState(() => _selectedDateOfBirth = picked);
     }
   }
 
   Future<void> _pickFile(String field) async {
     final ImagePicker picker = ImagePicker();
-    final XFile? file = await picker.pickImage(source: ImageSource.gallery);
-
+    final XFile? file =
+    await picker.pickImage(source: ImageSource.gallery);
     if (file != null) {
       setState(() {
         switch (field) {
           case 'govId':
-            _govIdFile = file; // Store XFile directly
+            _govIdFile = file;
             _govIdFileName = file.name;
             break;
           case 'profilePhoto':
-            _profilePhotoFile = file; // Store XFile directly
+            _profilePhotoFile = file;
             _profilePhotoFileName = file.name;
             break;
           case 'license':
-            _licenseFile = file; // Store XFile directly
+            _licenseFile = file;
             _licenseFileName = file.name;
             break;
         }
@@ -660,159 +550,555 @@ class _GuideProfileCompletionScreenState
   }
 
   void _showError(String message) {
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.error_outline_rounded,
+                color: Colors.white, size: 20),
+            const SizedBox(width: 10),
+            Expanded(
+                child: Text(message,
+                    style: const TextStyle(fontSize: 14))),
+          ],
+        ),
+        backgroundColor: const Color(0xFFE53935),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14)),
+        margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+        duration: const Duration(seconds: 3),
+      ),
     );
   }
 
-  // ─────────────────────────────────────────────
-  // UI Widgets (unchanged)
-  // ─────────────────────────────────────────────
-  Widget _buildShadowedTextField({
-    required String hint,
+  // ── UI ─────────────────────────────────────────────────────────────────────
+
+  @override
+  Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+
+    return Scaffold(
+      backgroundColor: const Color(0xFFF5F7FA),
+      body: Stack(
+        children: [
+          // Gradient header
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: Container(
+              height: size.height * 0.22,
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Color(0xFF0D47A1),
+                    Color(0xFF1565C0),
+                    Color(0xFF1E88E5),
+                  ],
+                ),
+                borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(32),
+                  bottomRight: Radius.circular(32),
+                ),
+              ),
+            ),
+          ),
+
+          SafeArea(
+            child: Column(
+              children: [
+                // ── Top bar ──────────────────────────────────
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 42,
+                        height: 42,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(14),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.15),
+                              blurRadius: 12,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        padding: const EdgeInsets.all(8),
+                        child: Image.asset(
+                            'assets/images/yaloo_logo.png'),
+                      ),
+                      const SizedBox(width: 14),
+                      Column(
+                        crossAxisAlignment:
+                        CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Guide Profile',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w800,
+                              color: Colors.white,
+                              letterSpacing: -0.2,
+                            ),
+                          ),
+                          Text(
+                            'Fill in your details to get started',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.white.withOpacity(0.80),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const Spacer(),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 5),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.18),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                              color: Colors.white.withOpacity(0.4)),
+                        ),
+                        child: Row(
+                          children: const [
+                            Icon(Icons.explore_outlined,
+                                color: Colors.white, size: 13),
+                            SizedBox(width: 5),
+                            Text(
+                              'Guide',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 20),
+
+                // ── Scrollable content ───────────────────────
+                Expanded(
+                  child: FadeTransition(
+                    opacity: _fadeAnim,
+                    child: SlideTransition(
+                      position: _slideAnim,
+                      child: SingleChildScrollView(
+                        physics: const BouncingScrollPhysics(),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 20),
+                        child: Column(
+                          crossAxisAlignment:
+                          CrossAxisAlignment.start,
+                          children: [
+                            // ── Personal Information ────────
+                            _sectionCard(
+                              title: 'Personal Information',
+                              icon: Icons.person_outline_rounded,
+                              children: [
+                                _formField(
+                                  controller: _nameController,
+                                  hint: 'Full Name',
+                                  icon: Icons.person_outline,
+                                ),
+                                const SizedBox(height: 12),
+                                _phoneField(),
+                                const SizedBox(height: 12),
+                                _pickerButton(
+                                  hint: 'Country',
+                                  icon: Icons.public_outlined,
+                                  value: _selectedCountry?.name,
+                                  onTap: _showCountryPicker,
+                                ),
+                                const SizedBox(height: 12),
+                                _pickerButton(
+                                  hint: 'City',
+                                  icon: Icons.location_city_outlined,
+                                  value: _selectedCityName,
+                                  onTap: _showCityPicker,
+                                ),
+                                const SizedBox(height: 12),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: _pickerButton(
+                                        hint: 'Date of Birth',
+                                        icon: Icons
+                                            .calendar_today_outlined,
+                                        value: _selectedDateOfBirth ==
+                                            null
+                                            ? null
+                                            : '${_selectedDateOfBirth!.day}/${_selectedDateOfBirth!.month}/${_selectedDateOfBirth!.year}',
+                                        onTap: _showDatePicker,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: _dropdownField(
+                                        hint: 'Gender',
+                                        icon: Icons.wc_outlined,
+                                        value: _selectedGender,
+                                        items: [
+                                          'Male',
+                                          'Female',
+                                          'Other',
+                                          'Prefer not to say'
+                                        ],
+                                        onChanged: (val) => setState(
+                                                () =>
+                                            _selectedGender = val),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 12),
+                                _pickerButton(
+                                  hint: 'Languages Spoken',
+                                  icon: Icons.translate_outlined,
+                                  value: _selectedLanguageNames
+                                      .isEmpty
+                                      ? null
+                                      : _selectedLanguageNames
+                                      .join(', '),
+                                  onTap: _showLanguageMultiSelect,
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+
+                            // ── Professional Details ────────
+                            _sectionCard(
+                              title: 'Professional Details',
+                              icon: Icons.work_outline_rounded,
+                              children: [
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: _formField(
+                                        controller:
+                                        _experienceController,
+                                        hint: 'Experience (yrs)',
+                                        icon: Icons.work_outline,
+                                        keyboardType:
+                                        TextInputType.number,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: _formField(
+                                        controller: _rateController,
+                                        hint: 'Rate / Hour (\$)',
+                                        icon: Icons
+                                            .attach_money_outlined,
+                                        keyboardType:
+                                        TextInputType.number,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 12),
+                                _formField(
+                                  controller: _educationController,
+                                  hint: 'Education / Qualifications',
+                                  icon: Icons.school_outlined,
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+
+                            // ── Verification Documents ──────
+                            _sectionCard(
+                              title: 'Verification Documents',
+                              icon: Icons.verified_outlined,
+                              subtitle:
+                              'Government ID and a selfie are required. License is optional.',
+                              children: [
+                                _uploadButton(
+                                  label: 'Government ID / Passport',
+                                  icon: Icons.badge_outlined,
+                                  fileName: _govIdFileName,
+                                  isRequired: true,
+                                  onPressed: () =>
+                                      _pickFile('govId'),
+                                ),
+                                const SizedBox(height: 10),
+                                _uploadButton(
+                                  label: 'Profile Photo (selfie)',
+                                  icon: Icons.camera_alt_outlined,
+                                  fileName: _profilePhotoFileName,
+                                  isRequired: true,
+                                  onPressed: () =>
+                                      _pickFile('profilePhoto'),
+                                ),
+                                const SizedBox(height: 10),
+                                _uploadButton(
+                                  label:
+                                  'License / Certificate (Optional)',
+                                  icon: Icons.school_outlined,
+                                  fileName: _licenseFileName,
+                                  isRequired: false,
+                                  onPressed: () =>
+                                      _pickFile('license'),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 28),
+
+                            // ── Submit button ───────────────
+                            _submitButton(
+                              label: 'Submit Profile',
+                              onTap: _isLoading
+                                  ? null
+                                  : _onSubmitTapped,
+                            ),
+                            const SizedBox(height: 36),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── Shared UI helpers ───────────────────────────────────────────────────────
+
+  Widget _sectionCard({
+    required String title,
     required IconData icon,
-    TextEditingController? controller,
-    TextInputType? keyboardType,
+    String? subtitle,
+    required List<Widget> children,
   }) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(24.r),
+        borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primaryGray.withAlpha(20),
-            blurRadius: 20,
-            offset: const Offset(0, 5),
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 14,
+            offset: const Offset(0, 4),
           ),
         ],
+      ),
+      padding: const EdgeInsets.all(18),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: AppColors.primaryBlue.withOpacity(0.09),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(icon,
+                    color: AppColors.primaryBlue, size: 18),
+              ),
+              const SizedBox(width: 10),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF0D1B2A),
+                ),
+              ),
+            ],
+          ),
+          if (subtitle != null) ...[
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF0F4FF),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.info_outline_rounded,
+                      size: 14,
+                      color: AppColors.primaryBlue),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      subtitle,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: AppColors.primaryBlue,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+          const SizedBox(height: 16),
+          ...children,
+        ],
+      ),
+    );
+  }
+
+  Widget _formField({
+    required TextEditingController controller,
+    required String hint,
+    required IconData icon,
+    TextInputType? keyboardType,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8F9FC),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE8EAED)),
       ),
       child: TextFormField(
         controller: controller,
         keyboardType: keyboardType,
-        style: AppTextStyles.textSmall.copyWith(color: Colors.black),
+        style: const TextStyle(
+            fontSize: 14,
+            color: Color(0xFF0D1B2A),
+            fontWeight: FontWeight.w400),
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle: AppTextStyles.textSmall.copyWith(
-            color: AppColors.primaryGray.withAlpha(150),
-          ),
-          prefixIcon: Padding(
-            padding: const EdgeInsets.only(left: 20.0, right: 16.0),
-            child: Icon(icon, color: AppColors.primaryGray),
-          ),
-          filled: true,
-          fillColor: Colors.white,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(24.r),
-            borderSide: BorderSide.none,
-          ),
-          contentPadding:
-          EdgeInsets.only(top: 20.h, bottom: 20.h, right: 20.w),
+          hintStyle: TextStyle(
+              color: Colors.grey[400],
+              fontSize: 14,
+              fontWeight: FontWeight.w400),
+          prefixIcon: Icon(icon,
+              color: AppColors.primaryBlue, size: 18),
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16, vertical: 14),
         ),
       ),
     );
   }
 
-  Widget _buildPhoneField() {
+  Widget _phoneField() {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24.r),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primaryGray.withAlpha(20),
-            blurRadius: 20,
-            offset: const Offset(0, 5),
-          ),
-        ],
+        color: const Color(0xFFF8F9FC),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE8EAED)),
       ),
       child: TextFormField(
         controller: _phoneController,
         keyboardType: TextInputType.phone,
-        style: AppTextStyles.textSmall.copyWith(color: Colors.black),
+        style: const TextStyle(
+            fontSize: 14,
+            color: Color(0xFF0D1B2A),
+            fontWeight: FontWeight.w400),
         decoration: InputDecoration(
           hintText: 'Phone Number',
-          hintStyle: AppTextStyles.textSmall.copyWith(
-            color: AppColors.primaryGray.withAlpha(150),
-          ),
+          hintStyle: TextStyle(color: Colors.grey[400], fontSize: 14),
           prefixIcon: InkWell(
-            onTap: () {
-              _showCountryPicker(showPhoneCode: true);
-            },
+            onTap: () => _showCountryPicker(showPhoneCode: true),
+            borderRadius: BorderRadius.circular(12),
             child: Padding(
-              padding: const EdgeInsets.only(left: 20.0, right: 10.0),
+              padding: const EdgeInsets.only(left: 14, right: 8),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.phone_outlined, color: AppColors.primaryGray),
-                  SizedBox(width: 8.w),
+                  Icon(Icons.phone_outlined,
+                      color: AppColors.primaryBlue, size: 18),
+                  const SizedBox(width: 6),
                   Text(
-                    "+$_countryCode",
-                    style:
-                    AppTextStyles.textSmall.copyWith(color: Colors.black),
+                    '+$_countryCode',
+                    style: const TextStyle(
+                        fontSize: 14,
+                        color: Color(0xFF0D1B2A),
+                        fontWeight: FontWeight.w500),
                   ),
-                  Icon(Icons.arrow_drop_down, color: AppColors.primaryGray),
+                  Icon(Icons.arrow_drop_down,
+                      color: Colors.grey[400], size: 18),
                 ],
               ),
             ),
           ),
-          filled: true,
-          fillColor: Colors.white,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(24.r),
-            borderSide: BorderSide.none,
-          ),
-          contentPadding:
-          EdgeInsets.only(top: 20.h, bottom: 20.h, right: 20.w),
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16, vertical: 14),
         ),
       ),
     );
   }
 
-  Widget _buildShadowedPickerButton({
+  Widget _pickerButton({
     required String hint,
     required IconData icon,
     String? value,
     required VoidCallback onTap,
   }) {
-    return GestureDetector(
+    return InkWell(
       onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
       child: Container(
-        padding: EdgeInsets.only(
-            top: 20.h, bottom: 20.h, left: 20.w, right: 12.w),
+        padding: const EdgeInsets.symmetric(
+            horizontal: 14, vertical: 14),
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(24.r),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.primaryGray.withAlpha(20),
-              blurRadius: 20,
-              offset: const Offset(0, 5),
-            ),
-          ],
+          color: value != null
+              ? AppColors.primaryBlue.withOpacity(0.05)
+              : const Color(0xFFF8F9FC),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: value != null
+                ? AppColors.primaryBlue.withOpacity(0.3)
+                : const Color(0xFFE8EAED),
+          ),
         ),
         child: Row(
           children: [
-            Icon(icon, color: AppColors.primaryGray),
-            SizedBox(width: 16.w),
+            Icon(
+              icon,
+              color: value != null
+                  ? AppColors.primaryBlue
+                  : Colors.grey[400],
+              size: 18,
+            ),
+            const SizedBox(width: 10),
             Expanded(
               child: Text(
                 value ?? hint,
-                style: AppTextStyles.textSmall.copyWith(
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w400,
                   color: value != null
-                      ? Colors.black
-                      : AppColors.primaryGray.withAlpha(150),
+                      ? const Color(0xFF0D1B2A)
+                      : Colors.grey[400],
                 ),
                 overflow: TextOverflow.ellipsis,
               ),
             ),
-            Icon(Icons.arrow_drop_down, color: AppColors.primaryGray),
+            Icon(Icons.chevron_right_rounded,
+                color: Colors.grey[400], size: 18),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildShadowedDropdown({
+  Widget _dropdownField({
     required String hint,
     required IconData icon,
     String? value,
@@ -821,100 +1107,300 @@ class _GuideProfileCompletionScreenState
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24.r),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primaryGray.withAlpha(20),
-            blurRadius: 20,
-            offset: const Offset(0, 5),
-          ),
-        ],
+        color: value != null
+            ? AppColors.primaryBlue.withOpacity(0.05)
+            : const Color(0xFFF8F9FC),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: value != null
+              ? AppColors.primaryBlue.withOpacity(0.3)
+              : const Color(0xFFE8EAED),
+        ),
       ),
       child: DropdownButtonFormField<String>(
         value: value,
-        style: AppTextStyles.textSmall.copyWith(color: Colors.black),
-        items: items.map((String item) {
-          return DropdownMenuItem<String>(
-            value: item,
-            child: Text(item,
-                style: AppTextStyles.textSmall,
-                overflow: TextOverflow.ellipsis),
-          );
-        }).toList(),
+        style: const TextStyle(
+            fontSize: 14,
+            color: Color(0xFF0D1B2A),
+            fontWeight: FontWeight.w400),
+        items: items
+            .map((item) => DropdownMenuItem<String>(
+          value: item,
+          child: Text(item,
+              style: const TextStyle(fontSize: 14),
+              overflow: TextOverflow.ellipsis),
+        ))
+            .toList(),
         onChanged: onChanged,
         isExpanded: true,
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle: AppTextStyles.textSmall.copyWith(
-            color: AppColors.primaryGray.withAlpha(150),
-          ),
-          prefixIcon: Padding(
-            padding: const EdgeInsets.only(left: 20.0, right: 16.0),
-            child: Icon(icon, color: AppColors.primaryGray),
-          ),
-          filled: true,
-          fillColor: Colors.white,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(24.r),
-            borderSide: BorderSide.none,
-          ),
-          contentPadding:
-          EdgeInsets.only(top: 20.h, bottom: 20.h, right: 0.w),
+          hintStyle:
+          TextStyle(color: Colors.grey[400], fontSize: 14),
+          prefixIcon: Icon(icon,
+              color: value != null
+                  ? AppColors.primaryBlue
+                  : Colors.grey[400],
+              size: 18),
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16, vertical: 14),
         ),
-        icon: Padding(
-          padding: const EdgeInsets.only(right: 12.0),
-          child: Icon(Icons.arrow_drop_down, color: AppColors.primaryGray),
+        icon: Icon(Icons.arrow_drop_down,
+            color: Colors.grey[400], size: 20),
+        dropdownColor: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+      ),
+    );
+  }
+
+  Widget _uploadButton({
+    required String label,
+    required IconData icon,
+    String? fileName,
+    required bool isRequired,
+    required VoidCallback onPressed,
+  }) {
+    final bool isUploaded = fileName != null;
+    return GestureDetector(
+      onTap: onPressed,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(
+            vertical: 14, horizontal: 16),
+        decoration: BoxDecoration(
+          color: isUploaded
+              ? AppColors.primaryBlue.withOpacity(0.07)
+              : const Color(0xFFF8F9FC),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: isUploaded
+                ? AppColors.primaryBlue
+                : const Color(0xFFE8EAED),
+            width: isUploaded ? 1.5 : 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                color: isUploaded
+                    ? AppColors.primaryBlue.withOpacity(0.12)
+                    : Colors.grey[100],
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(
+                isUploaded
+                    ? Icons.check_circle_rounded
+                    : icon,
+                color: isUploaded
+                    ? AppColors.primaryBlue
+                    : Colors.grey[500],
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    isUploaded ? fileName : label,
+                    style: TextStyle(
+                      fontSize: 13.5,
+                      fontWeight: isUploaded
+                          ? FontWeight.w600
+                          : FontWeight.w500,
+                      color: isUploaded
+                          ? AppColors.primaryBlue
+                          : Colors.grey[700],
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  if (!isUploaded)
+                    Text(
+                      isRequired ? 'Required' : 'Optional',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: isRequired
+                            ? Colors.orange[600]
+                            : Colors.grey[400],
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            Icon(
+              isUploaded
+                  ? Icons.edit_outlined
+                  : Icons.upload_rounded,
+              color: isUploaded
+                  ? AppColors.primaryBlue
+                  : Colors.grey[400],
+              size: 18,
+            ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildUploadButton({
+  Widget _submitButton({
     required String label,
-    required IconData icon,
-    String? fileName,
-    required VoidCallback onPressed,
+    required VoidCallback? onTap,
   }) {
-    bool isUploaded = fileName != null;
-    return GestureDetector(
-      onTap: onPressed,
-      child: Container(
-        padding: EdgeInsets.symmetric(vertical: 18.h, horizontal: 20.w),
-        decoration: BoxDecoration(
-          color: isUploaded ? AppColors.thirdBlue : Colors.white,
-          borderRadius: BorderRadius.circular(24.r),
-          border: isUploaded ? Border.all(color: AppColors.primaryBlue) : null,
-          boxShadow: [
-            if (!isUploaded)
-              BoxShadow(
-                color: AppColors.primaryGray.withAlpha(20),
-                blurRadius: 20,
-                offset: const Offset(0, 5),
-              ),
-          ],
+    return SizedBox(
+      width: double.infinity,
+      height: 52,
+      child: ElevatedButton(
+        onPressed: onTap,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFF1565C0),
+          disabledBackgroundColor:
+          const Color(0xFF1565C0).withOpacity(0.45),
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
         ),
-        child: Row(
+        child: _isLoading
+            ? const SizedBox(
+          width: 22,
+          height: 22,
+          child: CircularProgressIndicator(
+            strokeWidth: 2.5,
+            color: Colors.white,
+          ),
+        )
+            : Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(isUploaded ? Icons.check_circle_outline : icon,
-                color: isUploaded
-                    ? AppColors.primaryBlue
-                    : AppColors.primaryGray),
-            SizedBox(width: 12.w),
-            Expanded(
-              child: Text(
-                isUploaded ? fileName : label,
-                style: AppTextStyles.textSmall.copyWith(
-                    color: isUploaded
-                        ? AppColors.primaryBlue
-                        : AppColors.primaryGray,
-                    fontWeight:
-                    isUploaded ? FontWeight.bold : FontWeight.normal),
-                overflow: TextOverflow.ellipsis,
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: Colors.white,
+                letterSpacing: 0.2,
               ),
             ),
+            const SizedBox(width: 8),
+            const Icon(Icons.arrow_forward_rounded,
+                color: Colors.white, size: 18),
           ],
+        ),
+      ),
+    );
+  }
+
+  // ── Bottom sheet helpers ────────────────────────────────────────────────────
+
+  Widget _sheetHandle() {
+    return Padding(
+      padding: const EdgeInsets.only(top: 10, bottom: 4),
+      child: Center(
+        child: Container(
+          width: 40,
+          height: 4,
+          decoration: BoxDecoration(
+            color: Colors.grey[300],
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _sheetHeader(String title, IconData icon) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: AppColors.primaryBlue.withOpacity(0.09),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon,
+                color: AppColors.primaryBlue, size: 20),
+          ),
+          const SizedBox(width: 12),
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 17,
+              fontWeight: FontWeight.w800,
+              color: Color(0xFF0D1B2A),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _sheetListTile({
+    required String title,
+    String? subtitle,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(14),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          padding: const EdgeInsets.symmetric(
+              horizontal: 16, vertical: 13),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? AppColors.primaryBlue.withOpacity(0.07)
+                : Colors.grey[50],
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: isSelected
+                  ? AppColors.primaryBlue
+                  : Colors.grey[200]!,
+              width: isSelected ? 1.5 : 1,
+            ),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontWeight: isSelected
+                            ? FontWeight.w700
+                            : FontWeight.w500,
+                        color: isSelected
+                            ? AppColors.primaryBlue
+                            : Colors.grey[800],
+                        fontSize: 15,
+                      ),
+                    ),
+                    if (subtitle != null)
+                      Text(subtitle,
+                          style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey[500])),
+                  ],
+                ),
+              ),
+              if (isSelected)
+                Icon(Icons.check_circle_rounded,
+                    color: AppColors.primaryBlue, size: 20),
+            ],
+          ),
         ),
       ),
     );

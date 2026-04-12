@@ -336,7 +336,7 @@ class DjangoApiService {
     final token = await _getAuthToken();
     if (token == null) throw Exception('Not authenticated');
 
-    var uri = Uri.parse('$baseUrl/accounts/stays/create/');
+    var uri = Uri.parse('$baseUrl/accounts/host/stays/create/');
     var request = http.MultipartRequest('POST', uri);
 
     request.headers['Authorization'] = 'Bearer $token';

@@ -43,7 +43,7 @@ dependencies:
 
   pinput: ^4.0.0
   table_calendar: ^3.0.9
-  supabase_flutter: ^1.0.0
+  supabase_flutter: ^2.12.2
   lucide_icons_flutter: ^3.1.5
   smooth_page_indicator: ^1.1.0
   flutter_screenutil: ^5.9.0
@@ -63,6 +63,8 @@ dependencies:
   cached_network_image: ^3.4.1
   geocoding: ^4.0.0
   flutter_stripe: ^11.5.0
+  flutter_stripe_web: ^6.5.1
+  sign_in_with_apple: ^7.0.1
 
 dev_dependencies:
   flutter_test:
@@ -92,6 +94,7 @@ flutter:
     - assets/illustrations/
     - assets/icons/
     - assets/images/
+    - assets/.env
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see

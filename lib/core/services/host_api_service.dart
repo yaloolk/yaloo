@@ -4,30 +4,13 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:image_picker/image_picker.dart';
-import 'package:yaloo/core/storage/secure_storage.dart';
+import 'package:yaloo/core/network/api_client.dart';
 
 class HostApiService {
-  late final Dio _dio;
-  static const String baseUrl = 'http://localhost:8000/api';
+  // 1. Grab your working singleton
+  final ApiClient _apiClient = ApiClient();
 
-  HostApiService() {
-    _dio = Dio(BaseOptions(
-      baseUrl: baseUrl,
-      connectTimeout: const Duration(seconds: 30),
-      receiveTimeout: const Duration(seconds: 30),
-      headers: {'Content-Type': 'application/json'},
-    ));
-
-    _dio.interceptors.add(InterceptorsWrapper(
-      onRequest: (options, handler) async {
-        final token = await SecureStorage().getAccessToken();
-        if (token != null) {
-          options.headers['Authorization'] = 'Bearer $token';
-        }
-        return handler.next(options);
-      },
-    ));
-  }
+  // NO MORE CUSTOM CONSTRUCTOR OR LOCALHOST HERE! 🎉
 
   Future<T> _handleRequest<T>(Future<Response> Function() request) async {
     try {
@@ -53,11 +36,11 @@ class HostApiService {
   // ══════════════════════════════════════════════════════════
 
   Future<Map<String, dynamic>> getHostProfile() async {
-    return _handleRequest(() => _dio.get('/accounts/host/profile/'));
+    return _handleRequest(() => _apiClient.get('/accounts/host/profile/'));
   }
 
   Future<Map<String, dynamic>> updateHostProfile(Map<String, dynamic> data) async {
-    return _handleRequest(() => _dio.patch('/accounts/host/profile/update/', data: data));
+    return _handleRequest(() => _apiClient.patch('/accounts/host/profile/update/', data: data));
   }
 
   Future<Map<String, dynamic>> updateProfilePicture(XFile photo) async {
@@ -74,7 +57,7 @@ class HostApiService {
       });
     }
 
-    return _handleRequest(() => _dio.post('/accounts/profile/picture/', data: formData));
+    return _handleRequest(() => _apiClient.post('/accounts/profile/picture/', data: formData));
   }
 
   // ══════════════════════════════════════════════════════════
@@ -82,7 +65,7 @@ class HostApiService {
   // ══════════════════════════════════════════════════════════
 
   Future<Map<String, dynamic>> getHostDashboard() async {
-    return _handleRequest(() => _dio.get('/accounts/host/dashboard/'));
+    return _handleRequest(() => _apiClient.get('/accounts/host/dashboard/'));
   }
 
   // ══════════════════════════════════════════════════════════
@@ -134,27 +117,27 @@ class HostApiService {
       }
     }
 
-    return _handleRequest(() => _dio.post('/accounts/stays/create/', data: formData));
+    return _handleRequest(() => _apiClient.post('/accounts/stays/create/', data: formData));
   }
 
   Future<List<dynamic>> getHostStays() async {
-    return _handleRequest(() => _dio.get('/accounts/host/stays/'));
+    return _handleRequest(() => _apiClient.get('/accounts/host/stays/'));
   }
 
   Future<Map<String, dynamic>> getStayDetail(String stayId) async {
-    return _handleRequest(() => _dio.get('/accounts/host/stays/$stayId/'));
+    return _handleRequest(() => _apiClient.get('/accounts/host/stays/$stayId/'));
   }
 
   Future<Map<String, dynamic>> updateStay(String stayId, Map<String, dynamic> data) async {
-    return _handleRequest(() => _dio.patch('/accounts/host/stays/$stayId/update/', data: data));
+    return _handleRequest(() => _apiClient.patch('/accounts/host/stays/$stayId/update/', data: data));
   }
 
   Future<Map<String, dynamic>> toggleStayActive(String stayId) async {
-    return _handleRequest(() => _dio.post('/accounts/host/stays/$stayId/toggle/'));
+    return _handleRequest(() => _apiClient.post('/accounts/host/stays/$stayId/toggle/'));
   }
 
   Future<Map<String, dynamic>> deleteStay(String stayId) async {
-    return _handleRequest(() => _dio.delete('/accounts/host/stays/$stayId/delete/'));
+    return _handleRequest(() => _apiClient.delete('/accounts/host/stays/$stayId/delete/'));
   }
 
   // ══════════════════════════════════════════════════════════
@@ -179,15 +162,15 @@ class HostApiService {
       }
     }
 
-    return _handleRequest(() => _dio.post('/accounts/host/stays/$stayId/photos/add/', data: formData));
+    return _handleRequest(() => _apiClient.post('/accounts/host/stays/$stayId/photos/add/', data: formData));
   }
 
   Future<Map<String, dynamic>> deleteStayPhoto(String stayId, String photoId) async {
-    return _handleRequest(() => _dio.delete('/accounts/host/stays/$stayId/photos/$photoId/'));
+    return _handleRequest(() => _apiClient.delete('/accounts/host/stays/$stayId/photos/$photoId/'));
   }
 
   Future<Map<String, dynamic>> setCoverPhoto(String stayId, String photoId) async {
-    return _handleRequest(() => _dio.post('/accounts/host/stays/$stayId/photos/$photoId/set-cover/'));
+    return _handleRequest(() => _apiClient.post('/accounts/host/stays/$stayId/photos/$photoId/set-cover/'));
   }
 
   // ══════════════════════════════════════════════════════════
@@ -195,12 +178,12 @@ class HostApiService {
   // ══════════════════════════════════════════════════════════
 
   Future<List<dynamic>> getAllFacilities() async {
-    return _handleRequest(() => _dio.get('/accounts/facilities/'));
+    return _handleRequest(() => _apiClient.get('/accounts/facilities/'));
   }
 
   Future<Map<String, dynamic>> updateStayFacilities(
       String stayId, List<String> facilityIds) async {
-    return _handleRequest(() => _dio.post(
+    return _handleRequest(() => _apiClient.post(
       '/accounts/host/stays/$stayId/facilities/',
       data: {'facility_ids': facilityIds},
     ));
@@ -211,12 +194,12 @@ class HostApiService {
   // ══════════════════════════════════════════════════════════
 
   Future<List<dynamic>> getStayAvailability(String stayId) async {
-    return _handleRequest(() => _dio.get('/accounts/host/stays/$stayId/availability/'));
+    return _handleRequest(() => _apiClient.get('/accounts/host/stays/$stayId/availability/'));
   }
 
   Future<Map<String, dynamic>> setStayAvailability(
       String stayId, Map<String, dynamic> data) async {
-    return _handleRequest(() => _dio.post(
+    return _handleRequest(() => _apiClient.post(
       '/accounts/host/stays/$stayId/availability/set/',
       data: data,
     ));
@@ -224,14 +207,14 @@ class HostApiService {
 
   Future<Map<String, dynamic>> updateSingleAvailability(
       String stayId, String availId, Map<String, dynamic> data) async {
-    return _handleRequest(() => _dio.patch(
+    return _handleRequest(() => _apiClient.patch(
       '/accounts/host/stays/$stayId/availability/$availId/',
       data: data,
     ));
   }
 
   Future<Map<String, dynamic>> deleteAvailability(String stayId, String availId) async {
-    return _handleRequest(() => _dio.delete('/accounts/host/stays/$stayId/availability/$availId/delete/'));
+    return _handleRequest(() => _apiClient.delete('/accounts/host/stays/$stayId/availability/$availId/delete/'));
   }
 
   // ══════════════════════════════════════════════════════════
@@ -239,25 +222,25 @@ class HostApiService {
   // ══════════════════════════════════════════════════════════
 
   Future<List<dynamic>> getAllLanguages() async {
-    return _handleRequest(() => _dio.get('/accounts/languages/'));
+    return _handleRequest(() => _apiClient.get('/accounts/languages/'));
   }
 
   Future<Map<String, dynamic>> addHostLanguage(String languageId, String proficiency) async {
-    return _handleRequest(() => _dio.post(
+    return _handleRequest(() => _apiClient.post(
       '/accounts/host/languages/add/',
       data: {'language_id': languageId, 'proficiency': proficiency},
     ));
   }
 
   Future<Map<String, dynamic>> updateHostLanguage(String languageId, String proficiency) async {
-    return _handleRequest(() => _dio.patch(
+    return _handleRequest(() => _apiClient.patch(
       '/accounts/host/languages/$languageId/update/',
       data: {'proficiency': proficiency},
     ));
   }
 
   Future<Map<String, dynamic>> removeHostLanguage(String languageId) async {
-    return _handleRequest(() => _dio.delete('/accounts/host/languages/$languageId/delete/'));
+    return _handleRequest(() => _apiClient.delete('/accounts/host/languages/$languageId/delete/'));
   }
 
   // ══════════════════════════════════════════════════════════
@@ -265,7 +248,7 @@ class HostApiService {
   // ══════════════════════════════════════════════════════════
 
   Future<List<dynamic>> getAllCities() async {
-    return _handleRequest(() => _dio.get('/accounts/cities/'));
+    return _handleRequest(() => _apiClient.get('/accounts/cities/'));
   }
 
   // ══════════════════════════════════════════════════════════
@@ -273,6 +256,6 @@ class HostApiService {
   // ══════════════════════════════════════════════════════════
 
   Future<Map<String, dynamic>> getHostReviews() async {
-    return _handleRequest(() => _dio.get('/accounts/host/reviews/'));
+    return _handleRequest(() => _apiClient.get('/accounts/host/reviews/'));
   }
 }

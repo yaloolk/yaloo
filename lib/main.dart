@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -16,17 +17,28 @@ import 'package:yaloo/routes/app_routes.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 
+import 'features/tourist/providers/city_provider.dart';
+
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await dotenv.load(fileName: ".env");
+  await dotenv.load(fileName: "assets/.env");
 
   final supabaseUrl = dotenv.env['SUPABASE_URL']!;
   final supabaseAnonKey = dotenv.env['SUPABASE_ANON_KEY']!;
   final stripePublishable = dotenv.env['STRIPE_PUBLISHABLE_KEY']!;
 
-  Stripe.publishableKey = stripePublishable;
-  await Stripe.instance.applySettings();
+  if (!kIsWeb) {
+    // This will now only run on Android/iOS, preventing the web crash
+    Stripe.publishableKey = stripePublishable;
+    await Stripe.instance.applySettings();
+  } else {
+    // Optional: If you intend to process payments on the web version of Yaloo later,
+    // you must add 'flutter_stripe_web' to your pubspec.yaml and uncomment this block.
+    Stripe.publishableKey = stripePublishable;
+    await Stripe.instance.applySettings();
+  }
 
   await Supabase.initialize(
     url: supabaseUrl,
@@ -65,6 +77,7 @@ class YalooApp extends StatelessWidget {
           ChangeNotifierProvider(
             create: (_) => StayBookingProvider(),
           ),
+          ChangeNotifierProvider(create: (_) => CityProvider()),
         ],
         child: ScreenUtilInit(
       designSize: const Size(390, 844),
