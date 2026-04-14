@@ -9,6 +9,7 @@ import 'package:provider/provider.dart';
 import 'package:yaloo/features/tourist/models/stay_booking_model.dart';
 import 'package:yaloo/features/tourist/providers/stay_booking_provider.dart';
 import 'package:yaloo/features/tourist/providers/tourist_provider.dart';
+import 'package:yaloo/core/services/payment_service.dart';
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
 const _blue       = Color(0xFF2563EB);
@@ -593,8 +594,11 @@ class _BookingFormSheetState extends State<_BookingFormSheet> {
   int    _guests     = 1;
   int    _rooms      = 1;
   String _meal       = 'none';
-  String _bookType   = 'per_night';
-  bool   _submitting = false;
+  String _bookType          = 'per_night';
+  bool   _submitting        = false;
+  bool   _processingPayment = false;
+  String _paymentError      = '';
+  final  _paymentService    = PaymentService();
 
   static const _meals = ['none', 'veg', 'non_veg', 'halal'];
   static const _mealLabels = {
@@ -673,36 +677,73 @@ class _BookingFormSheetState extends State<_BookingFormSheet> {
     if (_phoneCtrl.text.trim().isEmpty) { _snack('Please enter your phone number'); return; }
     if (_emailCtrl.text.trim().isEmpty) { _snack('Please enter your email');        return; }
     if (_nights < 1)                    { _snack('Invalid check-in/out dates');      return; }
+    if (_submitting || _processingPayment) return;
 
-    setState(() => _submitting = true);
+    setState(() { _submitting = true; _paymentError = ''; });
 
     final prov = context.read<StayBookingProvider>();
-    final ok   = await prov.createBooking(
-      stayId:          widget.stay.stayId,
-      checkinDate:     widget.checkin,
-      checkoutDate:    widget.checkout,
-      bookingType:     _bookType,
-      roomCount:       _rooms,
-      guestCount:      _guests,
-      mealPreference:  _meal,
-      specialNote:     _noteCtrl.text.trim().isNotEmpty ? _noteCtrl.text.trim() : null,
-      touristFullName: _nameCtrl.text.trim(),
-      touristPassport: _passportCtrl.text.trim().isNotEmpty ? _passportCtrl.text.trim() : null,
-      touristPhone:    _phoneCtrl.text.trim(),
-      touristEmail:    _emailCtrl.text.trim(),
-    );
 
-    if (!mounted) return;
-    setState(() => _submitting = false);
+    try {
+      // ── Step 1: Create booking record (status = pending) ──────────────
+      final ok = await prov.createBooking(
+        stayId:          widget.stay.stayId,
+        checkinDate:     widget.checkin,
+        checkoutDate:    widget.checkout,
+        bookingType:     _bookType,
+        roomCount:       _rooms,
+        guestCount:      _guests,
+        mealPreference:  _meal,
+        specialNote:     _noteCtrl.text.trim().isNotEmpty ? _noteCtrl.text.trim() : null,
+        touristFullName: _nameCtrl.text.trim(),
+        touristPassport: _passportCtrl.text.trim().isNotEmpty ? _passportCtrl.text.trim() : null,
+        touristPhone:    _phoneCtrl.text.trim(),
+        touristEmail:    _emailCtrl.text.trim(),
+      );
 
-    if (ok) {
-      Navigator.pop(context);
-      Navigator.pushNamed(context, '/stayBookingConfirmation',
-          arguments: prov.lastCreatedBooking?.toJson());
-    } else {
-      _snack(prov.createError.isNotEmpty
-          ? prov.createError
-          : 'Booking failed. Please try again.');
+      if (!mounted) return;
+
+      if (!ok || prov.lastCreatedBooking == null) {
+        setState(() => _submitting = false);
+        _snack(prov.createError.isNotEmpty
+            ? prov.createError : 'Booking failed. Please try again.');
+        return;
+      }
+
+      final bookingId = prov.lastCreatedBooking!.id;
+
+      // ── Step 2: Create PaymentIntent on backend ───────────────────────
+      setState(() { _submitting = false; _processingPayment = true; });
+
+      final intentResult = await _paymentService.createPaymentIntent(
+        bookingType: 'stay',
+        bookingId:   bookingId,
+      );
+
+      // ── Step 3: Present Stripe payment sheet ──────────────────────────
+      final paid = await _paymentService.presentPaymentSheet(
+        clientSecret: intentResult.clientSecret,
+        totalLkr:     intentResult.totalLkr,
+      );
+
+      if (!mounted) return;
+
+      if (paid) {
+        Navigator.pop(context);
+        Navigator.pushNamed(context, '/stayBookingConfirmation',
+            arguments: prov.lastCreatedBooking?.toJson());
+      } else {
+        setState(() => _processingPayment = false);
+        _snack('Payment cancelled. Your request is saved but unpaid.');
+      }
+
+    } on Exception catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _submitting        = false;
+        _processingPayment = false;
+        _paymentError      = e.toString().replaceFirst('Exception: ', '');
+      });
+      _snack(_paymentError);
     }
   }
 
@@ -888,18 +929,25 @@ class _BookingFormSheetState extends State<_BookingFormSheet> {
               // Confirm
               SizedBox(width: double.infinity, height: 52.h,
                 child: ElevatedButton(
-                  onPressed: _submitting ? null : _confirm,
+                  onPressed: (_submitting || _processingPayment) ? null : _confirm,
                   style: ElevatedButton.styleFrom(
                       backgroundColor: _blue, foregroundColor: Colors.white,
                       elevation: 0,
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(20.r))),
-                  child: _submitting
-                      ? SizedBox(width: 22.w, height: 22.h,
-                      child: const CircularProgressIndicator(
-                          color: Colors.white, strokeWidth: 2.5))
-                      : Text('Confirm Booking',
-                      style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.w700)),
+                  child: (_submitting || _processingPayment)
+                      ? Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                    SizedBox(width: 20.w, height: 20.h,
+                        child: const CircularProgressIndicator(
+                            color: Colors.white, strokeWidth: 2.5)),
+                    SizedBox(width: 10.w),
+                    Text(
+                      _submitting ? 'Creating booking…' : 'Processing payment…',
+                      style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w700),
+                    ),
+                  ])
+                      : Text('Pay & Request — LKR ${_total.toStringAsFixed(0)}',
+                      style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.w800)),
                 ),
               ),
             ]),

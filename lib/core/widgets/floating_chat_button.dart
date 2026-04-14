@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:yaloo/core/constants/colors.dart';
+import 'package:yaloo/features/ai-chat/ai_chat_screen.dart';
 
 class FloatingChatButton extends StatefulWidget {
   const FloatingChatButton({super.key});
@@ -224,8 +225,7 @@ class _FloatingChatButtonState extends State<FloatingChatButton>
   }
 
   void _animateTap() {
-    // Add haptic feedback and tap animation
     HapticFeedback.mediumImpact();
-    // Navigate to chat or show modal
+    AIChatScreen.show(context);
   }
 }

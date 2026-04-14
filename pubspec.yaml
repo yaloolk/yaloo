@@ -65,6 +65,7 @@ dependencies:
   flutter_stripe: ^11.5.0
   flutter_stripe_web: ^6.5.1
   sign_in_with_apple: ^7.0.1
+  flutter_launcher_icons: ^0.14.4
 
 dev_dependencies:
   flutter_test:
@@ -116,3 +117,9 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/images/yaloo_logo.png"
+  min_sdk_android: 21

@@ -111,6 +111,184 @@ class _FindGuideScreenState extends State<FindGuideScreen> {
     if (p != null) setState(() => _time = p);
   }
 
+
+  Future<void> _pickMinutePicker() async {
+    final FixedExtentScrollController hourCtrl =
+    FixedExtentScrollController(initialItem: _time?.hour ?? 0);
+
+    // Only 2 options: 00 and 30
+    final minutes = [0, 30];
+    final int initMinIdx = (_time != null && _time!.minute >= 15) ? 1 : 0;
+    final FixedExtentScrollController minCtrl =
+    FixedExtentScrollController(initialItem: initMinIdx);
+
+    int selectedHour = _time?.hour ?? 0;
+    int selectedMinIdx = initMinIdx;
+
+    await showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return StatefulBuilder(builder: (ctx, setSheet) {
+          return Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+            ),
+            padding: EdgeInsets.only(bottom: 24.h),
+            child: Column(mainAxisSize: MainAxisSize.min, children: [
+              // Handle bar
+              Container(
+                margin: EdgeInsets.only(top: 12.h, bottom: 16.h),
+                width: 40.w,
+                height: 4.h,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(2.r),
+                ),
+              ),
+              // Title row
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 20.w),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(ctx),
+                      child: Text('Cancel',
+                          style: TextStyle(color: _textGray, fontSize: 15.sp)),
+                    ),
+                    Text('Start Time',
+                        style: TextStyle(
+                            fontSize: 16.sp,
+                            fontWeight: FontWeight.w700,
+                            color: _textDark)),
+                    TextButton(
+                      onPressed: () {
+                        setState(() {
+                          _time = TimeOfDay(
+                              hour: selectedHour,
+                              minute: minutes[selectedMinIdx]);
+                        });
+                        Navigator.pop(ctx);
+                      },
+                      child: Text('Done',
+                          style: TextStyle(
+                              color: _blue,
+                              fontSize: 15.sp,
+                              fontWeight: FontWeight.w700)),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(height: 8.h),
+              // Pickers row
+              SizedBox(
+                height: 200.h,
+                child: Row(
+                  children: [
+                    // ── Hour drum ──────────────────────────────
+                    Expanded(
+                      child: Stack(alignment: Alignment.center, children: [
+                        // Selection highlight
+                        Container(
+                          height: 44.h,
+                          margin: EdgeInsets.symmetric(horizontal: 8.w),
+                          decoration: BoxDecoration(
+                            color: _blue.withOpacity(0.08),
+                            borderRadius: BorderRadius.circular(12.r),
+                            border: Border.all(
+                                color: _blue.withOpacity(0.2), width: 1.5),
+                          ),
+                        ),
+                        ListWheelScrollView.useDelegate(
+                          controller: hourCtrl,
+                          itemExtent: 44.h,
+                          perspective: 0.003,
+                          diameterRatio: 1.4,
+                          physics: const FixedExtentScrollPhysics(),
+                          onSelectedItemChanged: (i) =>
+                              setSheet(() => selectedHour = i),
+                          childDelegate: ListWheelChildBuilderDelegate(
+                            childCount: 24,
+                            builder: (_, i) => Center(
+                              child: Text(
+                                i.toString().padLeft(2, '0'),
+                                style: TextStyle(
+                                  fontSize: selectedHour == i ? 22.sp : 17.sp,
+                                  fontWeight: selectedHour == i
+                                      ? FontWeight.w700
+                                      : FontWeight.w400,
+                                  color: selectedHour == i ? _blue : _textGray,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ]),
+                    ),
+                    // Colon separator
+                    Padding(
+                      padding: EdgeInsets.only(bottom: 4.h),
+                      child: Text(':',
+                          style: TextStyle(
+                              fontSize: 28.sp,
+                              fontWeight: FontWeight.w700,
+                              color: _textDark)),
+                    ),
+                    // ── Minute drum (00 / 30 only) ─────────────
+                    Expanded(
+                      child: Stack(alignment: Alignment.center, children: [
+                        Container(
+                          height: 44.h,
+                          margin: EdgeInsets.symmetric(horizontal: 8.w),
+                          decoration: BoxDecoration(
+                            color: _blue.withOpacity(0.08),
+                            borderRadius: BorderRadius.circular(12.r),
+                            border: Border.all(
+                                color: _blue.withOpacity(0.2), width: 1.5),
+                          ),
+                        ),
+                        ListWheelScrollView.useDelegate(
+                          controller: minCtrl,
+                          itemExtent: 44.h,
+                          perspective: 0.003,
+                          diameterRatio: 1.4,
+                          physics: const FixedExtentScrollPhysics(),
+                          onSelectedItemChanged: (i) =>
+                              setSheet(() => selectedMinIdx = i),
+                          childDelegate: ListWheelChildBuilderDelegate(
+                            childCount: minutes.length,
+                            builder: (_, i) => Center(
+                              child: Text(
+                                minutes[i].toString().padLeft(2, '0'),
+                                style: TextStyle(
+                                  fontSize: selectedMinIdx == i ? 22.sp : 17.sp,
+                                  fontWeight: selectedMinIdx == i
+                                      ? FontWeight.w700
+                                      : FontWeight.w400,
+                                  color:
+                                  selectedMinIdx == i ? _blue : _textGray,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ]),
+                    ),
+                  ],
+                ),
+              ),
+            ]),
+          );
+        });
+      },
+    );
+
+    hourCtrl.dispose();
+    minCtrl.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -270,7 +448,7 @@ class _FindGuideScreenState extends State<FindGuideScreen> {
             icon: CupertinoIcons.time,
             text: _time != null ? _time!.format(context) : 'Select start time',
             filled: _time != null,
-            onTap: _pickTime,
+            onTap: _pickMinutePicker,
           ),
           SizedBox(height: 28.h),
 
