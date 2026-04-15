@@ -12,7 +12,6 @@ import '../features/auth/screens/common/login_screen.dart';
 import '../features/auth/screens/common/signup_screen.dart';
 import '../features/auth/screens/tourist/tourist_profile_completion_screen.dart';
 import '../features/auth/screens/common/forgot_password_screen.dart';
-import '../features/auth/screens/guide/guide_signup_screen.dart';
 import '../features/auth/screens/common/email_verification_screen.dart';
 import '../features/auth/screens/guide/guide_profile_completion_screen.dart';
 import '../features/auth/screens/common/profile_submitted_screen.dart';
@@ -30,14 +29,9 @@ import '../features/tourist/screens/tourist_dashboard_screen.dart';
 import '../features/tourist/screens/guide/find_guide_screen.dart';
 import '../features/tourist/screens/guide/guide_list_screen.dart';
 import '../features/tourist/screens/guide/tourist_guide_profile.dart';
-import '../features/booking/screens/booking_details_screen.dart';
-import '../features/booking/screens/tour_information_screen.dart';
-import '../features/booking/screens/payment_screen.dart';
-import '../features/booking/screens/booking_request_sent_screen.dart';
 import '../features/tourist/screens/host/find_host_screen.dart';
 import '../features/tourist/screens/host/host_list_screen.dart';
 import '../features/tourist/screens/host/tourist_host_profile.dart';
-import '../features/booking/screens/stay_details_screen.dart';
 import '../features/guide/screens/guide_dashboard_screen.dart';
 import '../features/guide/screens/guide_tour_requests_screen.dart';
 import '../features/guide/screens/guide_booking_cancellation_screen.dart';
@@ -65,7 +59,6 @@ class AppRoutes {
     '/signup': (_) => const SignupScreen(),
     '/profileCompletion': (_) => const ProfileCompletionScreen(),
     '/forgotPassword': (_) => const ForgotPasswordScreen(),
-    '/guideSignup': (_) => const GuideSignupScreen(),
     '/verifyEmail': (_) => const EmailVerificationScreen(),
     '/guideProfileCompletion': (_) => const GuideProfileCompletionScreen(),
     '/profileSubmitted': (_) => const ProfileSubmittedScreen(),
@@ -75,12 +68,7 @@ class AppRoutes {
     '/findGuide': (_) => const FindGuideScreen(),
     '/guideList': (_) => const GuideListScreen(),
     '/touristGuideProfile': (_) => const GuideProfileScreen(),
-    '/bookingDetails': (_) => const BookingDetailsScreen(),
-    '/tourInformation': (_) => const TourInformationScreen(),
-    '/payment': (_) => const PaymentScreen(),
-    '/bookingRequestSent': (_) => const BookingRequestSentScreen(),
     '/touristHostProfile': (context) => const TouristHostProfileScreen(),
-    '/stayDetails': (_) => const StayDetailsScreen(),
     '/guideDashboard': (_) => const GuideDashboardScreen(),
     '/guideTourRequests': (_) => const GuideTourRequestsScreen(),
     '/guideTourRequestDetails': (_) => const GuideTourRequestDetailsScreen(),

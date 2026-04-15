@@ -11,12 +11,6 @@ import 'package:yaloo/features/tourist/screens/personal_information_screen.dart'
 import 'package:yaloo/features/tourist/screens/tourist_booking_status_screen.dart';
 import 'package:yaloo/features/tourist/screens/tourist_tour_completion_screen.dart';
 import '../../auth/screens/common/login_screen.dart';
-import '../../booking/screens/booking_details_screen.dart';
-import '../../booking/screens/booking_request_sent_screen.dart';
-import '../../booking/screens/booking_status_screen.dart';
-import '../../booking/screens/payment_screen.dart';
-import '../../booking/screens/stay_details_screen.dart';
-import '../../booking/screens/tour_completion_screen.dart';
 import '../../chat/screens/message_screen.dart';
 import '../../common/screens/help_support/contact_support_screen.dart';
 import '../../common/screens/help_support/faq_screen.dart';
@@ -33,12 +27,9 @@ import 'host/stay_booking_status_screen.dart';
 import 'host/stay_review_screen.dart';
 import 'host/tourist_host_profile.dart';
 import 'tourist_home_screen.dart';
-import 'tourist_bookings_screen.dart';
 import 'tourist_profile_screen.dart';
 import 'package:yaloo/core/widgets/floating_chat_button.dart';
 import 'package:yaloo/features/chat/screens/chat_list_screen.dart';
-
-// ── New guide booking flow ────────────────────────────────────────────────────
 import 'package:yaloo/features/tourist/screens/guide/find_guide_screen.dart';
 import 'package:yaloo/features/tourist/screens/guide/guide_list_screen.dart';
 import 'package:yaloo/features/tourist/screens/guide/guide_detail_screen.dart';
@@ -91,7 +82,6 @@ class _TouristDashboardScreenState extends State<TouristDashboardScreen> {
             case '/findGuide':         page = const FindGuideScreen();              break;
             case '/guideList':         page = const GuideListScreen();              break;
             case '/guideDetail':       page = const GuideDetailScreen();            break;
-          // ✅ tourInformation is the booking form (was guide_booking_screen)
             case '/tourInformation':   page = const TourInformationScreen();        break;
             case '/bookingConfirmation': page = const BookingConfirmationScreen();  break;
             case '/myBookings':        page = const MyBookingsScreen();             break;
@@ -99,16 +89,10 @@ class _TouristDashboardScreenState extends State<TouristDashboardScreen> {
           // ── Old guide profile (keep for backwards compat) ──────────────
             case '/touristGuideProfile': page = const GuideProfileScreen();   break;
 
-          // ── Existing booking screens (kept intact) ─────────────────────
-            case '/bookingDetails':    page = const BookingDetailsScreen();   break;
-            case '/payment':           page = const PaymentScreen();          break;
-            case '/bookingRequestSent':page = const BookingRequestSentScreen(); break;
-
           // ── Host flow ──────────────────────────────────────────────────
             case '/findHost':         page = const FindHostScreen();          break;
             case '/hostList':         page = const HostListScreen();          break;
             case '/touristHostProfile':page = const TouristHostProfileScreen(); break;
-            case '/stayDetails':      page = const StayDetailsScreen();       break;
             case '/stayBookingForm': page = const StayBookingFormScreen(); break;
             case '/stayBookingConfirmation': page = const StayBookingConfirmationScreen(); break;
             case '/myStayBookings':       page = const MyStayBookingsScreen(); break;
@@ -140,7 +124,7 @@ class _TouristDashboardScreenState extends State<TouristDashboardScreen> {
           }
           return MaterialPageRoute(
             builder: (_) => page,
-            settings: settings,   // preserves arguments
+            settings: settings,
           );
         },
       ),
