@@ -117,7 +117,7 @@ class _HostDashboardScreenState extends State<HostDashboardScreen> {
           );
         },
       ),
-      floatingActionButton: const FloatingChatButton(),
+      // floatingActionButton: const FloatingChatButton(),
       bottomNavigationBar: _buildBottomNav(),
     );
   }

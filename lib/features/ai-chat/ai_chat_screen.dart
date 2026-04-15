@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:math' show cos, sin;
 import 'dart:ui';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/material.dart';
@@ -7,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:http/http.dart' as http;
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:yaloo/core/constants/colors.dart';
 
 // ─────────────────────────────────────────────
@@ -37,6 +37,241 @@ class ChatMessage {
     timestamp: timestamp,
     isLoading: isLoading ?? this.isLoading,
   );
+
+  Map<String, String> toApiMap() => {
+    'role': role == MessageRole.user ? 'user' : 'assistant',
+    'content': content,
+  };
+}
+
+// ─────────────────────────────────────────────
+// Markdown Text Renderer
+// Parses **bold**, *italic*, `code`, bullet lists, numbered lists
+// ─────────────────────────────────────────────
+
+class _MarkdownText extends StatelessWidget {
+  final String text;
+  final Color baseColor;
+  final double fontSize;
+
+  const _MarkdownText({
+    required this.text,
+    required this.baseColor,
+    this.fontSize = 14,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final lines = text.split('\n');
+    final widgets = <Widget>[];
+
+    for (int i = 0; i < lines.length; i++) {
+      final line = lines[i];
+
+      // Blank line → small spacer
+      if (line.trim().isEmpty) {
+        widgets.add(SizedBox(height: 6.h));
+        continue;
+      }
+
+      // Bullet list: "- item" or "• item"
+      final bulletMatch = RegExp(r'^[-•*]\s+(.+)$').firstMatch(line.trim());
+      if (bulletMatch != null) {
+        widgets.add(_buildBulletLine(bulletMatch.group(1)!));
+        continue;
+      }
+
+      // Numbered list: "1. item"
+      final numberedMatch =
+      RegExp(r'^(\d+)\.\s+(.+)$').firstMatch(line.trim());
+      if (numberedMatch != null) {
+        widgets.add(
+            _buildNumberedLine(numberedMatch.group(1)!, numberedMatch.group(2)!));
+        continue;
+      }
+
+      // Heading: "### text" or "## text" or "# text"
+      final headingMatch = RegExp(r'^(#{1,3})\s+(.+)$').firstMatch(line.trim());
+      if (headingMatch != null) {
+        final level = headingMatch.group(1)!.length;
+        final headingText = headingMatch.group(2)!;
+        final headingSize = level == 1
+            ? fontSize + 4
+            : level == 2
+            ? fontSize + 2
+            : fontSize + 1;
+        widgets.add(Padding(
+          padding: EdgeInsets.only(top: 6.h, bottom: 2.h),
+          child: _buildInlineSpans(
+            headingText,
+            baseStyle: TextStyle(
+              color: baseColor,
+              fontSize: headingSize.sp,
+              fontWeight: FontWeight.w700,
+              height: 1.4,
+            ),
+          ),
+        ));
+        continue;
+      }
+
+      // Normal line with inline markdown
+      widgets.add(_buildInlineSpans(
+        line,
+        baseStyle: TextStyle(
+          color: baseColor,
+          fontSize: fontSize.sp,
+          height: 1.55,
+        ),
+      ));
+
+      // Add small gap between consecutive normal lines
+      if (i < lines.length - 1 && lines[i + 1].trim().isNotEmpty) {
+        widgets.add(SizedBox(height: 1.h));
+      }
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: widgets,
+    );
+  }
+
+  Widget _buildBulletLine(String content) {
+    return Padding(
+      padding: EdgeInsets.only(bottom: 4.h),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: EdgeInsets.only(top: 6.h, right: 8.w),
+            child: Container(
+              width: 5.w,
+              height: 5.w,
+              decoration: BoxDecoration(
+                color: AppColors.primaryBlue,
+                shape: BoxShape.circle,
+              ),
+            ),
+          ),
+          Expanded(
+            child: _buildInlineSpans(
+              content,
+              baseStyle: TextStyle(
+                color: baseColor,
+                fontSize: fontSize.sp,
+                height: 1.55,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNumberedLine(String number, String content) {
+    return Padding(
+      padding: EdgeInsets.only(bottom: 4.h),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: EdgeInsets.only(right: 8.w),
+            child: Text(
+              '$number.',
+              style: TextStyle(
+                color: AppColors.primaryBlue,
+                fontSize: fontSize.sp,
+                fontWeight: FontWeight.w700,
+                height: 1.55,
+              ),
+            ),
+          ),
+          Expanded(
+            child: _buildInlineSpans(
+              content,
+              baseStyle: TextStyle(
+                color: baseColor,
+                fontSize: fontSize.sp,
+                height: 1.55,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Parses inline markdown: **bold**, *italic*, `code`
+  Widget _buildInlineSpans(String text, {required TextStyle baseStyle}) {
+    final spans = <InlineSpan>[];
+    final pattern = RegExp(r'\*\*(.+?)\*\*|\*(.+?)\*|`(.+?)`');
+    int lastEnd = 0;
+
+    for (final match in pattern.allMatches(text)) {
+      // Text before this match
+      if (match.start > lastEnd) {
+        spans.add(TextSpan(
+          text: text.substring(lastEnd, match.start),
+          style: baseStyle,
+        ));
+      }
+
+      if (match.group(1) != null) {
+        // **bold**
+        spans.add(TextSpan(
+          text: match.group(1),
+          style: baseStyle.copyWith(fontWeight: FontWeight.w700),
+        ));
+      } else if (match.group(2) != null) {
+        // *italic*
+        spans.add(TextSpan(
+          text: match.group(2),
+          style: baseStyle.copyWith(fontStyle: FontStyle.italic),
+        ));
+      } else if (match.group(3) != null) {
+        // `code`
+        spans.add(WidgetSpan(
+          alignment: PlaceholderAlignment.middle,
+          child: Container(
+            padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 1.h),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(4.r),
+              border: Border.all(
+                color: Colors.white.withOpacity(0.15),
+              ),
+            ),
+            child: Text(
+              match.group(3)!,
+              style: baseStyle.copyWith(
+                fontFamily: 'monospace',
+                fontSize: (fontSize - 1).sp,
+                color: const Color(0xFF7DD3FC),
+              ),
+            ),
+          ),
+        ));
+      }
+
+      lastEnd = match.end;
+    }
+
+    // Remaining text
+    if (lastEnd < text.length) {
+      spans.add(TextSpan(
+        text: text.substring(lastEnd),
+        style: baseStyle,
+      ));
+    }
+
+    if (spans.isEmpty) {
+      spans.add(TextSpan(text: text, style: baseStyle));
+    }
+
+    return RichText(text: TextSpan(children: spans));
+  }
 }
 
 // ─────────────────────────────────────────────
@@ -46,7 +281,6 @@ class ChatMessage {
 class AIChatScreen extends StatelessWidget {
   const AIChatScreen({super.key});
 
-  /// Call this from FloatingChatButton's _animateTap()
   static Future<void> show(BuildContext context) {
     return showModalBottomSheet(
       context: context,
@@ -87,15 +321,23 @@ class _ChatSheetBodyState extends State<_ChatSheetBody>
 
   final List<ChatMessage> _messages = [];
   bool _isSending = false;
+  String? _touristId;
 
   static String get _baseUrl => dotenv.env['_aiBaseUrl'] ?? '';
 
   late AnimationController _headerPulse;
   late Animation<double> _headerPulseAnim;
 
+  int _idCounter = 0;
+  String _newId() =>
+      '${DateTime.now().millisecondsSinceEpoch}_${_idCounter++}';
+
+  // ── lifecycle ─────────────────────────────────
+
   @override
   void initState() {
     super.initState();
+
     _headerPulse = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 2000),
@@ -104,11 +346,11 @@ class _ChatSheetBodyState extends State<_ChatSheetBody>
       CurvedAnimation(parent: _headerPulse, curve: Curves.easeInOut),
     );
 
-    // Welcome message
-    _addAssistantMessage(
-      "Hi! I'm Yaloo AI 👋  I can help you discover guides, stays, activities, "
-          "and answer any questions about the platform. What are you looking for today?",
-    );
+    _resolveTouristId().then((_) {
+      _addAssistantMessage(
+        "Hi! I'm **Yaloo AI** 👋\n\nI can help you discover *guides*, *stays*, and *activities*, and answer any questions about the platform.\n\nWhat are you looking for today?",
+      );
+    });
   }
 
   @override
@@ -120,12 +362,28 @@ class _ChatSheetBodyState extends State<_ChatSheetBody>
     super.dispose();
   }
 
-  // ── helpers ──────────────────────────────────
+  // ── tourist_id resolution ─────────────────────
 
-  String _newId() =>
-      DateTime.now().millisecondsSinceEpoch.toString() +
-          (1000 + (999 * (DateTime.now().microsecond / 1000000)).toInt())
-              .toString();
+  Future<void> _resolveTouristId() async {
+    try {
+      final user = Supabase.instance.client.auth.currentUser;
+      if (user == null) return;
+
+      final response = await Supabase.instance.client
+          .from('tourist_profile')
+          .select('id')
+          .eq('user_profile_id', user.id)
+          .maybeSingle();
+
+      if (response != null && mounted) {
+        setState(() => _touristId = response['id'] as String?);
+      }
+    } catch (e) {
+      debugPrint('AIChatScreen: could not resolve tourist_id: $e');
+    }
+  }
+
+  // ── helpers ──────────────────────────────────
 
   void _addAssistantMessage(String text) {
     setState(() {
@@ -183,31 +441,25 @@ class _ChatSheetBodyState extends State<_ChatSheetBody>
     _scrollToBottom();
 
     try {
-      // Build conversation history for context
-      final history = _messages
-          .where((m) => !m.isLoading && m.id != loadingId)
-          .map((m) => {
-        'role': m.role == MessageRole.user ? 'user' : 'assistant',
-        'content': m.content,
-      })
+      final apiMessages = _messages
+          .where((m) => !m.isLoading)
+          .map((m) => m.toApiMap())
           .toList();
+
+      final body = <String, dynamic>{'messages': apiMessages};
+      if (_touristId != null) body['tourist_id'] = _touristId;
 
       final response = await http
           .post(
         Uri.parse('$_baseUrl/chat'),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'message': text,
-          'history': history,
-        }),
+        body: jsonEncode(body),
       )
-          .timeout(const Duration(seconds: 30));
+          .timeout(const Duration(seconds: 60));
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
-        final reply = (data['reply'] as String?) ??
-            (data['response'] as String?) ??
-            (data['message'] as String?) ??
+        final reply = (data['reply'] as String?)?.trim() ??
             'Sorry, I didn\'t get a response. Please try again.';
 
         setState(() {
@@ -269,8 +521,6 @@ class _ChatSheetBodyState extends State<_ChatSheetBody>
     );
   }
 
-  // ── drag handle ──────────────────────────────
-
   Widget _buildHandle() => Center(
     child: Container(
       margin: EdgeInsets.only(top: 12.h, bottom: 4.h),
@@ -283,13 +533,10 @@ class _ChatSheetBodyState extends State<_ChatSheetBody>
     ),
   );
 
-  // ── header ───────────────────────────────────
-
   Widget _buildHeader() => Padding(
     padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 14.h),
     child: Row(
       children: [
-        // Animated AI avatar
         AnimatedBuilder(
           animation: _headerPulse,
           builder: (_, __) => Container(
@@ -315,8 +562,7 @@ class _ChatSheetBodyState extends State<_ChatSheetBody>
                 ),
               ],
             ),
-            child: Icon(LucideIcons.bot,
-                color: Colors.white, size: 22.w),
+            child: Icon(LucideIcons.bot, color: Colors.white, size: 22.w),
           ),
         ),
         SizedBox(width: 12.w),
@@ -356,14 +602,11 @@ class _ChatSheetBodyState extends State<_ChatSheetBody>
             ],
           ),
         ),
-        // Clear chat
         GestureDetector(
           onTap: () {
             setState(() {
               _messages.clear();
-              _addAssistantMessage(
-                "Chat cleared! How can I help you?",
-              );
+              _addAssistantMessage("Chat cleared! How can I help you?");
             });
           },
           child: Container(
@@ -377,7 +620,6 @@ class _ChatSheetBodyState extends State<_ChatSheetBody>
           ),
         ),
         SizedBox(width: 8.w),
-        // Close
         GestureDetector(
           onTap: () => Navigator.of(context).pop(),
           child: Container(
@@ -394,19 +636,16 @@ class _ChatSheetBodyState extends State<_ChatSheetBody>
     ),
   );
 
-  // ── messages list ────────────────────────────
-
   Widget _buildMessageList() => ListView.builder(
     controller: _scrollController,
     padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
     itemCount: _messages.length,
     itemBuilder: (_, i) => _MessageBubble(
+      key: ValueKey(_messages[i].id),
       message: _messages[i],
       isLast: i == _messages.length - 1,
     ),
   );
-
-  // ── suggested chips ──────────────────────────
 
   Widget _buildSuggestedChips() {
     if (_isSending || _messages.length > 3) return const SizedBox.shrink();
@@ -454,11 +693,9 @@ class _ChatSheetBodyState extends State<_ChatSheetBody>
     );
   }
 
-  // ── input bar ────────────────────────────────
-
   Widget _buildInputBar() => Container(
-    padding: EdgeInsets.fromLTRB(
-        16.w, 12.h, 16.w, MediaQuery.of(context).viewInsets.bottom + 16.h),
+    padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w,
+        MediaQuery.of(context).viewInsets.bottom + 16.h),
     decoration: BoxDecoration(
       color: const Color(0xFF161B22),
       border: Border(
@@ -501,7 +738,6 @@ class _ChatSheetBodyState extends State<_ChatSheetBody>
           ),
         ),
         SizedBox(width: 10.w),
-        // Send button
         AnimatedContainer(
           duration: const Duration(milliseconds: 200),
           width: 46.w,
@@ -521,7 +757,8 @@ class _ChatSheetBodyState extends State<_ChatSheetBody>
             color: _inputController.text.trim().isEmpty || _isSending
                 ? Colors.white.withOpacity(0.08)
                 : null,
-            boxShadow: _inputController.text.trim().isNotEmpty && !_isSending
+            boxShadow:
+            _inputController.text.trim().isNotEmpty && !_isSending
                 ? [
               BoxShadow(
                 color: AppColors.primaryBlue.withOpacity(0.4),
@@ -564,7 +801,8 @@ class _MessageBubble extends StatefulWidget {
   final ChatMessage message;
   final bool isLast;
 
-  const _MessageBubble({required this.message, required this.isLast});
+  const _MessageBubble(
+      {super.key, required this.message, required this.isLast});
 
   @override
   State<_MessageBubble> createState() => _MessageBubbleState();
@@ -608,7 +846,7 @@ class _MessageBubbleState extends State<_MessageBubble>
       child: SlideTransition(
         position: _offset,
         child: Padding(
-          padding: EdgeInsets.only(bottom: 12.h),
+          padding: EdgeInsets.only(bottom: 16.h),
           child: Row(
             mainAxisAlignment:
             isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
@@ -624,54 +862,72 @@ class _MessageBubbleState extends State<_MessageBubble>
                       ? CrossAxisAlignment.end
                       : CrossAxisAlignment.start,
                   children: [
+                    // ── Bubble ───────────────────────────────
                     Container(
                       constraints: BoxConstraints(
-                        maxWidth: 0.72 * MediaQuery.of(context).size.width,
+                        maxWidth: 0.78 * MediaQuery.of(context).size.width,
                       ),
                       padding: EdgeInsets.symmetric(
-                          horizontal: 16.w, vertical: 12.h),
+                          horizontal: 16.w, vertical: 13.h),
                       decoration: BoxDecoration(
                         gradient: isUser
-                            ? LinearGradient(
+                            ? const LinearGradient(
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                           colors: [
-                            AppColors.primaryBlue,
-                            const Color(0xFF1E40AF),
+                            Color(0xFF2563EB),
+                            Color(0xFF1E40AF),
                           ],
                         )
                             : null,
-                        color: isUser ? null : const Color(0xFF21262D),
+                        color: isUser ? null : const Color(0xFF161B22),
                         borderRadius: BorderRadius.only(
-                          topLeft: Radius.circular(18.r),
-                          topRight: Radius.circular(18.r),
-                          bottomLeft: Radius.circular(isUser ? 18.r : 4.r),
-                          bottomRight: Radius.circular(isUser ? 4.r : 18.r),
+                          topLeft: Radius.circular(20.r),
+                          topRight: Radius.circular(20.r),
+                          bottomLeft: Radius.circular(isUser ? 20.r : 4.r),
+                          bottomRight: Radius.circular(isUser ? 4.r : 20.r),
                         ),
                         border: isUser
                             ? null
                             : Border.all(
-                          color: Colors.white.withOpacity(0.07),
+                          color: Colors.white.withOpacity(0.08),
+                          width: 1,
                         ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.2),
+                            blurRadius: 8.r,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
                       ),
                       child: widget.message.isLoading
-                          ? _TypingIndicator()
-                          : Text(
+                          ? _TypingIndicator(key: ValueKey('typing'))
+                          : isUser
+                      // User messages: plain white text (no markdown needed)
+                          ? Text(
                         widget.message.content,
                         style: TextStyle(
-                          color: isUser
-                              ? Colors.white
-                              : Colors.white.withOpacity(0.9),
+                          color: Colors.white,
                           fontSize: 14.sp,
-                          height: 1.5,
+                          height: 1.55,
                         ),
+                      )
+                      // Assistant messages: full markdown rendering
+                          : _MarkdownText(
+                        text: widget.message.content,
+                        baseColor: Colors.white.withOpacity(0.92),
+                        fontSize: 14,
                       ),
                     ),
-                    SizedBox(height: 4.h),
+
+                    SizedBox(height: 5.h),
+
+                    // ── Timestamp ────────────────────────────
                     Text(
                       _formatTime(widget.message.timestamp),
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.25),
+                        color: Colors.white.withOpacity(0.22),
                         fontSize: 10.sp,
                       ),
                     ),
@@ -701,6 +957,8 @@ class _MessageBubbleState extends State<_MessageBubble>
 // ─────────────────────────────────────────────
 
 class _TypingIndicator extends StatefulWidget {
+  const _TypingIndicator({super.key});
+
   @override
   State<_TypingIndicator> createState() => _TypingIndicatorState();
 }
@@ -708,6 +966,7 @@ class _TypingIndicator extends StatefulWidget {
 class _TypingIndicatorState extends State<_TypingIndicator>
     with TickerProviderStateMixin {
   static const _phrases = [
+    'Waking up AI...',
     'Fetching your data',
     'Analyzing request',
     'Searching knowledge base',

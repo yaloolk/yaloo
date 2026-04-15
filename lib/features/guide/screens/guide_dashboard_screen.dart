@@ -111,7 +111,7 @@ class _GuideDashboardScreenState extends State<GuideDashboardScreen> {
       ),
 
       // The persistent chat button
-      floatingActionButton: const FloatingChatButton(),
+      // floatingActionButton: const FloatingChatButton(),
 
       // 5-Tab Bottom Navigation Bar
       bottomNavigationBar: BottomNavigationBar(

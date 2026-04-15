@@ -6,6 +6,8 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:image_picker/image_picker.dart';
 import 'package:yaloo/core/network/api_client.dart';
 
+import '../network/api_exceptions.dart';
+
 class HostApiService {
   // 1. Grab your working singleton
   final ApiClient _apiClient = ApiClient();
@@ -16,18 +18,9 @@ class HostApiService {
     try {
       final response = await request();
       return response.data as T;
-    } on DioException catch (e) {
-      if (e.response != null) {
-        final data = e.response!.data;
-        String error;
-        if (data is Map) {
-          error = data['error']?.toString() ?? data['detail']?.toString() ?? 'Unknown error';
-        } else {
-          error = 'Server error: ${e.response!.statusCode}';
-        }
-        throw Exception(error);
-      }
-      throw Exception(e.message ?? 'Network error');
+    } catch (e) {
+      // Throw a clean, UI-ready exception
+      throw Exception(ApiErrorHandler.getFriendlyMessage(e));
     }
   }
 
