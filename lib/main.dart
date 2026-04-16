@@ -46,6 +46,16 @@ Future<void> main() async {
     debug: false,
   );
 
+  try {
+    final session = Supabase.instance.client.auth.currentSession;
+    if (session != null) {
+      await Supabase.instance.client.auth.refreshSession();
+    }
+  } catch (e) {
+    // Not logged in yet — that's fine, login flow handles it
+    debugPrint('Session refresh skipped: $e');
+  }
+
   runApp(const YalooApp());
 }
 

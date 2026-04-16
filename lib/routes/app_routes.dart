@@ -15,7 +15,6 @@ import '../features/auth/screens/common/forgot_password_screen.dart';
 import '../features/auth/screens/common/email_verification_screen.dart';
 import '../features/auth/screens/guide/guide_profile_completion_screen.dart';
 import '../features/auth/screens/common/profile_submitted_screen.dart';
-import '../features/auth/screens/host/host_signup_screen.dart.';
 import '../features/auth/screens/host/host_profile_completion_screen.dart';
 import '../features/tourist/screens/host/my_stay_bookings_screen.dart';
 import '../features/tourist/screens/host/stay_booking_confirmation_screen.dart';
@@ -62,7 +61,6 @@ class AppRoutes {
     '/verifyEmail': (_) => const EmailVerificationScreen(),
     '/guideProfileCompletion': (_) => const GuideProfileCompletionScreen(),
     '/profileSubmitted': (_) => const ProfileSubmittedScreen(),
-    '/hostSignup': (_) => const HostSignupScreen(),
     '/hostProfileCompletion': (_) => const HostProfileCompletionScreen(),
     '/touristDashboard': (_) => const TouristDashboardScreen(),
     '/findGuide': (_) => const FindGuideScreen(),

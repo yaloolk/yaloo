@@ -147,26 +147,113 @@ class _LoginScreenState extends State<LoginScreen>
 
   void _showError(String message) {
     if (!mounted) return;
+    _showNotification(
+      message: message,
+      icon: Icons.error_outline_rounded,
+      backgroundColor: const Color(0xFFB71C1C),
+      iconColor: Colors.white,
+    );
+  }
+
+  void _showSuccess(String message) {
+    if (!mounted) return;
+    _showNotification(
+      message: message,
+      icon: Icons.check_circle_outline_rounded,
+      backgroundColor: const Color(0xFF1B5E20),
+      iconColor: Colors.white,
+    );
+  }
+
+  void _showNotification({
+    required String message,
+    required IconData icon,
+    required Color backgroundColor,
+    required Color iconColor,
+  }) {
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).clearSnackBars();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Icon(Icons.error_outline_rounded,
-                color: Colors.white, size: 20),
+            Icon(icon, color: iconColor, size: 20),
             const SizedBox(width: 10),
             Expanded(
-                child:
-                Text(message, style: const TextStyle(fontSize: 14))),
+              child: Text(
+                _friendlyMessage(message),
+                style: const TextStyle(
+                  fontSize: 14,
+                  height: 1.4,
+                  color: Colors.white,
+                ),
+              ),
+            ),
           ],
         ),
-        backgroundColor: const Color(0xFFE53935),
+        backgroundColor: backgroundColor,
         behavior: SnackBarBehavior.floating,
-        shape:
-        RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14)),
         margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-        duration: const Duration(seconds: 3),
+        duration: const Duration(seconds: 4),
+        action: SnackBarAction(
+          label: 'Dismiss',
+          textColor: Colors.white70,
+          onPressed: () =>
+              ScaffoldMessenger.of(context).hideCurrentSnackBar(),
+        ),
       ),
     );
+  }
+
+  String _friendlyMessage(String raw) {
+    const Map<String, String> _messages = {
+      // ── Supabase / credential errors ──
+      'Invalid login credentials':
+      'Incorrect email or password. Please try again.',
+      'Email not confirmed':
+      'Check your inbox — you need to verify your email first.',
+      'User not found': 'No account found with that email address.',
+      'Password should be at least 6 characters':
+      'Password must be at least 6 characters.',
+      'signup_disabled': 'Sign-ups are temporarily disabled.',
+      'too_many_requests':
+      'Too many attempts. Please wait a moment and try again.',
+      'network_failure':
+      'No internet connection. Check your network and retry.',
+
+      // ── Your own messages ──
+      'Email and password required':
+      'Please enter both your email and password.',
+      'Please verify your email before logging in.':
+      'Your email isn\'t verified yet. Check your inbox for the confirmation link.',
+      'Cannot connect to server. Please try again.':
+      'Unable to reach the server right now. Check your connection.',
+      'Google login coming soon!':
+      'Google sign-in is on the way — stay tuned!',
+      'Facebook login coming soon!':
+      'Facebook sign-in is on the way — stay tuned!',
+      'Apple login coming soon!':
+      'Apple sign-in is on the way — stay tuned!',
+    };
+
+    for (final entry in _messages.entries) {
+      if (raw.toLowerCase().contains(entry.key.toLowerCase())) {
+        return entry.value;
+      }
+    }
+
+    // Fallback: strip technical jargon if no match
+    if (raw.startsWith('AuthException:') ||
+        raw.startsWith('Exception:') ||
+        raw.startsWith('Login failed:')) {
+      return 'Something went wrong. Please try again.';
+    }
+
+    return raw;
   }
 
   // ─── UI ────────────────────────────────────────────────────────────────────

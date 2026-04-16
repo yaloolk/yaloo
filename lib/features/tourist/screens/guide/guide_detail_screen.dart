@@ -17,11 +17,13 @@ const _green    = Color(0xFF10B981);
 const _amber    = Color(0xFFF59E0B);
 const _purple   = Color(0xFF8B5CF6);
 const _orange   = Color(0xFFF97316);
+const _teal     = Color(0xFF0D9488);
+const _rose     = Color(0xFFE11D48);
 
 // ── Slot model (internal only) ────────────────────────────────────────────────
 class _Slot {
   final String id;
-  final String start; // "HH:MM:SS" or "HH:MM" — raw from API
+  final String start;
   final String end;
 
   const _Slot({required this.id, required this.start, required this.end});
@@ -32,7 +34,6 @@ class _Slot {
     end:   m['end_time']?.toString()   ?? '',
   );
 
-  // Strip seconds so "09:00:00" → "09:00" (used when sending to backend)
   String get startClean {
     final p = start.split(':');
     return p.length >= 2 ? '${p[0]}:${p[1]}' : start;
@@ -43,7 +44,6 @@ class _Slot {
     return p.length >= 2 ? '${p[0]}:${p[1]}' : end;
   }
 
-  /// Display label: "9:00 AM"
   String _fmt(String raw) {
     try {
       final p = raw.split(':');
@@ -61,6 +61,40 @@ class _Slot {
   String get displayEnd   => _fmt(end);
 }
 
+// ── Local Activity model ──────────────────────────────────────────────────────
+class _LocalActivity {
+  final String id;
+  final String activityName;
+  final String activityDescription;
+  final String activityCategory;
+  final String activityIcon;   // emoji or icon name from API
+  final double setPrice;
+  final String specialNote;
+
+  const _LocalActivity({
+    required this.id,
+    required this.activityName,
+    required this.activityDescription,
+    required this.activityCategory,
+    required this.activityIcon,
+    required this.setPrice,
+    required this.specialNote,
+  });
+
+  factory _LocalActivity.fromJson(Map<String, dynamic> m) {
+    final activity = (m['activity'] as Map<String, dynamic>?) ?? {};
+    return _LocalActivity(
+      id:                  m['id']?.toString()                          ?? '',
+      activityName:        activity['name']?.toString()                 ?? '',
+      activityDescription: activity['description']?.toString()          ?? '',
+      activityCategory:    activity['category']?.toString()             ?? '',
+      activityIcon:        activity['icon']?.toString()                 ?? '',
+      setPrice:            (m['set_price'] as num?)?.toDouble()         ?? 0.0,
+      specialNote:         m['special_note']?.toString()                ?? '',
+    );
+  }
+}
+
 class GuideDetailScreen extends StatefulWidget {
   const GuideDetailScreen({super.key});
   @override State<GuideDetailScreen> createState() => _State();
@@ -71,15 +105,13 @@ class _State extends State<GuideDetailScreen> {
   bool    _argsApplied = false;
 
   // ── Slot state ────────────────────────────────────────────────────────────
-  // Populated from guideDetail['availability'][_searchDate] after load.
-  // We do NOT use the availability_slots passed in navigate arguments —
-  // those are search-time-filtered. We always use the full-day list from
-  // the profile API so tourists see every available slot on that date.
   List<_Slot> _slots    = [];
-  List<int>   _selected = []; // ordered indices, always contiguous
-
-  // Track which profile version the slots were built from (prevents loop)
+  List<int>   _selected = [];
   int _slotsBuiltFromHash = 0;
+
+  // ── Local Activities state ────────────────────────────────────────────────
+  List<_LocalActivity> _localActivities = [];
+  int _activitiesBuiltFromHash = 0;
 
   @override
   void didChangeDependencies() {
@@ -99,7 +131,7 @@ class _State extends State<GuideDetailScreen> {
     }
   }
 
-  // ── Sync slots from freshly loaded profile ────────────────────────────────
+  // ── Sync slots ────────────────────────────────────────────────────────────
   void _syncSlots(Map<String, dynamic> g) {
     if (_searchDate == null) return;
 
@@ -107,7 +139,7 @@ class _State extends State<GuideDetailScreen> {
     final raw   = (avail[_searchDate] as List?) ?? [];
     final hash  = raw.length ^ _searchDate.hashCode ^ g['guide_profile_id'].hashCode;
 
-    if (hash == _slotsBuiltFromHash) return; // already up to date
+    if (hash == _slotsBuiltFromHash) return;
 
     final fresh = raw
         .map((s) => _Slot.fromJson(s as Map<String, dynamic>))
@@ -120,19 +152,42 @@ class _State extends State<GuideDetailScreen> {
     });
   }
 
-  // ── Contiguous multi-slot selection ───────────────────────────────────────
+  // ── Sync local activities ─────────────────────────────────────────────────
   //
-  // Rules:
-  //  • Tap an unselected slot adjacent to the current range → extend range
-  //  • Tap a non-adjacent slot → start a fresh single-slot selection
-  //  • Tap the last selected slot → deselect it (shrink range from the end)
-  //  • Tap any slot inside the range → deselect from that slot onward
-  //  • Slots must share a boundary (slot[i].end == slot[i+1].start) to be
-  //    considered adjacent; a gap rejects the tap with a snackbar
+  // Expects guideDetail to contain a key 'local_activities' which is the list
+  // of local_activity rows joined with the activity table.
+  // Example structure:
+  // {
+  //   "id": "...",
+  //   "set_price": 2500,
+  //   "special_note": "Includes equipment",
+  //   "activity": {
+  //     "name": "Whale Watching",
+  //     "description": "...",
+  //     "category": "Water Sports",
+  //     "icon": "🐋"
+  //   }
+  // }
+  void _syncLocalActivities(Map<String, dynamic> g) {
+    final raw  = (g['local_activities'] as List?) ?? [];
+    final hash = raw.length ^ g['guide_profile_id'].hashCode ^ 0xDEAD;
+
+    if (hash == _activitiesBuiltFromHash) return;
+
+    final fresh = raw
+        .map((a) => _LocalActivity.fromJson(a as Map<String, dynamic>))
+        .toList();
+
+    setState(() {
+      _localActivities         = fresh;
+      _activitiesBuiltFromHash = hash;
+    });
+  }
+
+  // ── Contiguous multi-slot selection ───────────────────────────────────────
   void _tapSlot(int idx) {
     setState(() {
       if (_selected.contains(idx)) {
-        // Deselect from this index to end of selection (shrink)
         _selected.removeWhere((i) => i >= idx);
       } else {
         if (_selected.isEmpty) {
@@ -144,31 +199,26 @@ class _State extends State<GuideDetailScreen> {
         final last  = _selected.last;
 
         if (idx == last + 1) {
-          // Extend toward end — check boundary
           if (_slotsAdjacent(last, idx)) {
             _selected.add(idx);
           } else {
             _showGapWarning();
           }
         } else if (idx == first - 1) {
-          // Extend toward start — check boundary
           if (_slotsAdjacent(idx, first)) {
             _selected.insert(0, idx);
           } else {
             _showGapWarning();
           }
         } else {
-          // Non-adjacent → start fresh
           _selected = [idx];
         }
       }
     });
   }
 
-  bool _slotsAdjacent(int a, int b) {
-    // Compare HH:MM only (strip seconds from DB values like "09:00:00")
-    return _slots[a].endClean == _slots[b].startClean;
-  }
+  bool _slotsAdjacent(int a, int b) =>
+      _slots[a].endClean == _slots[b].startClean;
 
   void _showGapWarning() {
     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
@@ -208,9 +258,10 @@ class _State extends State<GuideDetailScreen> {
               body: Center(child: CircularProgressIndicator()));
         }
 
-        // Sync slots after each rebuild (post-frame to avoid setState-in-build)
-        WidgetsBinding.instance
-            .addPostFrameCallback((_) => _syncSlots(g));
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _syncSlots(g);
+          _syncLocalActivities(g);
+        });
 
         return Scaffold(
           backgroundColor: _bgPage,
@@ -250,6 +301,23 @@ class _State extends State<GuideDetailScreen> {
                             : null,
                       ),
                       SizedBox(height: 18.h),
+                      // ── Guide Specializations ────────────────────────────
+                      if ((g['guide_specializations'] as List? ?? []).isNotEmpty) ...[
+                        _section(
+                          'Guide Specializations',
+                          _specializationsWidget(g),
+                        ),
+                        SizedBox(height: 18.h),
+                      ],
+                      // ── Local Activities ─────────────────────────────────
+                      if (_localActivities.isNotEmpty) ...[
+                        _section(
+                          'Activities Offered',
+                          _localActivitiesWidget(),
+                          hint: '${_localActivities.length} available',
+                        ),
+                        SizedBox(height: 18.h),
+                      ],
                       if ((g['reviews'] as List? ?? []).isNotEmpty) ...[
                         _section(
                             'Reviews (${g['review_count'] ?? 0})',
@@ -310,7 +378,7 @@ class _State extends State<GuideDetailScreen> {
         color: Colors.white.withOpacity(0.3), size: 80.w),
   );
 
-  // ── Header: name + rate ───────────────────────────────────────────────────
+  // ── Header card ───────────────────────────────────────────────────────────
   Widget _headerCard(Map<String, dynamic> g) => Container(
     margin: EdgeInsets.only(top: 16.h),
     padding: EdgeInsets.all(16.w),
@@ -341,11 +409,9 @@ class _State extends State<GuideDetailScreen> {
         ),
       ),
       Container(
-        padding:
-        EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+        padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
         decoration: BoxDecoration(
-            gradient:
-            const LinearGradient(colors: [_blue, _blueDark]),
+            gradient: const LinearGradient(colors: [_blue, _blueDark]),
             borderRadius: BorderRadius.circular(12.r)),
         child: Column(children: [
           Text(
@@ -355,8 +421,7 @@ class _State extends State<GuideDetailScreen> {
                   fontSize: 14.sp,
                   fontWeight: FontWeight.w800)),
           Text('per hour',
-              style:
-              TextStyle(color: Colors.white70, fontSize: 9.sp)),
+              style: TextStyle(color: Colors.white70, fontSize: 9.sp)),
         ]),
       ),
     ]),
@@ -410,8 +475,7 @@ class _State extends State<GuideDetailScreen> {
 
   Widget _verBadge(String label, IconData icon, Color color) =>
       Container(
-        padding:
-        EdgeInsets.symmetric(vertical: 12.h, horizontal: 8.w),
+        padding: EdgeInsets.symmetric(vertical: 12.h, horizontal: 8.w),
         decoration: BoxDecoration(
             color: color.withOpacity(0.08),
             borderRadius: BorderRadius.circular(14.r),
@@ -477,12 +541,9 @@ class _State extends State<GuideDetailScreen> {
         final m      = l as Map<String, dynamic>;
         final native = m['is_native'] == true;
         return Container(
-            padding:
-            EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+            padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
             decoration: BoxDecoration(
-                color: native
-                    ? _blue.withOpacity(0.08)
-                    : _bgPage,
+                color: native ? _blue.withOpacity(0.08) : _bgPage,
                 borderRadius: BorderRadius.circular(10.r),
                 border: Border.all(
                     color: native
@@ -507,8 +568,7 @@ class _State extends State<GuideDetailScreen> {
       children: (g['specialties'] as List? ?? []).map((s) {
         final m = s as Map<String, dynamic>;
         return Container(
-            padding:
-            EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+            padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
             decoration: BoxDecoration(
                 color: _green.withOpacity(0.08),
                 borderRadius: BorderRadius.circular(10.r),
@@ -521,17 +581,7 @@ class _State extends State<GuideDetailScreen> {
       }).toList());
 
   // ── SLOT PICKER ───────────────────────────────────────────────────────────
-  //
-  // Shows ALL free slots for _searchDate loaded from
-  // guideDetail['availability'][_searchDate].
-  //
-  // Selection rules (contiguous only):
-  //  • First tap → select that slot
-  //  • Next tap on adjacent slot → extend selection
-  //  • Tap non-adjacent → start fresh single selection
-  //  • Tap selected slot → deselect from that slot onward
   Widget _slotPicker() {
-    // ── Loading / empty states ─────────────────────────────────────────
     if (_slots.isEmpty) {
       return Container(
         padding: EdgeInsets.all(16.w),
@@ -557,12 +607,10 @@ class _State extends State<GuideDetailScreen> {
     }
 
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      // ── Selection summary pill ─────────────────────────────────────────
       if (_hasSelection)
         Container(
           margin: EdgeInsets.only(bottom: 12.h),
-          padding:
-          EdgeInsets.symmetric(horizontal: 14.w, vertical: 8.h),
+          padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 8.h),
           decoration: BoxDecoration(
               color: _green.withOpacity(0.1),
               borderRadius: BorderRadius.circular(12.r),
@@ -580,14 +628,12 @@ class _State extends State<GuideDetailScreen> {
           ]),
         ),
 
-      // ── Slot chips ────────────────────────────────────────────────────
       Wrap(
         spacing: 8.w,
         runSpacing: 10.h,
         children: List.generate(_slots.length, (i) {
           final sel = _selected.contains(i);
 
-          // Highlight chips that can extend the current selection
           final canExtend = _selected.isEmpty ||
               (i == _selected.last + 1 && _slotsAdjacent(_selected.last, i)) ||
               (i == _selected.first - 1 && _slotsAdjacent(i, _selected.first));
@@ -596,12 +642,10 @@ class _State extends State<GuideDetailScreen> {
             onTap: () => _tapSlot(i),
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 180),
-              padding: EdgeInsets.symmetric(
-                  horizontal: 14.w, vertical: 9.h),
+              padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 9.h),
               decoration: BoxDecoration(
                 gradient: sel
-                    ? const LinearGradient(
-                    colors: [_blue, _blueDark])
+                    ? const LinearGradient(colors: [_blue, _blueDark])
                     : null,
                 color: sel
                     ? null
@@ -650,7 +694,6 @@ class _State extends State<GuideDetailScreen> {
         }),
       ),
 
-      // ── Usage hint ────────────────────────────────────────────────────
       SizedBox(height: 10.h),
       Row(children: [
         Icon(CupertinoIcons.info_circle, color: _gray, size: 12.w),
@@ -662,6 +705,242 @@ class _State extends State<GuideDetailScreen> {
             style: TextStyle(color: _gray, fontSize: 11.sp, height: 1.4))),
       ]),
     ]);
+  }
+
+  // ── GUIDE SPECIALIZATIONS ─────────────────────────────────────────────────
+  //
+  // Expects guideDetail['guide_specializations'] to be a list of objects with
+  // the joined specialization row:
+  // [
+  //   {
+  //     "id": "...",
+  //     "guide_profile_id": "...",
+  //     "specialization_id": "...",
+  //     "specialization": {
+  //       "id": "...",
+  //       "name": "Heritage & Culture",
+  //       "description": "...",
+  //       "icon": "🏛️"   // optional emoji / string icon from API
+  //     }
+  //   },
+  //   ...
+  // ]
+  Widget _specializationsWidget(Map<String, dynamic> g) {
+    final items = (g['guide_specializations'] as List? ?? []);
+
+    // Colour palette cycling for visual variety
+    final palette = [_purple, _teal, _rose, _orange, _blue, _green, _amber];
+
+    return Wrap(
+      spacing: 10.w,
+      runSpacing: 10.h,
+      children: items.asMap().entries.map((entry) {
+        final idx  = entry.key;
+        final item = entry.value as Map<String, dynamic>;
+        final spec = (item['specialization'] as Map<String, dynamic>?) ?? {};
+        final name = (spec['name'] ?? '').toString();
+        final icon = (spec['icon'] ?? '').toString();
+        final color = palette[idx % palette.length];
+
+        return Container(
+          padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.07),
+            borderRadius: BorderRadius.circular(14.r),
+            border: Border.all(color: color.withOpacity(0.3)),
+          ),
+          child: Row(mainAxisSize: MainAxisSize.min, children: [
+            if (icon.isNotEmpty) ...[
+              Text(icon, style: TextStyle(fontSize: 16.sp)),
+              SizedBox(width: 8.w),
+            ] else ...[
+              Container(
+                padding: EdgeInsets.all(4.r),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(CupertinoIcons.bookmark_fill,
+                    color: color, size: 10.w),
+              ),
+              SizedBox(width: 8.w),
+            ],
+            Text(name,
+                style: TextStyle(
+                    color: color,
+                    fontSize: 12.sp,
+                    fontWeight: FontWeight.w700)),
+          ]),
+        );
+      }).toList(),
+    );
+  }
+
+  // ── LOCAL ACTIVITIES ──────────────────────────────────────────────────────
+  //
+  // Renders each local_activity as a card showing:
+  //   • Activity name + category badge
+  //   • Guide's set price (LKR)
+  //   • Special note (if any)
+  //   • Brief description (if any)
+  Widget _localActivitiesWidget() {
+    if (_localActivities.isEmpty) {
+      return Container(
+        padding: EdgeInsets.all(16.w),
+        decoration: BoxDecoration(
+            color: _bgPage,
+            borderRadius: BorderRadius.circular(16.r),
+            border: Border.all(color: Colors.grey.shade200)),
+        child: Text('No activities listed yet.',
+            style: TextStyle(color: _gray, fontSize: 13.sp)),
+      );
+    }
+
+    return Column(
+      children: _localActivities.asMap().entries.map((entry) {
+        final a = entry.value;
+        return Container(
+          margin: EdgeInsets.only(bottom: 12.h),
+          decoration: _cardDeco(),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            // ── Card header ──────────────────────────────────────────────
+            Container(
+              padding: EdgeInsets.fromLTRB(14.w, 14.h, 14.w, 12.h),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    _teal.withOpacity(0.08),
+                    _blue.withOpacity(0.04),
+                  ],
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                ),
+                borderRadius: BorderRadius.vertical(
+                    top: Radius.circular(20.r)),
+              ),
+              child: Row(children: [
+                // Icon / emoji container
+                Container(
+                  width: 44.w,
+                  height: 44.w,
+                  decoration: BoxDecoration(
+                    color: _teal.withOpacity(0.12),
+                    borderRadius: BorderRadius.circular(12.r),
+                    border: Border.all(color: _teal.withOpacity(0.25)),
+                  ),
+                  child: Center(
+                    child: a.activityIcon.isNotEmpty
+                        ? Text(a.activityIcon,
+                        style: TextStyle(fontSize: 20.sp))
+                        : Icon(CupertinoIcons.map,
+                        color: _teal, size: 20.w),
+                  ),
+                ),
+                SizedBox(width: 12.w),
+                Expanded(
+                  child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          a.activityName.isNotEmpty
+                              ? a.activityName
+                              : 'Unnamed Activity',
+                          style: TextStyle(
+                              fontSize: 14.sp,
+                              fontWeight: FontWeight.w800,
+                              color: _dark),
+                        ),
+                        if (a.activityCategory.isNotEmpty) ...[
+                          SizedBox(height: 4.h),
+                          Container(
+                            padding: EdgeInsets.symmetric(
+                                horizontal: 8.w, vertical: 3.h),
+                            decoration: BoxDecoration(
+                              color: _teal.withOpacity(0.12),
+                              borderRadius: BorderRadius.circular(6.r),
+                            ),
+                            child: Text(a.activityCategory,
+                                style: TextStyle(
+                                    color: _teal,
+                                    fontSize: 10.sp,
+                                    fontWeight: FontWeight.w700)),
+                          ),
+                        ],
+                      ]),
+                ),
+                // Price badge
+                Container(
+                  padding:
+                  EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                        colors: [_teal, Color(0xFF0F766E)]),
+                    borderRadius: BorderRadius.circular(10.r),
+                  ),
+                  child: Column(children: [
+                    Text(
+                      'LKR ${a.setPrice.toStringAsFixed(0)}',
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 12.sp,
+                          fontWeight: FontWeight.w800),
+                    ),
+                    Text('per person',
+                        style: TextStyle(
+                            color: Colors.white70, fontSize: 8.sp)),
+                  ]),
+                ),
+              ]),
+            ),
+
+            // ── Card body ────────────────────────────────────────────────
+            if (a.activityDescription.isNotEmpty ||
+                a.specialNote.isNotEmpty)
+              Padding(
+                padding: EdgeInsets.fromLTRB(14.w, 10.h, 14.w, 14.h),
+                child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (a.activityDescription.isNotEmpty) ...[
+                        Text(a.activityDescription,
+                            style: TextStyle(
+                                color: _gray,
+                                fontSize: 12.sp,
+                                height: 1.5)),
+                        if (a.specialNote.isNotEmpty)
+                          SizedBox(height: 10.h),
+                      ],
+                      if (a.specialNote.isNotEmpty)
+                        Container(
+                          padding: EdgeInsets.all(10.w),
+                          decoration: BoxDecoration(
+                              color: _amber.withOpacity(0.08),
+                              borderRadius: BorderRadius.circular(10.r),
+                              border: Border.all(
+                                  color: _amber.withOpacity(0.3))),
+                          child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Icon(CupertinoIcons.exclamationmark_circle,
+                                    color: _amber, size: 13.w),
+                                SizedBox(width: 7.w),
+                                Expanded(
+                                  child: Text(a.specialNote,
+                                      style: TextStyle(
+                                          color: _dark,
+                                          fontSize: 11.sp,
+                                          height: 1.5)),
+                                ),
+                              ]),
+                        ),
+                    ]),
+              )
+            else
+              SizedBox(height: 14.h),
+          ]),
+        );
+      }).toList(),
+    );
   }
 
   // ── Reviews ───────────────────────────────────────────────────────────────
@@ -721,8 +1000,7 @@ class _State extends State<GuideDetailScreen> {
           physics: const BouncingScrollPhysics(),
           itemCount: photos.length,
           itemBuilder: (_, i) {
-            final url =
-            ((photos[i] as Map)['url'] ?? '').toString();
+            final url = ((photos[i] as Map)['url'] ?? '').toString();
             return Container(
                 width: 95.w,
                 margin: EdgeInsets.only(right: 10.w),
@@ -794,7 +1072,6 @@ class _State extends State<GuideDetailScreen> {
                 arguments: {
                   'guide':        g,
                   'booking_date': _searchDate,
-                  // Pass clean HH:MM (no seconds) for backend
                   'start_time':   _selStart,
                   'end_time':     _selEnd,
                   'slot_count':   _selected.length,
