@@ -3,6 +3,7 @@ import '../features/auth/screens/common/approval_rejected_screen.dart';
 import '../features/auth/screens/common/guide_welcome_screen.dart';
 import '../features/auth/screens/host/host_stay_details_screen.dart';
 import '../features/common/screens/help_support/help_support_screen.dart';
+import '../features/common/screens/settings/about_screen.dart';
 import '../features/common/screens/settings/change_password_screen.dart';
 import '../features/common/screens/settings/language_screen.dart';
 import '../features/onboarding/screens/onboarding.dart';
@@ -98,7 +99,6 @@ class AppRoutes {
     '/stayBookingStatus':      (_) => const StayBookingStatusScreen(),
     '/hostStayRequests':       (_) => const HostStayRequestsScreen(),
     '/stayReview': (context) => const StayReviewScreen(),
-
-
+    '/about': (context) => const AboutScreen()
   };
 }

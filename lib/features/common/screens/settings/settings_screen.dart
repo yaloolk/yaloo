@@ -139,14 +139,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
               icon: FontAwesomeIcons.circleQuestion,
               iconColor: const Color(0xFF9D174D),
               bgColor: const Color(0xFFFCE7F3),
-              onTap: () {Navigator.pushNamed(context, '/helpSupport');},
+              onTap: () {
+                Navigator.pushNamed(context, '/helpSupport');
+              },
             ),
             _buildSettingsTile(
               title: "Contact Support",
               icon: FontAwesomeIcons.headset,
               iconColor: const Color(0xFF9D174D),
               bgColor: const Color(0xFFFCE7F3),
-              onTap: () {Navigator.pushNamed(context, '/contactSupport');},
+              onTap: () {
+                Navigator.pushNamed(context, '/contactSupport');
+              },
             ),
             _buildSettingsTile(
               title: "Terms & Conditions",
@@ -161,6 +165,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
               iconColor: const Color(0xFF9D174D),
               bgColor: const Color(0xFFFCE7F3),
               onTap: () {},
+            ),
+
+            // ✅ NEW: About Yaloo tile
+            _buildSettingsTile(
+              title: "About Yaloo",
+              icon: FontAwesomeIcons.circleInfo,
+              iconColor: const Color(0xFF9D174D),
+              bgColor: const Color(0xFFFCE7F3),
+              onTap: () {
+                Navigator.pushNamed(context, '/about');
+              },
             ),
 
             SizedBox(height: 40.h),

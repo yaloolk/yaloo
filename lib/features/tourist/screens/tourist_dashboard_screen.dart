@@ -15,6 +15,7 @@ import '../../chat/screens/message_screen.dart';
 import '../../common/screens/help_support/contact_support_screen.dart';
 import '../../common/screens/help_support/faq_screen.dart';
 import '../../common/screens/help_support/help_support_screen.dart';
+import '../../common/screens/settings/about_screen.dart';
 import '../../common/screens/settings/change_password_screen.dart';
 import '../../common/screens/settings/language_screen.dart';
 import '../../common/screens/settings/settings_screen.dart';
@@ -119,6 +120,8 @@ class _TouristDashboardScreenState extends State<TouristDashboardScreen> {
             case '/tourCompletion':     page = const TouristTourCompletionScreen();
 
             case '/stayReview':     page = const StayReviewScreen();
+
+            case '/about':    page = const AboutScreen();
 
             default:                   page = const TouristHomeScreen();
           }

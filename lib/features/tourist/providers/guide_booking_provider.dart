@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import '../models/guide_search_result.dart';
 import '../models/guide_booking_model.dart';
 import '../services/guide_booking_service.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class GuideBookingProvider extends ChangeNotifier {
   final GuideBookingService _service;
@@ -39,6 +40,12 @@ class GuideBookingProvider extends ChangeNotifier {
   Map<String, dynamic>? get guideDetail   => _guideDetail;
   bool                  get detailLoading => _detailLoading;
   String                get detailError   => _detailError;
+
+  // ── Tourist interests state ───────────────────────────────────────────────
+  // Fetched from user_interest joined with interest table.
+  // Each item: { id, interest: { id, name, icon } }
+  List<Map<String, dynamic>> _guideInterests = [];
+  List<Map<String, dynamic>> get guideInterests => _guideInterests;
 
   // ── Tourist bookings state ────────────────────────────────────────────────
   List<GuideBookingModel> _myBookings        = [];
@@ -90,12 +97,12 @@ class GuideBookingProvider extends ChangeNotifier {
         endTime:   endTime,
       );
 
-      _searchResults      = response.guides;
-      _lastSearchDate     = date;
+      _searchResults       = response.guides;
+      _lastSearchDate      = date;
       _lastSearchStartTime = startTime;
-      _lastSearchEndTime  = endTime ?? response.endTime;
-      _lastCityId         = cityId;
-      _lastCityName       = cityName;
+      _lastSearchEndTime   = endTime ?? response.endTime;
+      _lastCityId          = cityId;
+      _lastCityName        = cityName;
     } catch (e) {
       _searchError = e.toString();
     } finally {
@@ -105,22 +112,56 @@ class GuideBookingProvider extends ChangeNotifier {
   }
 
   // ─────────────────────────────────────────────────────────────────────────
-  // GUIDE PUBLIC PROFILE
+  // GUIDE PUBLIC PROFILE  +  TOURIST INTERESTS
+  // Fetched together so the detail screen has everything in one pass.
   // ─────────────────────────────────────────────────────────────────────────
 
   Future<void> loadGuideDetail(String guideProfileId) async {
-    _detailLoading = true;
-    _detailError   = '';
-    _guideDetail   = null;
+    _detailLoading   = true;
+    _detailError     = '';
+    _guideDetail     = null;
+    _guideInterests = [];
     notifyListeners();
 
     try {
-      _guideDetail = await _service.getGuidePublicProfile(guideProfileId);
+      // Run guide profile fetch + tourist interests fetch in parallel
+      final results = await Future.wait([
+        _service.getGuidePublicProfile(guideProfileId),
+        _fetchTouristInterests(),
+      ]);
+
+      _guideDetail      = results[0] as Map<String, dynamic>;
+      _guideInterests = results[1] as List<Map<String, dynamic>>;
     } catch (e) {
       _detailError = e.toString();
     } finally {
       _detailLoading = false;
       notifyListeners();
+    }
+  }
+
+  /// Fetches the logged-in tourist's interests joined with the interest table.
+  /// Returns an empty list safely if the user is not logged in or query fails.
+  Future<List<Map<String, dynamic>>> _fetchTouristInterests() async {
+    try {
+      final userId = Supabase.instance.client.auth.currentUser?.id;
+      if (userId == null) return [];
+
+      final res = await Supabase.instance.client
+          .from('user_interest')
+          .select('''
+            id,
+            interest (
+              id,
+              name,
+              icon
+            )
+          ''')
+          .eq('user_profile_id', userId);
+
+      return List<Map<String, dynamic>>.from(res as List);
+    } catch (_) {
+      return [];
     }
   }
 
@@ -139,8 +180,8 @@ class GuideBookingProvider extends ChangeNotifier {
     String? pickupAddress,
     String? specialNote,
   }) async {
-    _createLoading       = true;
-    _lastCreatedBooking  = null;
+    _createLoading      = true;
+    _lastCreatedBooking = null;
     notifyListeners();
 
     try {
@@ -195,7 +236,6 @@ class GuideBookingProvider extends ChangeNotifier {
       await _service.cancelBooking(bookingId);
       final idx = _myBookings.indexWhere((b) => b.id == bookingId);
       if (idx != -1) {
-        // Refresh from API to get updated status
         await loadMyBookings();
       }
       return true;
@@ -258,11 +298,10 @@ class GuideBookingProvider extends ChangeNotifier {
   }) async {
     try {
       await _service.respondToBooking(
-        bookingId:          bookingId,
-        action:             action,
-        guideResponseNote:  guideResponseNote,
+        bookingId:         bookingId,
+        action:            action,
+        guideResponseNote: guideResponseNote,
       );
-      // Refresh requests list
       await loadGuideRequests();
       await loadGuideUpcoming();
       return true;

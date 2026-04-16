@@ -3755,6 +3755,8 @@ class _GuideProfileScreenState extends State<GuideProfileScreen> {
 
 // ─── AVAILABILITY MODAL (SAME AS BEFORE) ─────────────────────────────────────
 
+// ─── AVAILABILITY MODAL ──────────────────────────────────────────────────────
+
 typedef AvailabilitySaveCallback = void Function({
 String? singleDate,
 String? rangeStart,
@@ -3776,11 +3778,16 @@ class _AvailabilityModalState extends State<_AvailabilityModal> {
   DateTime? _singleDate;
   DateTime? _rangeStart;
   DateTime? _rangeEnd;
-  bool        _entireDay = false;
-  TimeOfDay   _startTime = const TimeOfDay(hour: 9,  minute: 0);
-  TimeOfDay   _endTime   = const TimeOfDay(hour: 17, minute: 0);
+  bool _entireDay = false;
+  TimeOfDay _startTime = const TimeOfDay(hour: 9, minute: 0);
+  TimeOfDay _endTime = const TimeOfDay(hour: 17, minute: 0);
+
+  // NEW: Toggle state for 9 to 5 daily availability
+  bool _isAlwaysAvailable9to5 = false;
 
   bool get _isValid {
+    if (_isAlwaysAvailable9to5) return true; // Valid immediately if toggle is on
+
     final hasDate = _mode == 0
         ? _singleDate != null
         : (_rangeStart != null && _rangeEnd != null);
@@ -3834,27 +3841,34 @@ class _AvailabilityModalState extends State<_AvailabilityModal> {
   void _save() {
     if (!_isValid) return;
 
-    final st = _entireDay ? '00:00' : _fmt(_startTime);
-    final et = _entireDay ? '23:59' : _fmt(_endTime);
-
-    if (_mode == 0) {
+    if (_isAlwaysAvailable9to5) {
       widget.onSave(
-        singleDate: DateFormat('yyyy-MM-dd').format(_singleDate!),
-        startTime:  st,
-        endTime:    et,
+        rangeStart: DateFormat('yyyy-MM-dd').format(DateTime.now()),
+        rangeEnd: DateFormat('yyyy-MM-dd').format(DateTime.now().add(const Duration(days: 6))),
+        startTime: '09:00',
+        endTime: '17:00',
       );
     } else {
-      widget.onSave(
-        rangeStart: DateFormat('yyyy-MM-dd').format(_rangeStart!),
-        rangeEnd:   DateFormat('yyyy-MM-dd').format(_rangeEnd!),
-        startTime:  st,
-        endTime:    et,
-      );
+      final st = _entireDay ? '00:00' : _fmt(_startTime);
+      final et = _entireDay ? '23:59' : _fmt(_endTime);
+
+      if (_mode == 0) {
+        widget.onSave(
+          singleDate: DateFormat('yyyy-MM-dd').format(_singleDate!),
+          startTime: st,
+          endTime: et,
+        );
+      } else {
+        widget.onSave(
+          rangeStart: DateFormat('yyyy-MM-dd').format(_rangeStart!),
+          rangeEnd: DateFormat('yyyy-MM-dd').format(_rangeEnd!),
+          startTime: st,
+          endTime: et,
+        );
+      }
     }
     Navigator.pop(context);
   }
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -3885,88 +3899,147 @@ class _AvailabilityModalState extends State<_AvailabilityModal> {
                   fontWeight: FontWeight.w700,
                   fontSize: 18.sp)),
           SizedBox(height: 4.h),
-          Text('Choose one day or a date range',
+          Text('Configure when you are available for tours',
               style: TextStyle(
                   color: Colors.grey.shade500, fontSize: 13.sp)),
           SizedBox(height: 20.h),
+
+          // NEW: Always Available Toggle Box
           Container(
+            padding: EdgeInsets.all(16.w),
             decoration: BoxDecoration(
-              color: const Color(0xFFF3F4F6),
-              borderRadius: BorderRadius.circular(12.r),
+              color: _isAlwaysAvailable9to5 ? AppColors.primaryBlue.withOpacity(0.05) : Colors.white,
+              borderRadius: BorderRadius.circular(16.r),
+              border: Border.all(
+                color: _isAlwaysAvailable9to5 ? AppColors.primaryBlue.withOpacity(0.3) : Colors.grey.shade200,
+                width: 1.5,
+              ),
             ),
-            child: Row(children: [
-              _modeTab(0, 'Single Day'),
-              _modeTab(1, 'Date Range'),
-            ]),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.access_time_filled, color: AppColors.primaryBlue, size: 20.w),
+                        SizedBox(width: 8.w),
+                        Text(
+                          'Always Available',
+                          style: TextStyle(
+                            fontSize: 15.sp,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.primaryBlue,
+                          ),
+                        ),
+                      ],
+                    ),
+                    Switch(
+                      value: _isAlwaysAvailable9to5,
+                      onChanged: (val) => setState(() => _isAlwaysAvailable9to5 = val),
+                      activeColor: AppColors.primaryBlue,
+                    ),
+                  ],
+                ),
+                SizedBox(height: 6.h),
+                Text(
+                  'Turn this on to automatically set your availability every day from 9:00 AM to 5:00 PM for the next 7 days. You can turn this off anytime.',
+                  style: TextStyle(
+                    fontSize: 12.sp,
+                    color: Colors.grey.shade600,
+                    height: 1.4,
+                  ),
+                ),
+              ],
+            ),
           ),
+
           SizedBox(height: 20.h),
-          if (_mode == 0)
-            _datePickerRow(
-              label:       'Date',
-              value:       _singleDate != null
-                  ? DateFormat('EEE, d MMM yyyy').format(_singleDate!)
-                  : 'Select a date',
-              hasValue:    _singleDate != null,
-              onTap:       () => _pickDate(isStart: true),
-            )
-          else ...[
-            _datePickerRow(
-              label:    'From',
-              value:    _rangeStart != null
-                  ? DateFormat('EEE, d MMM yyyy').format(_rangeStart!)
-                  : 'Start date',
-              hasValue: _rangeStart != null,
-              onTap:    () => _pickDate(isStart: true),
-            ),
-            SizedBox(height: 10.h),
-            _datePickerRow(
-              label:    'To',
-              value:    _rangeEnd != null
-                  ? DateFormat('EEE, d MMM yyyy').format(_rangeEnd!)
-                  : 'End date',
-              hasValue: _rangeEnd != null,
-              onTap:    () => _pickDate(isStart: false),
-            ),
-          ],
-          SizedBox(height: 20.h),
-          Row(children: [
-            Expanded(
-              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text('Entire Day',
-                    style: TextStyle(
-                        fontSize: 14.sp, fontWeight: FontWeight.w600)),
-                Text('Set 00:00 – 23:59',
-                    style: TextStyle(
-                        fontSize: 12.sp, color: Colors.grey.shade500)),
+
+          // Hide manual selections if Always Available is ON
+          if (!_isAlwaysAvailable9to5) ...[
+            Container(
+              decoration: BoxDecoration(
+                color: const Color(0xFFF3F4F6),
+                borderRadius: BorderRadius.circular(12.r),
+              ),
+              child: Row(children: [
+                _modeTab(0, 'Single Day'),
+                _modeTab(1, 'Date Range'),
               ]),
             ),
-            Switch(
-              value:    _entireDay,
-              onChanged: (v) => setState(() => _entireDay = v),
-              activeColor: AppColors.primaryBlue,
-            ),
-          ]),
-          SizedBox(height: 16.h),
-          if (!_entireDay) ...[
+            SizedBox(height: 20.h),
+            if (_mode == 0)
+              _datePickerRow(
+                label: 'Date',
+                value: _singleDate != null
+                    ? DateFormat('EEE, d MMM yyyy').format(_singleDate!)
+                    : 'Select a date',
+                hasValue: _singleDate != null,
+                onTap: () => _pickDate(isStart: true),
+              )
+            else ...[
+              _datePickerRow(
+                label: 'From',
+                value: _rangeStart != null
+                    ? DateFormat('EEE, d MMM yyyy').format(_rangeStart!)
+                    : 'Start date',
+                hasValue: _rangeStart != null,
+                onTap: () => _pickDate(isStart: true),
+              ),
+              SizedBox(height: 10.h),
+              _datePickerRow(
+                label: 'To',
+                value: _rangeEnd != null
+                    ? DateFormat('EEE, d MMM yyyy').format(_rangeEnd!)
+                    : 'End date',
+                hasValue: _rangeEnd != null,
+                onTap: () => _pickDate(isStart: false),
+              ),
+            ],
+            SizedBox(height: 20.h),
             Row(children: [
               Expanded(
-                child: _timePickerBox(
-                  label: 'Start Time',
-                  time:  _startTime,
-                  onTap: () => _pickTime(isStart: true),
-                ),
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text('Entire Day',
+                      style: TextStyle(
+                          fontSize: 14.sp, fontWeight: FontWeight.w600)),
+                  Text('Set 00:00 – 23:59',
+                      style: TextStyle(
+                          fontSize: 12.sp, color: Colors.grey.shade500)),
+                ]),
               ),
-              SizedBox(width: 12.w),
-              Expanded(
-                child: _timePickerBox(
-                  label: 'End Time',
-                  time:  _endTime,
-                  onTap: () => _pickTime(isStart: false),
-                ),
+              Switch(
+                value: _entireDay,
+                onChanged: (v) => setState(() => _entireDay = v),
+                activeColor: AppColors.primaryBlue,
               ),
             ]),
-            SizedBox(height: 20.h),
+            SizedBox(height: 16.h),
+            if (!_entireDay) ...[
+              Row(children: [
+                Expanded(
+                  child: _timePickerBox(
+                    label: 'Start Time',
+                    time: _startTime,
+                    onTap: () => _pickTime(isStart: true),
+                  ),
+                ),
+                SizedBox(width: 12.w),
+                Expanded(
+                  child: _timePickerBox(
+                    label: 'End Time',
+                    time: _endTime,
+                    onTap: () => _pickTime(isStart: false),
+                  ),
+                ),
+              ]),
+              SizedBox(height: 20.h),
+            ],
           ],
+
+          // Save Button
           SizedBox(
             width: double.infinity,
             height: 52.h,

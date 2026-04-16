@@ -20,7 +20,7 @@ const _orange   = Color(0xFFF97316);
 const _teal     = Color(0xFF0D9488);
 const _rose     = Color(0xFFE11D48);
 
-// ── Slot model (internal only) ────────────────────────────────────────────────
+// ── Slot model ────────────────────────────────────────────────────────────────
 class _Slot {
   final String id;
   final String start;
@@ -46,9 +46,9 @@ class _Slot {
 
   String _fmt(String raw) {
     try {
-      final p = raw.split(':');
-      int h   = int.parse(p[0]);
-      final m = p[1].padLeft(2, '0');
+      final p  = raw.split(':');
+      int h    = int.parse(p[0]);
+      final m  = p[1].padLeft(2, '0');
       final ap = h >= 12 ? 'PM' : 'AM';
       if (h == 0) h = 12; else if (h > 12) h -= 12;
       return '$h:$m $ap';
@@ -64,40 +64,88 @@ class _Slot {
 // ── Local Activity model ──────────────────────────────────────────────────────
 class _LocalActivity {
   final String id;
+  final String activityId;
   final String activityName;
   final String activityDescription;
   final String activityCategory;
-  final String activityIcon;   // emoji or icon name from API
   final double setPrice;
   final String specialNote;
 
   const _LocalActivity({
     required this.id,
+    required this.activityId,
     required this.activityName,
     required this.activityDescription,
     required this.activityCategory,
-    required this.activityIcon,
     required this.setPrice,
     required this.specialNote,
   });
 
   factory _LocalActivity.fromJson(Map<String, dynamic> m) {
-    final activity = (m['activity'] as Map<String, dynamic>?) ?? {};
+    // Checks for both flat structure and nested 'activity' object
+    final act = (m['activity'] as Map<String, dynamic>?) ?? {};
     return _LocalActivity(
-      id:                  m['id']?.toString()                          ?? '',
-      activityName:        activity['name']?.toString()                 ?? '',
-      activityDescription: activity['description']?.toString()          ?? '',
-      activityCategory:    activity['category']?.toString()             ?? '',
-      activityIcon:        activity['icon']?.toString()                 ?? '',
-      setPrice:            (m['set_price'] as num?)?.toDouble()         ?? 0.0,
-      specialNote:         m['special_note']?.toString()                ?? '',
+      id:                  m['local_activity_id']?.toString() ?? m['id']?.toString() ?? '',
+      activityId:          m['activity_id']?.toString() ?? act['id']?.toString() ?? '',
+      activityName:        m['name']?.toString() ?? act['name']?.toString() ?? 'Unnamed Activity',
+      activityDescription: m['description']?.toString() ?? act['description']?.toString() ?? '',
+      activityCategory:    m['category']?.toString() ?? act['category']?.toString() ?? '',
+      setPrice:            (m['set_price'] as num?)?.toDouble() ?? 0.0,
+      specialNote:         m['special_note']?.toString() ?? '',
     );
   }
 }
 
+// ── Guide Specialization model ────────────────────────────────────────────────
+class _GuideSpecialization {
+  final String id;
+  final String name;
+  final String category;
+
+  const _GuideSpecialization({
+    required this.id,
+    required this.name,
+    required this.category,
+  });
+
+  factory _GuideSpecialization.fromJson(Map<String, dynamic> m) {
+    // Checks for both flat structure and nested 'specialization' object
+    final spec = (m['specialization'] as Map<String, dynamic>?) ?? {};
+    return _GuideSpecialization(
+      id:       m['id']?.toString() ?? spec['id']?.toString() ?? '',
+      name:     m['label']?.toString() ?? m['name']?.toString() ?? spec['label']?.toString() ?? spec['name']?.toString() ?? '',
+      category: m['category']?.toString() ?? spec['category']?.toString() ?? '',
+    );
+  }
+}
+
+// ── Tourist Interest model ────────────────────────────────────────────────────
+class _Interest {
+  final String id;
+  final String name;
+  final String category;
+
+  const _Interest({
+    required this.id,
+    required this.name,
+    required this.category,
+  });
+
+  factory _Interest.fromJson(Map<String, dynamic> m) {
+    final intObj = (m['interest'] as Map<String, dynamic>?) ?? {};
+    return _Interest(
+      id:       m['id']?.toString() ?? intObj['id']?.toString() ?? '',
+      name:     m['name']?.toString() ?? intObj['name']?.toString() ?? '',
+      category: m['category']?.toString() ?? intObj['category']?.toString() ?? '',
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 class GuideDetailScreen extends StatefulWidget {
   const GuideDetailScreen({super.key});
-  @override State<GuideDetailScreen> createState() => _State();
+  @override
+  State<GuideDetailScreen> createState() => _State();
 }
 
 class _State extends State<GuideDetailScreen> {
@@ -105,14 +153,23 @@ class _State extends State<GuideDetailScreen> {
   bool    _argsApplied = false;
 
   // ── Slot state ────────────────────────────────────────────────────────────
-  List<_Slot> _slots    = [];
-  List<int>   _selected = [];
-  int _slotsBuiltFromHash = 0;
+  List<_Slot> _slots          = [];
+  List<int>   _selected       = [];
+  int         _slotsHash      = 0;
 
   // ── Local Activities state ────────────────────────────────────────────────
   List<_LocalActivity> _localActivities = [];
-  int _activitiesBuiltFromHash = 0;
+  int                  _activitiesHash  = 0;
 
+  // ── Guide Specializations state ───────────────────────────────────────────
+  List<_GuideSpecialization> _specializations = [];
+  int                        _specializationsHash = 0;
+
+  // ── Tourist Interests state ───────────────────────────────────────────────
+  List<_Interest> _interests      = [];
+  int             _interestsHash  = 0;
+
+  // ─────────────────────────────────────────────────────────────────────────
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -131,85 +188,83 @@ class _State extends State<GuideDetailScreen> {
     }
   }
 
-  // ── Sync slots ────────────────────────────────────────────────────────────
+  // ── Sync helpers ──────────────────────────────────────────────────────────
+
   void _syncSlots(Map<String, dynamic> g) {
     if (_searchDate == null) return;
-
     final avail = (g['availability'] as Map<String, dynamic>?) ?? {};
     final raw   = (avail[_searchDate] as List?) ?? [];
-    final hash  = raw.length ^ _searchDate.hashCode ^ g['guide_profile_id'].hashCode;
-
-    if (hash == _slotsBuiltFromHash) return;
-
-    final fresh = raw
-        .map((s) => _Slot.fromJson(s as Map<String, dynamic>))
-        .toList();
-
+    final hash  = raw.toString().hashCode;
+    if (hash == _slotsHash) return;
     setState(() {
-      _slots              = fresh;
-      _selected           = [];
-      _slotsBuiltFromHash = hash;
+      _slots     = raw.map((s) => _Slot.fromJson(s as Map<String, dynamic>)).toList();
+      _selected  = [];
+      _slotsHash = hash;
     });
   }
 
-  // ── Sync local activities ─────────────────────────────────────────────────
-  //
-  // Expects guideDetail to contain a key 'local_activities' which is the list
-  // of local_activity rows joined with the activity table.
-  // Example structure:
-  // {
-  //   "id": "...",
-  //   "set_price": 2500,
-  //   "special_note": "Includes equipment",
-  //   "activity": {
-  //     "name": "Whale Watching",
-  //     "description": "...",
-  //     "category": "Water Sports",
-  //     "icon": "🐋"
-  //   }
-  // }
   void _syncLocalActivities(Map<String, dynamic> g) {
-    final raw  = (g['local_activities'] as List?) ?? [];
-    final hash = raw.length ^ g['guide_profile_id'].hashCode ^ 0xDEAD;
+    // Looks for every possible backend key formulation
+    final raw  = (g['local_activities'] as List?) ??
+        (g['local_activity'] as List?) ??
+        (g['guide_local_activities'] as List?) ?? [];
 
-    if (hash == _activitiesBuiltFromHash) return;
-
-    final fresh = raw
-        .map((a) => _LocalActivity.fromJson(a as Map<String, dynamic>))
-        .toList();
+    final hash = raw.toString().hashCode;
+    if (hash == _activitiesHash) return;
 
     setState(() {
-      _localActivities         = fresh;
-      _activitiesBuiltFromHash = hash;
+      _localActivities = raw
+          .map((a) => _LocalActivity.fromJson(a as Map<String, dynamic>))
+          .toList();
+      _activitiesHash = hash;
     });
   }
 
-  // ── Contiguous multi-slot selection ───────────────────────────────────────
+  void _syncSpecializations(Map<String, dynamic> g) {
+    // Looks for every possible backend key formulation
+    final raw  = (g['specializations'] as List?) ??
+        (g['guide_specializations'] as List?) ??
+        (g['guide_specialization'] as List?) ?? [];
+
+    final hash = raw.toString().hashCode;
+    if (hash == _specializationsHash) return;
+
+    setState(() {
+      _specializations = raw
+          .map((s) => _GuideSpecialization.fromJson(s as Map<String, dynamic>))
+          .where((s) => s.name.isNotEmpty)
+          .toList();
+      _specializationsHash = hash;
+    });
+  }
+
+  void _syncInterests(Map<String, dynamic> g) {
+    final raw = (g['specialties'] as List?) ?? (g['interests'] as List?) ?? [];
+    final hash = raw.toString().hashCode;
+    if (hash == _interestsHash) return;
+
+    setState(() {
+      _interests = raw
+          .map((i) => _Interest.fromJson(i as Map<String, dynamic>))
+          .where((i) => i.name.isNotEmpty)
+          .toList();
+      _interestsHash = hash;
+    });
+  }
+
+  // ── Slot selection logic ──────────────────────────────────────────────────
   void _tapSlot(int idx) {
     setState(() {
       if (_selected.contains(idx)) {
         _selected.removeWhere((i) => i >= idx);
       } else {
-        if (_selected.isEmpty) {
-          _selected = [idx];
-          return;
-        }
-
+        if (_selected.isEmpty) { _selected = [idx]; return; }
         final first = _selected.first;
         final last  = _selected.last;
-
         if (idx == last + 1) {
-          if (_slotsAdjacent(last, idx)) {
-            _selected.add(idx);
-          } else {
-            _showGapWarning();
-          }
+          _slotsAdjacent(last, idx) ? _selected.add(idx) : _showGapWarning();
         } else if (idx == first - 1) {
-          if (_slotsAdjacent(idx, first)) {
-            _selected.insert(0, idx);
-          } else {
-            _showGapWarning();
-          }
+          _slotsAdjacent(idx, first) ? _selected.insert(0, idx) : _showGapWarning();
         } else {
           _selected = [idx];
         }
@@ -228,15 +283,11 @@ class _State extends State<GuideDetailScreen> {
     ));
   }
 
-  bool    get _hasSelection => _selected.isNotEmpty;
-  String? get _selStart =>
-      _selected.isNotEmpty ? _slots[_selected.first].startClean : null;
-  String? get _selEnd =>
-      _selected.isNotEmpty ? _slots[_selected.last].endClean : null;
-  String? get _selStartDisplay =>
-      _selected.isNotEmpty ? _slots[_selected.first].displayStart : null;
-  String? get _selEndDisplay =>
-      _selected.isNotEmpty ? _slots[_selected.last].displayEnd : null;
+  bool    get _hasSelection    => _selected.isNotEmpty;
+  String? get _selStart        => _selected.isNotEmpty ? _slots[_selected.first].startClean  : null;
+  String? get _selEnd          => _selected.isNotEmpty ? _slots[_selected.last].endClean      : null;
+  String? get _selStartDisplay => _selected.isNotEmpty ? _slots[_selected.first].displayStart : null;
+  String? get _selEndDisplay   => _selected.isNotEmpty ? _slots[_selected.last].displayEnd    : null;
 
   // ── BUILD ─────────────────────────────────────────────────────────────────
   @override
@@ -261,6 +312,8 @@ class _State extends State<GuideDetailScreen> {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           _syncSlots(g);
           _syncLocalActivities(g);
+          _syncSpecializations(g);
+          _syncInterests(g);
         });
 
         return Scaffold(
@@ -280,19 +333,20 @@ class _State extends State<GuideDetailScreen> {
                       SizedBox(height: 14.h),
                       _statsRow(g),
                       SizedBox(height: 18.h),
+
+                      // About
                       if ((g['profile_bio'] ?? '').toString().isNotEmpty) ...[
                         _section('About', _bioWidget(g)),
                         SizedBox(height: 18.h),
                       ],
+
+                      // Languages
                       if ((g['languages'] as List? ?? []).isNotEmpty) ...[
                         _section('Languages', _languagesWidget(g)),
                         SizedBox(height: 18.h),
                       ],
-                      if ((g['specialties'] as List? ?? []).isNotEmpty) ...[
-                        _section('Specialties', _specialtiesWidget(g)),
-                        SizedBox(height: 18.h),
-                      ],
-                      // ── Slot picker ──────────────────────────────────────
+
+                      // ── Available Time Slots ─────────────────────────────
                       _section(
                         'Available Time Slots',
                         _slotPicker(),
@@ -301,29 +355,46 @@ class _State extends State<GuideDetailScreen> {
                             : null,
                       ),
                       SizedBox(height: 18.h),
-                      // ── Guide Specializations ────────────────────────────
-                      if ((g['guide_specializations'] as List? ?? []).isNotEmpty) ...[
+
+                      // ── Guide Specializations ─────────────────────────────
+                      if (_specializations.isNotEmpty) ...[
                         _section(
-                          'Guide Specializations',
-                          _specializationsWidget(g),
+                          'Guide Specialization',
+                          _specializationsWidget(),
+                          hint: '${_specializations.length} areas',
                         ),
                         SizedBox(height: 18.h),
                       ],
-                      // ── Local Activities ─────────────────────────────────
+
+                      // ── Guide Interests (Specialties) ─────────────────────
+                      if (_interests.isNotEmpty) ...[
+                        _section(
+                          'Guide Interests',
+                          _interestsWidget(),
+                          hint: '${_interests.length} topics',
+                        ),
+                        SizedBox(height: 18.h),
+                      ],
+
+                      // ── Activities Offered ────────────────────────────────
                       if (_localActivities.isNotEmpty) ...[
                         _section(
-                          'Activities Offered',
+                          'Tours & Activities',
                           _localActivitiesWidget(),
                           hint: '${_localActivities.length} available',
                         ),
                         SizedBox(height: 18.h),
                       ],
+
+                      // Reviews
                       if ((g['reviews'] as List? ?? []).isNotEmpty) ...[
                         _section(
                             'Reviews (${g['review_count'] ?? 0})',
                             _reviewsWidget(g)),
                         SizedBox(height: 18.h),
                       ],
+
+                      // Gallery
                       if ((g['gallery'] as List? ?? []).isNotEmpty)
                         _section('Gallery', _galleryWidget(g)),
                     ],
@@ -352,7 +423,8 @@ class _State extends State<GuideDetailScreen> {
         background: Stack(fit: StackFit.expand, children: [
           pic.isNotEmpty
               ? CachedNetworkImage(
-              imageUrl: pic, fit: BoxFit.cover,
+              imageUrl: pic,
+              fit: BoxFit.cover,
               placeholder:  (_, __) => _heroBg(),
               errorWidget: (_, __, ___) => _heroBg())
               : _heroBg(),
@@ -473,27 +545,26 @@ class _State extends State<GuideDetailScreen> {
     );
   }
 
-  Widget _verBadge(String label, IconData icon, Color color) =>
-      Container(
-        padding: EdgeInsets.symmetric(vertical: 12.h, horizontal: 8.w),
-        decoration: BoxDecoration(
-            color: color.withOpacity(0.08),
-            borderRadius: BorderRadius.circular(14.r),
-            border: Border.all(color: color.withOpacity(0.25))),
-        child: Column(children: [
-          Icon(icon, color: color, size: 22.w),
-          SizedBox(height: 6.h),
-          Text(label,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                  color: color,
-                  fontSize: 10.sp,
-                  fontWeight: FontWeight.w700,
-                  height: 1.3)),
-        ]),
-      );
+  Widget _verBadge(String label, IconData icon, Color color) => Container(
+    padding: EdgeInsets.symmetric(vertical: 12.h, horizontal: 8.w),
+    decoration: BoxDecoration(
+        color: color.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(14.r),
+        border: Border.all(color: color.withOpacity(0.25))),
+    child: Column(children: [
+      Icon(icon, color: color, size: 22.w),
+      SizedBox(height: 6.h),
+      Text(label,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+              color: color,
+              fontSize: 10.sp,
+              fontWeight: FontWeight.w700,
+              height: 1.3)),
+    ]),
+  );
 
-  // ── Stats ─────────────────────────────────────────────────────────────────
+  // ── Stats row ─────────────────────────────────────────────────────────────
   Widget _statsRow(Map<String, dynamic> g) => Row(children: [
     Expanded(child: _stat(
         '${(g['avg_rating'] ?? 0).toStringAsFixed(1)}',
@@ -512,24 +583,21 @@ class _State extends State<GuideDetailScreen> {
         'Response', CupertinoIcons.arrow_2_circlepath, _purple)),
   ]);
 
-  Widget _stat(String val, String lbl, IconData icon, Color c) =>
-      Container(
-        padding: EdgeInsets.symmetric(vertical: 12.h),
-        decoration: _cardDeco(),
-        child: Column(children: [
-          Icon(icon, color: c, size: 18.w),
-          SizedBox(height: 4.h),
-          Text(val,
-              style: TextStyle(
-                  fontSize: 13.sp,
-                  fontWeight: FontWeight.w800,
-                  color: _dark)),
-          SizedBox(height: 2.h),
-          Text(lbl, style: TextStyle(fontSize: 9.sp, color: _gray)),
-        ]),
-      );
+  Widget _stat(String val, String lbl, IconData icon, Color c) => Container(
+    padding: EdgeInsets.symmetric(vertical: 12.h),
+    decoration: _cardDeco(),
+    child: Column(children: [
+      Icon(icon, color: c, size: 18.w),
+      SizedBox(height: 4.h),
+      Text(val,
+          style: TextStyle(
+              fontSize: 13.sp, fontWeight: FontWeight.w800, color: _dark)),
+      SizedBox(height: 2.h),
+      Text(lbl, style: TextStyle(fontSize: 9.sp, color: _gray)),
+    ]),
+  );
 
-  // ── Bio / Languages / Specialties ─────────────────────────────────────────
+  // ── Bio / Languages ───────────────────────────────────────────────────────
   Widget _bioWidget(Map<String, dynamic> g) => Text(
       (g['profile_bio'] ?? '').toString(),
       style: TextStyle(color: _dark, fontSize: 13.sp, height: 1.6));
@@ -562,24 +630,6 @@ class _State extends State<GuideDetailScreen> {
             ]));
       }).toList());
 
-  Widget _specialtiesWidget(Map<String, dynamic> g) => Wrap(
-      spacing: 8.w,
-      runSpacing: 8.h,
-      children: (g['specialties'] as List? ?? []).map((s) {
-        final m = s as Map<String, dynamic>;
-        return Container(
-            padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
-            decoration: BoxDecoration(
-                color: _green.withOpacity(0.08),
-                borderRadius: BorderRadius.circular(10.r),
-                border: Border.all(color: _green.withOpacity(0.3))),
-            child: Text((m['name'] ?? '').toString(),
-                style: TextStyle(
-                    color: _green,
-                    fontSize: 12.sp,
-                    fontWeight: FontWeight.w600)));
-      }).toList());
-
   // ── SLOT PICKER ───────────────────────────────────────────────────────────
   Widget _slotPicker() {
     if (_slots.isEmpty) {
@@ -599,8 +649,7 @@ class _State extends State<GuideDetailScreen> {
                     ? 'No free time slots for $_searchDate.\n'
                     'Try a different date from the search screen.'
                     : 'No slots loaded yet.',
-                style:
-                TextStyle(color: _dark, fontSize: 13.sp, height: 1.5)),
+                style: TextStyle(color: _dark, fontSize: 13.sp, height: 1.5)),
           ),
         ]),
       );
@@ -627,15 +676,13 @@ class _State extends State<GuideDetailScreen> {
                     fontWeight: FontWeight.w700)),
           ]),
         ),
-
       Wrap(
         spacing: 8.w,
         runSpacing: 10.h,
         children: List.generate(_slots.length, (i) {
           final sel = _selected.contains(i);
-
           final canExtend = _selected.isEmpty ||
-              (i == _selected.last + 1 && _slotsAdjacent(_selected.last, i)) ||
+              (i == _selected.last + 1  && _slotsAdjacent(_selected.last, i)) ||
               (i == _selected.first - 1 && _slotsAdjacent(i, _selected.first));
 
           return GestureDetector(
@@ -662,18 +709,14 @@ class _State extends State<GuideDetailScreen> {
                   width: (sel || (canExtend && _hasSelection)) ? 1.5 : 1,
                 ),
                 boxShadow: sel
-                    ? [
-                  BoxShadow(
-                      color: _blue.withOpacity(0.35),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4))
-                ]
-                    : [
-                  BoxShadow(
-                      color: Colors.black.withOpacity(0.04),
-                      blurRadius: 6,
-                      offset: const Offset(0, 2))
-                ],
+                    ? [BoxShadow(
+                    color: _blue.withOpacity(0.35),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4))]
+                    : [BoxShadow(
+                    color: Colors.black.withOpacity(0.04),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2))],
               ),
               child: Row(mainAxisSize: MainAxisSize.min, children: [
                 if (sel) ...[
@@ -693,54 +736,30 @@ class _State extends State<GuideDetailScreen> {
           );
         }),
       ),
-
       SizedBox(height: 10.h),
       Row(children: [
         Icon(CupertinoIcons.info_circle, color: _gray, size: 12.w),
         SizedBox(width: 5.w),
-        Expanded(child: Text(
-            'Tap a slot to select it. '
-                'Tap an adjacent slot to extend the booking window. '
-                'Tap a selected slot to deselect from that point.',
-            style: TextStyle(color: _gray, fontSize: 11.sp, height: 1.4))),
+        Expanded(
+            child: Text(
+                'Tap a slot to select it. '
+                    'Tap an adjacent slot to extend the booking window. '
+                    'Tap a selected slot to deselect from that point.',
+                style: TextStyle(color: _gray, fontSize: 11.sp, height: 1.4))),
       ]),
     ]);
   }
 
   // ── GUIDE SPECIALIZATIONS ─────────────────────────────────────────────────
-  //
-  // Expects guideDetail['guide_specializations'] to be a list of objects with
-  // the joined specialization row:
-  // [
-  //   {
-  //     "id": "...",
-  //     "guide_profile_id": "...",
-  //     "specialization_id": "...",
-  //     "specialization": {
-  //       "id": "...",
-  //       "name": "Heritage & Culture",
-  //       "description": "...",
-  //       "icon": "🏛️"   // optional emoji / string icon from API
-  //     }
-  //   },
-  //   ...
-  // ]
-  Widget _specializationsWidget(Map<String, dynamic> g) {
-    final items = (g['guide_specializations'] as List? ?? []);
-
-    // Colour palette cycling for visual variety
+  Widget _specializationsWidget() {
     final palette = [_purple, _teal, _rose, _orange, _blue, _green, _amber];
 
     return Wrap(
       spacing: 10.w,
       runSpacing: 10.h,
-      children: items.asMap().entries.map((entry) {
-        final idx  = entry.key;
-        final item = entry.value as Map<String, dynamic>;
-        final spec = (item['specialization'] as Map<String, dynamic>?) ?? {};
-        final name = (spec['name'] ?? '').toString();
-        final icon = (spec['icon'] ?? '').toString();
-        final color = palette[idx % palette.length];
+      children: _specializations.asMap().entries.map((entry) {
+        final color = palette[entry.key % palette.length];
+        final spec  = entry.value;
 
         return Container(
           padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
@@ -750,22 +769,17 @@ class _State extends State<GuideDetailScreen> {
             border: Border.all(color: color.withOpacity(0.3)),
           ),
           child: Row(mainAxisSize: MainAxisSize.min, children: [
-            if (icon.isNotEmpty) ...[
-              Text(icon, style: TextStyle(fontSize: 16.sp)),
-              SizedBox(width: 8.w),
-            ] else ...[
-              Container(
-                padding: EdgeInsets.all(4.r),
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.15),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(CupertinoIcons.bookmark_fill,
-                    color: color, size: 10.w),
+            Container(
+              padding: EdgeInsets.all(4.r),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.15),
+                shape: BoxShape.circle,
               ),
-              SizedBox(width: 8.w),
-            ],
-            Text(name,
+              child: Icon(CupertinoIcons.bookmark_fill,
+                  color: color, size: 10.w),
+            ),
+            SizedBox(width: 8.w),
+            Text(spec.name,
                 style: TextStyle(
                     color: color,
                     fontSize: 12.sp,
@@ -777,12 +791,6 @@ class _State extends State<GuideDetailScreen> {
   }
 
   // ── LOCAL ACTIVITIES ──────────────────────────────────────────────────────
-  //
-  // Renders each local_activity as a card showing:
-  //   • Activity name + category badge
-  //   • Guide's set price (LKR)
-  //   • Special note (if any)
-  //   • Brief description (if any)
   Widget _localActivitiesWidget() {
     if (_localActivities.isEmpty) {
       return Container(
@@ -802,8 +810,9 @@ class _State extends State<GuideDetailScreen> {
         return Container(
           margin: EdgeInsets.only(bottom: 12.h),
           decoration: _cardDeco(),
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            // ── Card header ──────────────────────────────────────────────
+          child:
+          Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            // Card header
             Container(
               padding: EdgeInsets.fromLTRB(14.w, 14.h, 14.w, 12.h),
               decoration: BoxDecoration(
@@ -815,11 +824,10 @@ class _State extends State<GuideDetailScreen> {
                   begin: Alignment.centerLeft,
                   end: Alignment.centerRight,
                 ),
-                borderRadius: BorderRadius.vertical(
-                    top: Radius.circular(20.r)),
+                borderRadius:
+                BorderRadius.vertical(top: Radius.circular(20.r)),
               ),
               child: Row(children: [
-                // Icon / emoji container
                 Container(
                   width: 44.w,
                   height: 44.w,
@@ -829,10 +837,7 @@ class _State extends State<GuideDetailScreen> {
                     border: Border.all(color: _teal.withOpacity(0.25)),
                   ),
                   child: Center(
-                    child: a.activityIcon.isNotEmpty
-                        ? Text(a.activityIcon,
-                        style: TextStyle(fontSize: 20.sp))
-                        : Icon(CupertinoIcons.map,
+                    child: Icon(CupertinoIcons.map,
                         color: _teal, size: 20.w),
                   ),
                 ),
@@ -842,9 +847,7 @@ class _State extends State<GuideDetailScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          a.activityName.isNotEmpty
-                              ? a.activityName
-                              : 'Unnamed Activity',
+                          a.activityName,
                           style: TextStyle(
                               fontSize: 14.sp,
                               fontWeight: FontWeight.w800,
@@ -893,9 +896,8 @@ class _State extends State<GuideDetailScreen> {
               ]),
             ),
 
-            // ── Card body ────────────────────────────────────────────────
-            if (a.activityDescription.isNotEmpty ||
-                a.specialNote.isNotEmpty)
+            // Card body
+            if (a.activityDescription.isNotEmpty || a.specialNote.isNotEmpty)
               Padding(
                 padding: EdgeInsets.fromLTRB(14.w, 10.h, 14.w, 14.h),
                 child: Column(
@@ -907,8 +909,7 @@ class _State extends State<GuideDetailScreen> {
                                 color: _gray,
                                 fontSize: 12.sp,
                                 height: 1.5)),
-                        if (a.specialNote.isNotEmpty)
-                          SizedBox(height: 10.h),
+                        if (a.specialNote.isNotEmpty) SizedBox(height: 10.h),
                       ],
                       if (a.specialNote.isNotEmpty)
                         Container(
@@ -921,8 +922,10 @@ class _State extends State<GuideDetailScreen> {
                           child: Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Icon(CupertinoIcons.exclamationmark_circle,
-                                    color: _amber, size: 13.w),
+                                Icon(
+                                    CupertinoIcons.exclamationmark_circle,
+                                    color: _amber,
+                                    size: 13.w),
                                 SizedBox(width: 7.w),
                                 Expanded(
                                   child: Text(a.specialNote,
@@ -937,6 +940,40 @@ class _State extends State<GuideDetailScreen> {
               )
             else
               SizedBox(height: 14.h),
+          ]),
+        );
+      }).toList(),
+    );
+  }
+
+  // ── GUIDE INTERESTS ─────────────────────────────────────────────────────
+  Widget _interestsWidget() {
+    final palette = [_purple, _blue, _teal, _rose, _orange, _green, _amber];
+
+    return Wrap(
+      spacing: 8.w,
+      runSpacing: 8.h,
+      children: _interests.asMap().entries.map((entry) {
+        final color    = palette[entry.key % palette.length];
+        final interest = entry.value;
+
+        return Container(
+          padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.07),
+            borderRadius: BorderRadius.circular(20.r),
+            border: Border.all(color: color.withOpacity(0.3)),
+          ),
+          child: Row(mainAxisSize: MainAxisSize.min, children: [
+            Icon(CupertinoIcons.heart_fill, color: color, size: 11.w),
+            SizedBox(width: 6.w),
+            Text(
+              interest.name,
+              style: TextStyle(
+                  color: color,
+                  fontSize: 12.sp,
+                  fontWeight: FontWeight.w700),
+            ),
           ]),
         );
       }).toList(),
@@ -962,16 +999,14 @@ class _State extends State<GuideDetailScreen> {
                       ? CachedNetworkImageProvider(photo)
                       : null,
                   child: photo.isEmpty
-                      ? Icon(CupertinoIcons.person,
-                      color: _blue, size: 14.w)
+                      ? Icon(CupertinoIcons.person, color: _blue, size: 14.w)
                       : null),
               SizedBox(width: 10.w),
               Expanded(
                   child: Text(
                       (m['tourist_name'] ?? 'Anonymous').toString(),
                       style: TextStyle(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 13.sp))),
+                          fontWeight: FontWeight.w700, fontSize: 13.sp))),
               Row(children: [
                 Icon(Icons.star_rounded, color: _amber, size: 13.w),
                 SizedBox(width: 2.w),
@@ -983,8 +1018,8 @@ class _State extends State<GuideDetailScreen> {
             if ((m['review'] ?? '').toString().isNotEmpty) ...[
               SizedBox(height: 8.h),
               Text((m['review']).toString(),
-                  style: TextStyle(
-                      color: _dark, fontSize: 12.sp, height: 1.5)),
+                  style:
+                  TextStyle(color: _dark, fontSize: 12.sp, height: 1.5)),
             ],
           ]),
         );
@@ -1009,7 +1044,7 @@ class _State extends State<GuideDetailScreen> {
                     child: CachedNetworkImage(
                         imageUrl: url,
                         fit: BoxFit.cover,
-                        placeholder:  (_, __) =>
+                        placeholder: (_, __) =>
                             Container(color: _blue.withOpacity(0.08)),
                         errorWidget: (_, __, ___) =>
                             Container(color: _blue.withOpacity(0.08)))));
@@ -1018,85 +1053,84 @@ class _State extends State<GuideDetailScreen> {
   }
 
   // ── Book button bar ───────────────────────────────────────────────────────
-  Widget _bookBar(BuildContext context, Map<String, dynamic> g) =>
-      Container(
-        padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 24.h),
-        decoration: BoxDecoration(
-            color: Colors.white,
-            boxShadow: [
-              BoxShadow(
-                  color: Colors.black.withOpacity(0.08),
-                  blurRadius: 20,
-                  offset: const Offset(0, -4))
-            ]),
-        child: Column(mainAxisSize: MainAxisSize.min, children: [
-          if (_hasSelection) ...[
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(children: [
-                  Icon(CupertinoIcons.time, color: _gray, size: 13.w),
-                  SizedBox(width: 5.w),
-                  Text('$_selStartDisplay – $_selEndDisplay',
-                      style: TextStyle(
-                          color: _dark,
-                          fontSize: 12.sp,
-                          fontWeight: FontWeight.w700)),
-                ]),
-                Container(
-                  padding: EdgeInsets.symmetric(
-                      horizontal: 10.w, vertical: 4.h),
-                  decoration: BoxDecoration(
-                      color: _green.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(8.r)),
-                  child: Text(
-                      '${_selected.length} '
-                          'hr${_selected.length > 1 ? "s" : ""} selected',
-                      style: TextStyle(
-                          color: _green,
-                          fontSize: 11.sp,
-                          fontWeight: FontWeight.w700)),
-                ),
-              ],
-            ),
-            SizedBox(height: 10.h),
-          ],
-          SizedBox(
-            width: double.infinity,
-            height: 52.h,
-            child: ElevatedButton(
-              onPressed: _hasSelection
-                  ? () => Navigator.pushNamed(
-                context,
-                '/tourInformation',
-                arguments: {
-                  'guide':        g,
-                  'booking_date': _searchDate,
-                  'start_time':   _selStart,
-                  'end_time':     _selEnd,
-                  'slot_count':   _selected.length,
-                },
-              )
-                  : null,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: _blue,
-                disabledBackgroundColor: Colors.grey.shade200,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20.r)),
-                elevation: 0,
-              ),
-              child: Text(
-                  _hasSelection
-                      ? 'Book  ·  $_selStartDisplay – $_selEndDisplay'
-                      : 'Select Time Slots Above',
+  Widget _bookBar(BuildContext context, Map<String, dynamic> g) => Container(
+    padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 24.h),
+    decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+              color: Colors.black.withOpacity(0.08),
+              blurRadius: 20,
+              offset: const Offset(0, -4))
+        ]),
+    child: Column(mainAxisSize: MainAxisSize.min, children: [
+      if (_hasSelection) ...[
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(children: [
+              Icon(CupertinoIcons.time, color: _gray, size: 13.w),
+              SizedBox(width: 5.w),
+              Text('$_selStartDisplay – $_selEndDisplay',
                   style: TextStyle(
-                      color: _hasSelection ? Colors.white : _gray,
-                      fontSize: 14.sp,
+                      color: _dark,
+                      fontSize: 12.sp,
+                      fontWeight: FontWeight.w700)),
+            ]),
+            Container(
+              padding:
+              EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+              decoration: BoxDecoration(
+                  color: _green.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8.r)),
+              child: Text(
+                  '${_selected.length} '
+                      'hr${_selected.length > 1 ? "s" : ""} selected',
+                  style: TextStyle(
+                      color: _green,
+                      fontSize: 11.sp,
                       fontWeight: FontWeight.w700)),
             ),
+          ],
+        ),
+        SizedBox(height: 10.h),
+      ],
+      SizedBox(
+        width: double.infinity,
+        height: 52.h,
+        child: ElevatedButton(
+          onPressed: _hasSelection
+              ? () => Navigator.pushNamed(
+            context,
+            '/tourInformation',
+            arguments: {
+              'guide':        g,
+              'booking_date': _searchDate,
+              'start_time':   _selStart,
+              'end_time':     _selEnd,
+              'slot_count':   _selected.length,
+            },
+          )
+              : null,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: _blue,
+            disabledBackgroundColor: Colors.grey.shade200,
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20.r)),
+            elevation: 0,
           ),
-        ]),
-      );
+          child: Text(
+              _hasSelection
+                  ? 'Book  ·  $_selStartDisplay – $_selEndDisplay'
+                  : 'Select Time Slots Above',
+              style: TextStyle(
+                  color: _hasSelection ? Colors.white : _gray,
+                  fontSize: 14.sp,
+                  fontWeight: FontWeight.w700)),
+        ),
+      ),
+    ]),
+  );
 
   // ── Shared helpers ────────────────────────────────────────────────────────
   BoxDecoration _cardDeco() => BoxDecoration(
@@ -1149,8 +1183,8 @@ class _State extends State<GuideDetailScreen> {
         padding: EdgeInsets.all(24.w),
         child: Text(msg,
             textAlign: TextAlign.center,
-            style: TextStyle(
-                color: Colors.red.shade400, fontSize: 14.sp)),
+            style:
+            TextStyle(color: Colors.red.shade400, fontSize: 14.sp)),
       ),
     ),
   );
