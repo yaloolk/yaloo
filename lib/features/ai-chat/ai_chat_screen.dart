@@ -324,7 +324,7 @@ class _ChatSheetBodyState extends State<_ChatSheetBody>
   // FIX: Use empty string as default instead of null.
   // The backend requires tourist_id to always be present in the request body.
   // An empty string signals "not logged in" and the backend handles it gracefully.
-  String _touristId = '';
+  String? _touristId;
 
   static String get _baseUrl => dotenv.env['_aiBaseUrl'] ?? '';
 
@@ -402,7 +402,7 @@ class _ChatSheetBodyState extends State<_ChatSheetBody>
           .maybeSingle();
 
       if (touristProfile != null && mounted) {
-        setState(() => _touristId = touristProfile['id'] as String? ?? '');
+        setState(() => _touristId = touristProfile['id'] as String?);
         debugPrint('🚀 AIChatScreen: SUCCESS! Tourist ID attached to chat: $_touristId');
       } else {
         debugPrint('⚠️ AIChatScreen: No tourist_profile found for user_profile_id = $userProfileId');
@@ -481,8 +481,12 @@ class _ChatSheetBodyState extends State<_ChatSheetBody>
       // because tourist_id is a required field in ChatRequest.
       final body = <String, dynamic>{
         'messages': apiMessages,
-        'tourist_id': _touristId, // always sent; empty string = not logged in
       };
+
+      // Only attach the tourist_id if the user is signed in and we have it!
+      if (_touristId != null) {
+        body['tourist_id'] = _touristId;
+      }
 
       final response = await http
           .post(
