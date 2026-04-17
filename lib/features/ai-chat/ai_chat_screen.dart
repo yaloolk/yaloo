@@ -46,7 +46,7 @@ class ChatMessage {
 
 // ─────────────────────────────────────────────
 // Markdown Text Renderer
-// Parses **bold**, *italic*, `code`, bullet lists, numbered lists
+// Parses *bold, *italic, code, bullet lists, numbered lists
 // ─────────────────────────────────────────────
 
 class _MarkdownText extends StatelessWidget {
@@ -203,7 +203,7 @@ class _MarkdownText extends StatelessWidget {
     );
   }
 
-  /// Parses inline markdown: **bold**, *italic*, `code`
+  /// Parses inline markdown: *bold, *italic, code
   Widget _buildInlineSpans(String text, {required TextStyle baseStyle}) {
     final spans = <InlineSpan>[];
     final pattern = RegExp(r'\*\*(.+?)\*\*|\*(.+?)\*|`(.+?)`');
@@ -321,7 +321,10 @@ class _ChatSheetBodyState extends State<_ChatSheetBody>
 
   final List<ChatMessage> _messages = [];
   bool _isSending = false;
-  String? _touristId;
+  // FIX: Use empty string as default instead of null.
+  // The backend requires tourist_id to always be present in the request body.
+  // An empty string signals "not logged in" and the backend handles it gracefully.
+  String _touristId = '';
 
   static String get _baseUrl => dotenv.env['_aiBaseUrl'] ?? '';
 
@@ -346,9 +349,11 @@ class _ChatSheetBodyState extends State<_ChatSheetBody>
       CurvedAnimation(parent: _headerPulse, curve: Curves.easeInOut),
     );
 
+    // FIX: was calling resolveTouristId() (missing underscore) — method didn't exist,
+    // so _touristId was never populated, causing silent null in the request body.
     _resolveTouristId().then((_) {
       _addAssistantMessage(
-        "Hi! I'm **Yaloo AI** 👋\n\nI can help you discover *guides*, *stays*, and *activities*, and answer any questions about the platform.\n\nWhat are you looking for today?",
+        "Hi! I'm **Yaloo AI** 👋\n\nI can help you discover guides, stays, and activities, and answer any questions about the platform.\n\nWhat are you looking for today?",
       );
     });
   }
@@ -367,19 +372,43 @@ class _ChatSheetBodyState extends State<_ChatSheetBody>
   Future<void> _resolveTouristId() async {
     try {
       final user = Supabase.instance.client.auth.currentUser;
-      if (user == null) return;
+      if (user == null) {
+        debugPrint('🛑 AIChatScreen: User is not logged in.');
+        return;
+      }
 
-      final response = await Supabase.instance.client
-          .from('tourist_profile')
+      debugPrint('✅ AIChatScreen: Auth UUID: ${user.id}');
+
+      // STEP 1: Find the User Profile using the Auth ID
+      final userProfile = await Supabase.instance.client
+          .from('user_profile')
           .select('id')
-          .eq('user_profile_id', user.id)
+          .eq('auth_user_id', user.id)
           .maybeSingle();
 
-      if (response != null && mounted) {
-        setState(() => _touristId = response['id'] as String?);
+      if (userProfile == null) {
+        debugPrint('⚠️ AIChatScreen: No user_profile found for auth_user_id = ${user.id}');
+        return;
+      }
+
+      final userProfileId = userProfile['id'];
+      debugPrint('✅ AIChatScreen: Found user_profile_id: $userProfileId');
+
+      // STEP 2: Find the Tourist Profile using the User Profile ID
+      final touristProfile = await Supabase.instance.client
+          .from('tourist_profile')
+          .select('id')
+          .eq('user_profile_id', userProfileId)
+          .maybeSingle();
+
+      if (touristProfile != null && mounted) {
+        setState(() => _touristId = touristProfile['id'] as String? ?? '');
+        debugPrint('🚀 AIChatScreen: SUCCESS! Tourist ID attached to chat: $_touristId');
+      } else {
+        debugPrint('⚠️ AIChatScreen: No tourist_profile found for user_profile_id = $userProfileId');
       }
     } catch (e) {
-      debugPrint('AIChatScreen: could not resolve tourist_id: $e');
+      debugPrint('❌ AIChatScreen: CRITICAL ERROR fetching tourist_id: $e');
     }
   }
 
@@ -446,8 +475,14 @@ class _ChatSheetBodyState extends State<_ChatSheetBody>
           .map((m) => m.toApiMap())
           .toList();
 
-      final body = <String, dynamic>{'messages': apiMessages};
-      if (_touristId != null) body['tourist_id'] = _touristId;
+      // FIX: Always include tourist_id in the request body.
+      // Previously used `if (_touristId != null)` which omitted the field entirely
+      // when not logged in, causing FastAPI to return 422 Unprocessable Entity
+      // because tourist_id is a required field in ChatRequest.
+      final body = <String, dynamic>{
+        'messages': apiMessages,
+        'tourist_id': _touristId, // always sent; empty string = not logged in
+      };
 
       final response = await http
           .post(
@@ -539,7 +574,7 @@ class _ChatSheetBodyState extends State<_ChatSheetBody>
       children: [
         AnimatedBuilder(
           animation: _headerPulse,
-          builder: (_, __) => Container(
+          builder: (context, _) => Container(
             width: 44.w,
             height: 44.w,
             decoration: BoxDecoration(
@@ -663,7 +698,7 @@ class _ChatSheetBodyState extends State<_ChatSheetBody>
           scrollDirection: Axis.horizontal,
           padding: EdgeInsets.symmetric(horizontal: 16.w),
           itemCount: chips.length,
-          separatorBuilder: (_, __) => SizedBox(width: 8.w),
+          separatorBuilder: (context, _) => SizedBox(width: 8.w),
           itemBuilder: (_, i) => GestureDetector(
             onTap: () {
               _inputController.text = chips[i].substring(3).trim();
@@ -1039,7 +1074,7 @@ class _TypingIndicatorState extends State<_TypingIndicator>
       children: [
         AnimatedBuilder(
           animation: _dotController,
-          builder: (_, __) => Opacity(
+          builder: (context, _) => Opacity(
             opacity: 0.5 + 0.5 * _dotController.value,
             child: Icon(
               LucideIcons.sparkles,

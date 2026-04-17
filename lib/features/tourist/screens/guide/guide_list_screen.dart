@@ -44,25 +44,22 @@ class _GuideListScreenState extends State<GuideListScreen> {
   Future<void> _fetchAiRankings() async {
     final prov = context.read<GuideBookingProvider>();
 
-    // Tourist ID from Supabase auth → tourist_profile.id
-    // The tourist_profile.id must be stored/accessible; here we read from
-    // the Supabase user metadata where we store 'tourist_profile_id'.
-    final user = Supabase.instance.client.auth.currentUser;
-    final touristId = user?.userMetadata?['tourist_profile_id'] as String?;
-      print('🟡 touristId = $touristId');
-      print('🟡 userMetadata = ${user?.userMetadata}');
+    final user       = Supabase.instance.client.auth.currentUser;
+    final touristId  = user?.userMetadata?['tourist_profile_id'] as String?;
+    print('🟡 touristId = $touristId');
+    print('🟡 userMetadata = ${user?.userMetadata}');
+
     if (touristId == null || touristId.isEmpty) {
       setState(() { _aiLoading = false; _aiAvailable = false; });
       return;
     }
 
-    // Pass the available guide IDs from the search so AI ranks within the
-    // already-availability-checked pool (time-slot search mode).
     final availableIds = prov.searchResults
         .map((g) => g.guideProfileId)
         .toList();
 
-    final result = await YalooAiService.instance.recommend(
+    // ↓ Now calls the dedicated /recommend/guides endpoint
+    final result = await YalooAiService.instance.recommendGuides(
       touristId:         touristId,
       city:              prov.lastCityName,
       availableGuideIds: availableIds,
@@ -72,20 +69,19 @@ class _GuideListScreenState extends State<GuideListScreen> {
     if (!mounted) return;
 
     if (result != null && result.rankedGuideIds.isNotEmpty) {
-      // Top 3 AI results get the badge
       final topIds = result.rankedGuideIds.take(3).toSet();
       setState(() {
         _aiRankedIds   = result.rankedGuideIds;
         _aiPickSet     = topIds;
         _aiAvailable   = true;
         _aiLoading     = false;
-        _sort          = 'ai'; // auto-select AI sort
+        _sort          = 'ai';
       });
     } else {
       setState(() {
         _aiAvailable = false;
         _aiLoading   = false;
-        _sort        = 'rating'; // fall back to rating sort
+        _sort        = 'rating';
       });
     }
   }
@@ -98,7 +94,6 @@ class _GuideListScreenState extends State<GuideListScreen> {
         if (_aiRankedIds.isEmpty) {
           list.sort((a, b) => b.avgRating.compareTo(a.avgRating));
         } else {
-          // Build position map for O(1) lookup
           final posMap = { for (var i = 0; i < _aiRankedIds.length; i++) _aiRankedIds[i]: i };
           list.sort((a, b) {
             final pa = posMap[a.guideProfileId] ?? 999;
@@ -308,9 +303,7 @@ class _GuideListScreenState extends State<GuideListScreen> {
 class _GuideCard extends StatelessWidget {
   final GuideSearchResult guide;
   final VoidCallback       onTap;
-  /// True when this card is one of the top AI picks AND AI sort is active.
   final bool   isAiPick;
-  /// 1-based rank in AI order; null when not in AI sort mode.
   final int?   aiRank;
 
   const _GuideCard({
@@ -340,7 +333,6 @@ class _GuideCard extends StatelessWidget {
               offset: const Offset(0, 4))],
         ),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          // AI pick banner
           if (isAiPick) _aiPickBanner(),
           Padding(
             padding: EdgeInsets.all(14.w),
@@ -396,7 +388,6 @@ class _GuideCard extends StatelessWidget {
   );
 
   Widget _info() => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-    // Name + badges
     Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
       Expanded(child: Text(guide.fullName, style: TextStyle(
           fontSize: 14.sp, fontWeight: FontWeight.w800, color: _dark),
@@ -408,7 +399,6 @@ class _GuideCard extends StatelessWidget {
     ]),
     SizedBox(height: 3.h),
 
-    // City · rating
     Row(children: [
       Icon(CupertinoIcons.map_pin, color: _gray, size: 11.w),
       SizedBox(width: 3.w),
@@ -424,7 +414,6 @@ class _GuideCard extends StatelessWidget {
     ]),
     SizedBox(height: 7.h),
 
-    // Languages
     if (guide.languages.isNotEmpty)
       Wrap(
           spacing: 5.w, runSpacing: 4.h,
@@ -442,7 +431,6 @@ class _GuideCard extends StatelessWidget {
     ],
     SizedBox(height: 10.h),
 
-    // Price + slots pill
     Row(children: [
       Text('LKR ${guide.ratePerHour.toStringAsFixed(0)}',
           style: TextStyle(

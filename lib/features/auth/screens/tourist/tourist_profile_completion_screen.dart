@@ -305,127 +305,119 @@ class _ProfileCompletionScreenState
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
+      isScrollControlled: true, // 1. Allows the modal to take up more screen space
       builder: (context) {
         return Container(
           decoration: const BoxDecoration(
             color: Colors.white,
-            borderRadius:
-            BorderRadius.vertical(top: Radius.circular(28)),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
           ),
-          padding:
-          const EdgeInsets.fromLTRB(24, 12, 24, 32),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Handle
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[300],
-                    borderRadius: BorderRadius.circular(2),
+          padding: const EdgeInsets.fromLTRB(24, 12, 24, 32),
+          child: SingleChildScrollView( // 2. Makes the column scrollable to prevent overflow
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Handle
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(2),
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 20),
-              const Text(
-                'Travel Style',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w800,
-                  color: Color(0xFF0D1B2A),
+                const SizedBox(height: 20),
+                const Text(
+                  'Travel Style',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF0D1B2A),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'How do you usually travel?',
-                style: TextStyle(
-                    fontSize: 13, color: Colors.grey[500]),
-              ),
-              const SizedBox(height: 20),
-              ...(_travelStyleOptions.entries.map((entry) {
-                final isSelected =
-                    _selectedTravelStyle == entry.key;
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 10),
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      onTap: () {
-                        setState(() =>
-                        _selectedTravelStyle = entry.key);
-                        Navigator.pop(context);
-                      },
-                      borderRadius:
-                      BorderRadius.circular(14),
-                      child: AnimatedContainer(
-                        duration:
-                        const Duration(milliseconds: 180),
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 14),
-                        decoration: BoxDecoration(
-                          color: isSelected
-                              ? AppColors.primaryBlue
-                              .withValues(alpha: 0.08)
-                              : Colors.grey[50],
-                          borderRadius:
-                          BorderRadius.circular(14),
-                          border: Border.all(
+                const SizedBox(height: 4),
+                Text(
+                  'How do you usually travel?',
+                  style: TextStyle(fontSize: 13, color: Colors.grey[500]),
+                ),
+                const SizedBox(height: 20),
+                ...(_travelStyleOptions.entries.map((entry) {
+                  final isSelected = _selectedTravelStyle == entry.key;
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: () {
+                          setState(() => _selectedTravelStyle = entry.key);
+                          Navigator.pop(context);
+                        },
+                        borderRadius: BorderRadius.circular(14),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 180),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 14),
+                          decoration: BoxDecoration(
                             color: isSelected
-                                ? AppColors.primaryBlue
-                                : Colors.grey[200]!,
-                            width: isSelected ? 1.5 : 1,
-                          ),
-                        ),
-                        child: Row(
-                          children: [
-                            Text(
-                              _travelStyleEmojis[entry.key] ??
-                                  '✈️',
-                              style: const TextStyle(
-                                  fontSize: 20),
-                            ),
-                            const SizedBox(width: 12),
-                            Icon(
-                              _travelStyleIcons[entry.key] ??
-                                  Icons.style_outlined,
+                                ? AppColors.primaryBlue.withValues(alpha: 0.08)
+                                : Colors.grey[50],
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(
                               color: isSelected
                                   ? AppColors.primaryBlue
-                                  : Colors.grey[500],
-                              size: 18,
+                                  : Colors.grey[200]!,
+                              width: isSelected ? 1.5 : 1,
                             ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: Text(
-                                entry.value,
-                                style: TextStyle(
-                                  fontWeight: isSelected
-                                      ? FontWeight.w700
-                                      : FontWeight.w500,
-                                  color: isSelected
-                                      ? AppColors.primaryBlue
-                                      : Colors.grey[700],
-                                  fontSize: 15,
+                          ),
+                          child: Row(
+                            children: [
+                              Text(
+                                _travelStyleEmojis[entry.key] ?? '✈️',
+                                style: const TextStyle(fontSize: 20),
+                              ),
+                              const SizedBox(width: 12),
+                              Icon(
+                                _travelStyleIcons[entry.key] ??
+                                    Icons.style_outlined,
+                                color: isSelected
+                                    ? AppColors.primaryBlue
+                                    : Colors.grey[500],
+                                size: 18,
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Text(
+                                  entry.value,
+                                  style: TextStyle(
+                                    fontWeight: isSelected
+                                        ? FontWeight.w700
+                                        : FontWeight.w500,
+                                    color: isSelected
+                                        ? AppColors.primaryBlue
+                                        : Colors.grey[700],
+                                    fontSize: 15,
+                                  ),
                                 ),
                               ),
-                            ),
-                            if (isSelected)
-                              Icon(
-                                Icons.check_circle_rounded,
-                                color: AppColors.primaryBlue,
-                                size: 20,
-                              ),
-                          ],
+                              if (isSelected)
+                                Icon(
+                                  Icons.check_circle_rounded,
+                                  color: AppColors.primaryBlue,
+                                  size: 20,
+                                ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                );
-              }).toList()),
-              const SizedBox(height: 8),
-            ],
+                  );
+                }).toList()),
+                const SizedBox(height: 8),
+              ],
+            ),
           ),
         );
       },

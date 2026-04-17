@@ -42,18 +42,18 @@ class _HostListScreenState extends State<HostListScreen> {
   Future<void> _fetchAiRankings() async {
     final prov = context.read<StayBookingProvider>();
 
-    final user       = Supabase.instance.client.auth.currentUser;
-    final touristId  = user?.userMetadata?['tourist_profile_id'] as String?;
+    final user      = Supabase.instance.client.auth.currentUser;
+    final touristId = user?.userMetadata?['tourist_profile_id'] as String?;
 
     if (touristId == null || touristId.isEmpty) {
       setState(() { _aiLoading = false; _aiAvailable = false; });
       return;
     }
 
-    // Pass available stay IDs (availability already checked by Django)
     final availableIds = prov.searchResults.map((s) => s.stayId).toList();
 
-    final result = await YalooAiService.instance.recommend(
+    // ↓ Now calls the dedicated /recommend/stays endpoint
+    final result = await YalooAiService.instance.recommendStays(
       touristId:        touristId,
       city:             prov.lastCityName,
       availableStayIds: availableIds,
@@ -372,7 +372,7 @@ class _StayCard extends StatelessWidget {
                           fontSize: 11.sp, fontWeight: FontWeight.w700)),
                 ),
               ),
-              // AI badge (top-right, replaces/alongside rating)
+              // AI badge (top-right)
               if (isAiPick)
                 Positioned(
                   top: 12.h, right: 12.w,

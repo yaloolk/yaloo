@@ -199,7 +199,7 @@ class _HostStayAvailabilityScreenState extends State<HostStayAvailabilityScreen>
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Turn this on to mark your stay as available every day from 9:00 AM to 5:00 PM for the next 60 days. You can turn this off anytime to resume manual scheduling.',
+                    'Turn this on to mark your stay as available every day for the next 60 days. You can turn this off anytime to resume manual scheduling.',
                     style: TextStyle(
                       fontSize: 13,
                       color: Colors.grey.shade600,
